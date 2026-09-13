@@ -1,12 +1,13 @@
 import React from 'react';
-import { Moon, Sun, Shield, Award, User, BookOpen, Building2, MapPin } from 'lucide-react';
+import { Moon, Sun, Shield, Award, User, BookOpen, Building2, MapPin, LogOut } from 'lucide-react';
 
 import TahfidzHubLogo from './TahfidzHubLogo';
 
 export default function Header({ 
   activeTab, 
   currentRole, 
-  onSwitchRole, 
+  authUser,
+  onSignOut,
   isDarkMode, 
   onToggleDarkMode,
   activeBranchId,
@@ -99,49 +100,58 @@ export default function Header({
           </div>
         )}
 
-        {/* Role Switcher Pills */}
-        <div className="role-badge-group">
-          <button 
-            className={`role-btn ${currentRole === 'owner' ? 'active' : ''}`}
-            onClick={() => onSwitchRole('owner')}
-            title="Beralih ke Owner (Yayasan & Multi-Cabang)"
-            style={{
-              borderColor: currentRole === 'owner' ? '#f59e0b' : undefined,
-              background: currentRole === 'owner' ? 'linear-gradient(135deg, #78350f 0%, #b45309 100%)' : undefined,
-              color: currentRole === 'owner' ? '#fff' : undefined
-            }}
+        {/* Authenticated User Profile Pill */}
+        {authUser && (
+          <div 
+            className="header-user-profile" 
+            title={`Login sebagai: ${authUser.nama} (${authUser.roleLabel || currentRole})`}
           >
-            <Building2 size={13} />
-            <span>👑 Owner</span>
-          </button>
+            <div className="header-user-avatar">
+              {authUser.foto ? (
+                <img 
+                  src={authUser.foto} 
+                  alt={authUser.nama} 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+              ) : currentRole === 'owner' ? (
+                <Building2 size={14} color="#d97706" />
+              ) : currentRole === 'superadmin' ? (
+                <Shield size={14} color="#059669" />
+              ) : currentRole === 'pengampu' ? (
+                <Award size={14} color="#2563eb" />
+              ) : (
+                <User size={14} color="#7c3aed" />
+              )}
+            </div>
 
-          <button 
-            className={`role-btn ${currentRole === 'superadmin' ? 'active' : ''}`}
-            onClick={() => onSwitchRole('superadmin')}
-            title="Beralih ke Super Admin (Akses Seluruh Halaqah & Madrasah Cabang)"
-          >
-            <Shield size={13} />
-            <span>Super Admin</span>
-          </button>
+            <div className="header-user-details">
+              <span className="header-user-name">{authUser.nama || 'Pengguna'}</span>
+              <span 
+                className="header-user-role-badge"
+                style={{
+                  color: currentRole === 'owner' ? '#d97706' :
+                         currentRole === 'superadmin' ? '#059669' :
+                         currentRole === 'pengampu' ? '#2563eb' : '#7c3aed'
+                }}
+              >
+                {currentRole === 'owner' ? '👑 Owner' :
+                 currentRole === 'superadmin' ? '🛡️ Super Admin' :
+                 currentRole === 'pengampu' ? '🏅 Pengampu' : '👤 Orang Tua'}
+              </span>
+            </div>
 
-          <button 
-            className={`role-btn ${currentRole === 'pengampu' ? 'active' : ''}`}
-            onClick={() => onSwitchRole('pengampu')}
-            title="Beralih ke Pengampu (Ustadz Wahyudin Hafiz)"
-          >
-            <Award size={13} />
-            <span>Pengampu</span>
-          </button>
-
-          <button 
-            className={`role-btn ${currentRole === 'orangtua' ? 'active' : ''}`}
-            onClick={() => onSwitchRole('orangtua')}
-            title="Beralih ke Orang Tua / Wali Santri"
-          >
-            <User size={13} />
-            <span>Orang Tua</span>
-          </button>
-        </div>
+            {onSignOut && (
+              <button 
+                type="button" 
+                className="btn-header-signout" 
+                onClick={onSignOut}
+                title="Keluar / Logout dari Sistem"
+              >
+                <LogOut size={14} />
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Tahfidz HUB Brand Emblem */}
         <div 

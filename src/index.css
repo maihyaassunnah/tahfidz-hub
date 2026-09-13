@@ -337,6 +337,76 @@ body.dark-mode .role-badge-group {
   border-color: #334155;
 }
 
+/* Authenticated User Profile Pill */
+.header-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  padding: 3px 8px 3px 5px;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+body.dark-mode .header-user-profile {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.header-user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #eef7f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.header-user-details {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.header-user-name {
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: var(--text-main);
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-user-role-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.btn-header-signout {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  margin-left: 2px;
+}
+
+.btn-header-signout:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
 .role-btn {
   border: none;
   background: transparent;

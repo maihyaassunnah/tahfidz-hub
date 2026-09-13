@@ -24,15 +24,22 @@ import PersetujuanIzinSigapView from './components/sigap/PersetujuanIzinSigapVie
 import OwnerView from './components/owner/OwnerView';
 import SetoranModal from './components/SetoranModal';
 import BottomNav from './components/BottomNav';
+import LoginView from './components/LoginView';
 import { storageService } from './services/storage';
 import { CheckCircle, KeyRound } from 'lucide-react';
 
 export default function App() {
-  const [currentRole, setCurrentRole] = useState(storageService.getCurrentRole());
-  const [activeTab, setActiveTab] = useState(
-    storageService.getCurrentRole() === 'owner' ? 'owner-dashboard' :
-    storageService.getCurrentRole() === 'superadmin' ? 'sigap-dashboard' : 'dashboard'
-  );
+  const [authUser, setAuthUser] = useState(() => storageService.getAuthUser());
+  const [currentRole, setCurrentRole] = useState(() => {
+    const u = storageService.getAuthUser();
+    return u?.role || storageService.getCurrentRole();
+  });
+  const [activeTab, setActiveTab] = useState(() => {
+    const u = storageService.getAuthUser();
+    const role = u?.role || storageService.getCurrentRole();
+    return role === 'owner' ? 'owner-dashboard' :
+           role === 'superadmin' ? 'sigap-dashboard' : 'dashboard';
+  });
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Multi-Branch State
@@ -71,6 +78,25 @@ export default function App() {
     setTimeout(() => {
       setToastMessage('');
     }, 3500);
+  };
+
+  const handleLoginSuccess = (user) => {
+    setAuthUser(user);
+    const role = user.role || 'superadmin';
+    setCurrentRole(role);
+    if (user.cabangId && user.cabangId !== 'ALL') {
+      storageService.setActiveBranchId(user.cabangId);
+      setActiveBranchId(user.cabangId);
+    }
+    if (role === 'owner') {
+      setActiveTab('owner-dashboard');
+    } else if (role === 'superadmin') {
+      setActiveTab('sigap-dashboard');
+    } else {
+      setActiveTab('dashboard');
+    }
+    loadData();
+    showToast(`Ahlan wa Sahlan, ${user.nama}!`);
   };
 
   const handleSwitchBranch = (branchId) => {
@@ -135,9 +161,31 @@ export default function App() {
 
   const handleSignOut = () => {
     if (window.confirm("Keluar dari sistem Tahfidz HUB?")) {
+      storageService.logout();
+      setAuthUser(null);
       showToast("Anda telah keluar dari sistem Tahfidz HUB.");
     }
   };
+
+  // JIKA BELUM LOGIN: TAMPILKAN HALAMAN LOGIN (SESUAI GAMBAR 2)
+  if (!authUser) {
+    return (
+      <>
+        <LoginView 
+          onLoginSuccess={handleLoginSuccess}
+          isDarkMode={isDarkMode}
+        />
+        {toastMessage && (
+          <div className="toast-container no-print">
+            <div className="toast">
+              <CheckCircle size={18} color="#34d399" />
+              <span>{toastMessage}</span>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <div className="simtah-layout">
@@ -162,7 +210,8 @@ export default function App() {
         <Header 
           activeTab={activeTab}
           currentRole={currentRole}
-          onSwitchRole={handleSwitchRole}
+          authUser={authUser}
+          onSignOut={handleSignOut}
           isDarkMode={isDarkMode}
           onToggleDarkMode={handleToggleDarkMode}
           activeBranchId={activeBranchId}

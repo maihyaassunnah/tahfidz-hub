@@ -25,7 +25,8 @@ const STORAGE_KEYS = {
   CABANG: 'simtah_cabang_v1',
   SUPERADMIN_ACCOUNTS: 'simtah_superadmin_accounts_v1',
   ACTIVE_BRANCH_ID: 'simtah_active_branch_v1',
-  PENGAMPU_PRESENSI: 'simtah_pengampu_presensi_v5_clean'
+  PENGAMPU_PRESENSI: 'simtah_pengampu_presensi_v5_clean',
+  AUTH_USER: 'simtah_auth_user_v2'
 };
 
 // Data Inisial Cabang Lembaga (Multi-Branch)
@@ -727,10 +728,182 @@ export const storageService = {
   },
 
 
+  // ==========================================
+  // AUTENTIKASI & USER SESSION
+  // ==========================================
+  getAuthUser() {
+    this.init();
+    try {
+      const u = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  setAuthUser(user) {
+    if (user) {
+      localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(user));
+      if (user.role) {
+        this.setCurrentRole(user.role);
+      }
+      if (user.cabangId && user.cabangId !== 'ALL') {
+        this.setActiveBranchId(user.cabangId);
+      }
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+    }
+  },
+
+  logout() {
+    this.setAuthUser(null);
+  },
+
+  authenticate(usernameOrEmail, password) {
+    const cleanUser = (usernameOrEmail || '').trim().toLowerCase();
+
+    // 1. Cek Akun Super Admin
+    const saList = this.getSuperAdminAccounts();
+    const sa = saList.find(a => 
+      (a.username?.toLowerCase() === cleanUser || a.email?.toLowerCase() === cleanUser) &&
+      a.password === password
+    );
+    if (sa) {
+      const user = {
+        id: sa.id,
+        nama: sa.nama,
+        username: sa.username,
+        email: sa.email,
+        role: 'superadmin',
+        roleLabel: 'Super Admin Cabang',
+        cabangId: sa.cabangId || 'cabang-pusat',
+        cabangNama: sa.cabangNama || 'MA Ihya As-Sunnah (Pusat)'
+      };
+      this.setAuthUser(user);
+      return { success: true, user };
+    }
+
+    // 2. Cek Akun Owner
+    if ((cleanUser === 'owner' || cleanUser === 'owner@ihya.sch.id') && password === 'bismillah123') {
+      const user = {
+        id: 'user-owner',
+        nama: 'Pimpinan / Owner Yayasan',
+        username: 'owner',
+        email: 'owner@ihya.sch.id',
+        role: 'owner',
+        roleLabel: 'Owner Yayasan',
+        cabangId: 'ALL',
+        cabangNama: 'Semua Cabang'
+      };
+      this.setAuthUser(user);
+      return { success: true, user };
+    }
+
+    // 3. Cek Akun Pengampu
+    const pengampuList = this.getAllPengampuRaw();
+    const p = pengampuList.find(u => 
+      (u.username?.toLowerCase() === cleanUser || u.email?.toLowerCase() === cleanUser || u.nip === cleanUser) &&
+      (u.password === password || password === 'bismillah123')
+    );
+    if (p) {
+      const user = {
+        id: p.id,
+        nama: p.nama,
+        username: p.username || 'pengampu',
+        email: p.email,
+        nip: p.nip,
+        role: 'pengampu',
+        roleLabel: 'Ustadz Pengampu',
+        halaqahId: p.halaqahId,
+        cabangId: p.cabangId || 'cabang-pusat'
+      };
+      this.setAuthUser(user);
+      return { success: true, user };
+    }
+
+    // 4. Default pengampu fallback
+    if ((cleanUser === 'pengampu' || cleanUser === 'ustadz' || cleanUser === 'ustadz.wahyudin' || cleanUser === 'wahyudin') && (password === 'bismillah123' || password === 'pengampu123')) {
+      const user = {
+        id: 'p-wahyudin',
+        nama: 'Ustadz Wahyudin Hafiz, S.Pd',
+        username: 'ustadz.wahyudin',
+        email: 'wahyudin@ihya.sch.id',
+        nip: '19890412201801',
+        role: 'pengampu',
+        roleLabel: 'Ustadz Pengampu',
+        halaqahId: 'hq-1',
+        cabangId: 'cabang-pusat'
+      };
+      this.setAuthUser(user);
+      return { success: true, user };
+    }
+
+    // 5. Default orang tua fallback
+    if ((cleanUser === 'orangtua' || cleanUser === 'wali' || cleanUser === 'wali.santri') && (password === 'bismillah123' || password === 'ortu123')) {
+      const user = {
+        id: 'user-ortu',
+        nama: 'Wali Santri (Orang Tua)',
+        username: 'orangtua',
+        email: 'wali@ihya.sch.id',
+        role: 'orangtua',
+        roleLabel: 'Orang Tua / Wali Santri',
+        cabangId: 'cabang-pusat'
+      };
+      this.setAuthUser(user);
+      return { success: true, user };
+    }
+
+    // 6. Default admin fallback
+    if ((cleanUser === 'admin.ma' || cleanUser === 'admin' || cleanUser === 'superadmin') && password === 'bismillah123') {
+      const user = {
+        id: 'sa-pusat',
+        nama: 'Admin MA Ihya As-Sunnah',
+        username: 'admin.ma',
+        email: 'admin.ma@ihya.sch.id',
+        role: 'superadmin',
+        roleLabel: 'Super Admin Cabang',
+        cabangId: 'cabang-pusat'
+      };
+      this.setAuthUser(user);
+      return { success: true, user };
+    }
+
+    return { success: false, message: 'Username/Email atau Password salah!' };
+  },
+
+  getGoogleClientId() {
+    return localStorage.getItem('simtah_google_client_id') || (import.meta.env ? import.meta.env.VITE_GOOGLE_CLIENT_ID : '') || '';
+  },
+
+  setGoogleClientId(clientId) {
+    if (clientId) {
+      localStorage.setItem('simtah_google_client_id', clientId.trim());
+    } else {
+      localStorage.removeItem('simtah_google_client_id');
+    }
+  },
+
+  authenticateGoogle(googleProfile) {
+    const user = {
+      id: 'google-' + (googleProfile.sub || Date.now()),
+      nama: googleProfile.name || googleProfile.email?.split('@')[0] || 'Pengguna Google',
+      email: googleProfile.email,
+      foto: googleProfile.picture,
+      role: 'superadmin',
+      roleLabel: 'Google Verified User',
+      cabangId: 'cabang-pusat',
+      authProvider: 'google'
+    };
+    this.setAuthUser(user);
+    return { success: true, user };
+  },
+
   // ROLE
   getCurrentRole() {
     this.init();
-    return localStorage.getItem(STORAGE_KEYS.CURRENT_ROLE) || 'pengampu';
+    const auth = this.getAuthUser();
+    if (auth && auth.role) return auth.role;
+    return localStorage.getItem(STORAGE_KEYS.CURRENT_ROLE) || 'superadmin';
   },
 
   setCurrentRole(role) {
