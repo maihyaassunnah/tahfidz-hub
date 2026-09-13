@@ -30,7 +30,8 @@ import {
   Sparkles,
   Sliders,
   ChevronDown,
-  Database
+  Database,
+  Receipt
 } from 'lucide-react';
 import { storageService } from '../services/storage';
 import TahfidzHubLogo from './TahfidzHubLogo';
@@ -339,6 +340,14 @@ export default function Sidebar({
           </div>
 
           <div 
+            className={`sigap-nav-item ${activeTab === 'sigap-spp' ? 'active' : ''}`}
+            onClick={() => setActiveTab('sigap-spp')}
+          >
+            <Receipt size={18} className="sigap-nav-icon" />
+            <span>Pembayaran SPP</span>
+          </div>
+
+          <div 
             className={`sigap-nav-item ${activeTab === 'sigap-prisma-studio' ? 'active' : ''}`}
             onClick={() => setActiveTab('sigap-prisma-studio')}
             style={{ marginTop: '4px' }}
@@ -557,7 +566,21 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* 5. SISTEM */}
+          {/* 5. KEUANGAN & PEMBAYARAN */}
+          <div className="sigap-section-divider">
+            <span className="sigap-section-title">KEUANGAN & SPP</span>
+            <div className="sigap-section-line"></div>
+          </div>
+
+          <div 
+            className={`sigap-nav-item ${activeTab === 'sigap-spp' ? 'active' : ''}`}
+            onClick={() => setActiveTab('sigap-spp')}
+          >
+            <Receipt size={18} className="sigap-nav-icon" />
+            <span>Pembayaran SPP</span>
+          </div>
+
+          {/* 6. SISTEM */}
           <div className="sigap-section-divider">
             <span className="sigap-section-title">SISTEM & DATABASE</span>
             <div className="sigap-section-line"></div>

@@ -68,13 +68,27 @@ async function seedData() {
     `);
     console.log('✅ Santri seeded');
 
+    // 6. Seed Pembayaran SPP
+    await client.query(`
+      INSERT INTO pembayaran_spp (id, invoice_no, santri_id, santri_nama, nis, kelas, cabang_id, bulan, tahun, nominal, status, tanggal_bayar, metode_bayar, nomor_ref, catatan, nama_petugas)
+      VALUES
+        ('spp-1', 'INV-SPP/202609/001', 's-1', 'Ahmad Farhan Al-Fatih', '2026101', 'X-A', 'cabang-pusat', 'September 2026', 2026, 350000, 'Lunas', '2026-09-05', 'Transfer Bank BSI', 'BSI-TRX-982104', 'Pembayaran SPP September via Mobile Banking BSI', 'Ustadz Wahyudin (Bendahara)'),
+        ('spp-2', 'INV-SPP/202609/002', 's-2', 'Muhammad Ziyad Rabbani', '2026102', 'X-A', 'cabang-pusat', 'September 2026', 2026, 350000, 'Lunas', '2026-09-08', 'Tunai / Kas', 'KWT-09-002', 'Pembayaran langsung di loket tata usaha', 'Ustadz Wahyudin (Bendahara)'),
+        ('spp-3', 'INV-SPP/202609/003', 's-3', 'Hafizh Al-Ghifari', '2026103', 'X-A', 'cabang-pusat', 'September 2026', 2026, 350000, 'Belum Lunas', NULL, '-', '-', 'Menunggu transfer wali santri', 'Bendahara Pesantren'),
+        ('spp-4', 'INV-SPP/202609/004', 's-4', 'Bilal Ibnu Rabah', '2026104', 'XI-A', 'cabang-pusat', 'September 2026', 2026, 350000, 'Lunas', '2026-09-10', 'Transfer Bank BSI', 'BSI-TRX-112093', 'Lunas tepat waktu', 'Ustadz Wahyudin (Bendahara)'),
+        ('spp-5', 'INV-SPP/202609/005', 's-5', 'Umar Al-Faruq', '2026105', 'XII-A', 'cabang-pusat', 'September 2026', 2026, 350000, 'Belum Lunas', NULL, '-', '-', 'Tagihan diterbitkan otomatis', 'Bendahara Pesantren')
+      ON CONFLICT (id) DO NOTHING;
+    `);
+    console.log('✅ Pembayaran SPP seeded');
+
     const check = await client.query(`
       SELECT 
         (SELECT COUNT(*) FROM cabang) as total_cabang,
         (SELECT COUNT(*) FROM pengampu) as total_pengampu,
         (SELECT COUNT(*) FROM halaqah) as total_halaqah,
         (SELECT COUNT(*) FROM sesi) as total_sesi,
-        (SELECT COUNT(*) FROM santri) as total_santri;
+        (SELECT COUNT(*) FROM santri) as total_santri,
+        (SELECT COUNT(*) FROM pembayaran_spp) as total_spp;
     `);
     console.log('Database summary:', check.rows[0]);
 

@@ -217,7 +217,7 @@ app.post('/api/monitoring-sigap', async (req, res) => {
 
 // 8. 1-CLICK SYNC-ALL: MENGIRIM DARI BROWSER LOCALSTORAGE KE POSTGRESQL
 app.post('/api/sync-all', async (req, res) => {
-  const { santri, pengampu, sesi, cabang, halaqah, monitoring } = req.body;
+  const { santri, pengampu, sesi, cabang, halaqah, spp, monitoring } = req.body;
   const client = await pool.connect();
 
   try {
@@ -278,6 +278,28 @@ app.post('/api/sync-all', async (req, res) => {
       }
     }
 
+    if (Array.isArray(spp)) {
+      for (const item of spp) {
+        await client.query(`
+          INSERT INTO pembayaran_spp (
+            id, invoice_no, santri_id, santri_nama, nis, kelas, cabang_id,
+            bulan, tahun, nominal, status, tanggal_bayar, metode_bayar, nomor_ref, catatan, nama_petugas
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+          ON CONFLICT (id) DO UPDATE SET
+            status = EXCLUDED.status, nominal = EXCLUDED.nominal, tanggal_bayar = EXCLUDED.tanggal_bayar,
+            metode_bayar = EXCLUDED.metode_bayar, nomor_ref = EXCLUDED.nomor_ref, catatan = EXCLUDED.catatan;
+        `, [
+          item.id, item.invoiceNo || item.invoice_no, item.santriId || item.santri_id, item.santriNama || item.santri_nama,
+          item.nis, item.kelas, item.cabangId || item.cabang_id || 'cabang-pusat',
+          item.bulan, item.tahun || 2026, item.nominal || 350000, item.status || 'Lunas',
+          item.tanggalBayar || item.tanggal_bayar || new Date().toISOString().split('T')[0],
+          item.metodeBayar || item.metode_bayar || 'Transfer Bank BSI',
+          item.nomorRef || item.nomor_ref || '-', item.catatan || '', item.namaPetugas || item.nama_petugas || 'Bendahara Pesantren'
+        ]);
+      }
+    }
+
     if (Array.isArray(monitoring)) {
       for (const m of monitoring) {
         await client.query(`
@@ -308,12 +330,13 @@ app.post('/api/sync-all', async (req, res) => {
 // 9. PULL-ALL: MENGAMBIL SELURUH DATA DARI POSTGRESQL UNTUK SYNC KE PERANGKAT/BROWSER
 app.get('/api/pull-all', async (req, res) => {
   try {
-    const [cabang, pengampu, santri, halaqah, sesi, monitoring] = await Promise.all([
+    const [cabang, pengampu, santri, halaqah, sesi, spp, monitoring] = await Promise.all([
       query('SELECT * FROM cabang ORDER BY created_at ASC'),
       query('SELECT * FROM pengampu ORDER BY nama ASC'),
       query('SELECT * FROM santri ORDER BY nama ASC'),
       query('SELECT * FROM halaqah ORDER BY created_at ASC'),
       query('SELECT * FROM sesi ORDER BY jam_mulai ASC'),
+      query('SELECT * FROM pembayaran_spp ORDER BY created_at DESC LIMIT 500'),
       query('SELECT * FROM monitoring_sigap ORDER BY created_at DESC LIMIT 200')
     ]);
 
@@ -325,11 +348,96 @@ app.get('/api/pull-all', async (req, res) => {
         santri: santri.rows,
         halaqah: halaqah.rows,
         sesi: sesi.rows,
+        spp: spp.rows,
         monitoring: monitoring.rows
       }
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 10. PEMBAYARAN SPP CRUD ENDPOINTS
+app.get('/api/spp', async (req, res) => {
+  const { cabang_id, bulan, status, santri_id } = req.query;
+  try {
+    let sql = 'SELECT * FROM pembayaran_spp WHERE 1=1';
+    const params = [];
+    if (cabang_id) {
+      params.push(cabang_id);
+      sql += ` AND cabang_id = $${params.length}`;
+    }
+    if (bulan) {
+      params.push(bulan);
+      sql += ` AND bulan = $${params.length}`;
+    }
+    if (status) {
+      params.push(status);
+      sql += ` AND status = $${params.length}`;
+    }
+    if (santri_id) {
+      params.push(santri_id);
+      sql += ` AND santri_id = $${params.length}`;
+    }
+    sql += ' ORDER BY created_at DESC';
+    const result = await query(sql, params);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/spp', async (req, res) => {
+  const {
+    id, invoice_no, invoiceNo, santri_id, santriId, santri_nama, santriNama,
+    nis, kelas, cabang_id, cabangId, bulan, tahun, nominal, status,
+    tanggal_bayar, tanggalBayar, metode_bayar, metodeBayar, nomor_ref, nomorRef, catatan, nama_petugas, namaPetugas
+  } = req.body;
+
+  try {
+    const invNo = invoice_no || invoiceNo || `INV-SPP-${Date.now()}`;
+    const sId = santri_id || santriId;
+    const sNama = santri_nama || santriNama || 'Santri';
+    const cId = cabang_id || cabangId || 'cabang-pusat';
+    const tgl = tanggal_bayar || tanggalBayar || new Date().toISOString().split('T')[0];
+    const metode = metode_bayar || metodeBayar || 'Transfer Bank BSI';
+    const ref = nomor_ref || nomorRef || '-';
+    const petugas = nama_petugas || namaPetugas || 'Bendahara Pesantren';
+    const recordId = id || `spp-${Date.now()}`;
+
+    const sql = `
+      INSERT INTO pembayaran_spp (
+        id, invoice_no, santri_id, santri_nama, nis, kelas, cabang_id,
+        bulan, tahun, nominal, status, tanggal_bayar, metode_bayar, nomor_ref, catatan, nama_petugas
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      ON CONFLICT (id) DO UPDATE SET
+        status = EXCLUDED.status,
+        nominal = EXCLUDED.nominal,
+        tanggal_bayar = EXCLUDED.tanggal_bayar,
+        metode_bayar = EXCLUDED.metode_bayar,
+        nomor_ref = EXCLUDED.nomor_ref,
+        catatan = EXCLUDED.catatan
+      RETURNING *;
+    `;
+    const result = await query(sql, [
+      recordId, invNo, sId, sNama, nis, kelas, cId,
+      bulan || 'September 2026', tahun || 2026, nominal || 350000, status || 'Lunas',
+      tgl, metode, ref, catatan, petugas
+    ]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/spp/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await query('DELETE FROM pembayaran_spp WHERE id = $1', [id]);
+    res.json({ success: true, message: 'Transaksi SPP berhasil dihapus' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

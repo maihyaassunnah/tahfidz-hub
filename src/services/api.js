@@ -110,6 +110,45 @@ class ApiService {
       throw err;
     }
   }
+
+  // 8. Pembayaran SPP
+  async getSPP(params = {}) {
+    try {
+      const qs = new URLSearchParams(params).toString();
+      const res = await fetch(`${this.baseUrl}/spp${qs ? '?' + qs : ''}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get SPP records from server:', err.message);
+      return null;
+    }
+  }
+
+  async saveSPP(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/spp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to save SPP record:', err);
+      throw err;
+    }
+  }
+
+  async deleteSPP(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/spp/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to delete SPP record:', err);
+      throw err;
+    }
+  }
 }
 
 export const apiService = new ApiService();

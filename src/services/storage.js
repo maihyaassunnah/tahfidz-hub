@@ -26,7 +26,8 @@ const STORAGE_KEYS = {
   SUPERADMIN_ACCOUNTS: 'simtah_superadmin_accounts_v1',
   ACTIVE_BRANCH_ID: 'simtah_active_branch_v1',
   PENGAMPU_PRESENSI: 'simtah_pengampu_presensi_v5_clean',
-  AUTH_USER: 'simtah_auth_user_v2'
+  AUTH_USER: 'simtah_auth_user_v2',
+  PEMBAYARAN_SPP: 'simtah_pembayaran_spp_v1'
 };
 
 // Data Inisial Cabang Lembaga (Multi-Branch)
@@ -231,6 +232,100 @@ const INITIAL_SETORAN = [];
 const INITIAL_IZIN = [];
 
 const INITIAL_ABSENSI = [];
+
+// Data Demonstrasi Awal Pembayaran SPP Santri
+const INITIAL_SPP = [
+  {
+    id: "spp-1",
+    invoiceNo: "INV-SPP/202609/001",
+    santriId: "s-1",
+    santriNama: "Ahmad Farhan Al-Fatih",
+    nis: "2026101",
+    kelas: "X-A",
+    cabangId: "cabang-pusat",
+    bulan: "September 2026",
+    tahun: 2026,
+    nominal: 350000,
+    status: "Lunas",
+    tanggalBayar: "2026-09-05",
+    metodeBayar: "Transfer Bank BSI",
+    nomorRef: "BSI-TRX-982104",
+    catatan: "Pembayaran SPP September via Mobile Banking BSI",
+    namaPetugas: "Ustadz Wahyudin (Bendahara)"
+  },
+  {
+    id: "spp-2",
+    invoiceNo: "INV-SPP/202609/002",
+    santriId: "s-2",
+    santriNama: "Muhammad Ziyad Rabbani",
+    nis: "2026102",
+    kelas: "X-A",
+    cabangId: "cabang-pusat",
+    bulan: "September 2026",
+    tahun: 2026,
+    nominal: 350000,
+    status: "Lunas",
+    tanggalBayar: "2026-09-08",
+    metodeBayar: "Tunai / Kas",
+    nomorRef: "KWT-09-002",
+    catatan: "Pembayaran langsung di loket tata usaha",
+    namaPetugas: "Ustadz Wahyudin (Bendahara)"
+  },
+  {
+    id: "spp-3",
+    invoiceNo: "INV-SPP/202609/003",
+    santriId: "s-3",
+    santriNama: "Hafizh Al-Ghifari",
+    nis: "2026103",
+    kelas: "X-A",
+    cabangId: "cabang-pusat",
+    bulan: "September 2026",
+    tahun: 2026,
+    nominal: 350000,
+    status: "Belum Lunas",
+    tanggalBayar: null,
+    metodeBayar: "-",
+    nomorRef: "-",
+    catatan: "Menunggu transfer wali santri",
+    namaPetugas: "Bendahara Pesantren"
+  },
+  {
+    id: "spp-4",
+    invoiceNo: "INV-SPP/202609/004",
+    santriId: "s-4",
+    santriNama: "Bilal Ibnu Rabah",
+    nis: "2026104",
+    kelas: "XI-A",
+    cabangId: "cabang-pusat",
+    bulan: "September 2026",
+    tahun: 2026,
+    nominal: 350000,
+    status: "Lunas",
+    tanggalBayar: "2026-09-10",
+    metodeBayar: "Transfer Bank BSI",
+    nomorRef: "BSI-TRX-112093",
+    catatan: "Lunas tepat waktu",
+    namaPetugas: "Ustadz Wahyudin (Bendahara)"
+  },
+  {
+    id: "spp-5",
+    invoiceNo: "INV-SPP/202609/005",
+    santriId: "s-5",
+    santriNama: "Umar Al-Faruq",
+    nis: "2026105",
+    kelas: "XII-A",
+    cabangId: "cabang-pusat",
+    bulan: "September 2026",
+    tahun: 2026,
+    nominal: 350000,
+    status: "Belum Lunas",
+    tanggalBayar: null,
+    metodeBayar: "-",
+    nomorRef: "-",
+    catatan: "Tagihan diterbitkan otomatis",
+    namaPetugas: "Bendahara Pesantren"
+  }
+];
 
 const INITIAL_SETTINGS = {
   namaMadrasah: "Pesantren Persatuan Islam As-Sunnah (PPIAS)",
@@ -2506,6 +2601,7 @@ export const storageService = {
       halaqah: this.getHalaqah(),
       santri: this.getSantri(),
       sesi: this.getSesi(),
+      spp: this.getPembayaranSPP(),
       monitoring: (this.getSigapMonitoring() || {}).liveFeed || []
     };
     return await apiService.syncAllToDatabase(payload);
@@ -2515,7 +2611,7 @@ export const storageService = {
     try {
       const res = await apiService.pullAllData();
       if (res && res.success && res.data) {
-        const { cabang, pengampu, santri, halaqah, sesi } = res.data;
+        const { cabang, pengampu, santri, halaqah, sesi, spp } = res.data;
         if (Array.isArray(cabang) && cabang.length > 0) {
           localStorage.setItem(STORAGE_KEYS.CABANG, JSON.stringify(cabang));
         }
@@ -2531,6 +2627,9 @@ export const storageService = {
         if (Array.isArray(sesi) && sesi.length > 0) {
           localStorage.setItem(STORAGE_KEYS.SESI, JSON.stringify(sesi));
         }
+        if (Array.isArray(spp) && spp.length > 0) {
+          localStorage.setItem(STORAGE_KEYS.PEMBAYARAN_SPP, JSON.stringify(spp));
+        }
         return { success: true, message: 'Berhasil mengunduh data terbaru dari PostgreSQL Cloud!' };
       }
       return { success: false, message: 'Data tidak ditemukan di server.' };
@@ -2538,6 +2637,117 @@ export const storageService = {
       console.error('[STORAGE] Error pulling from postgres:', err);
       return { success: false, message: err.message };
     }
+  },
+
+  // =========================================================
+  // PEMBAYARAN SPP & MANAJEMEN KEUANGAN
+  // =========================================================
+  getPembayaranSPP(filter = {}) {
+    const data = localStorage.getItem(STORAGE_KEYS.PEMBAYARAN_SPP);
+    let list = data ? JSON.parse(data) : INITIAL_SPP;
+
+    if (filter.cabangId && filter.cabangId !== 'all') {
+      list = list.filter(item => (item.cabangId || item.cabang_id) === filter.cabangId);
+    }
+    if (filter.bulan && filter.bulan !== 'all') {
+      list = list.filter(item => item.bulan === filter.bulan);
+    }
+    if (filter.status && filter.status !== 'all') {
+      list = list.filter(item => item.status === filter.status);
+    }
+    if (filter.kelas && filter.kelas !== 'all') {
+      list = list.filter(item => item.kelas === filter.kelas);
+    }
+    if (filter.search) {
+      const q = filter.search.toLowerCase();
+      list = list.filter(item => 
+        (item.santriNama && item.santriNama.toLowerCase().includes(q)) ||
+        (item.santri_nama && item.santri_nama.toLowerCase().includes(q)) ||
+        (item.nis && String(item.nis).toLowerCase().includes(q)) ||
+        (item.invoiceNo && item.invoiceNo.toLowerCase().includes(q)) ||
+        (item.invoice_no && item.invoice_no.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  },
+
+  addPembayaranSPP(item) {
+    const list = this.getPembayaranSPP();
+    const newItem = {
+      ...item,
+      id: item.id || `spp-${Date.now()}`,
+      invoiceNo: item.invoiceNo || this.generateInvoiceNo(),
+      createdAt: new Date().toISOString()
+    };
+    list.unshift(newItem);
+    localStorage.setItem(STORAGE_KEYS.PEMBAYARAN_SPP, JSON.stringify(list));
+    apiService.saveSPP(newItem).catch(err => console.warn('Sync SPP error:', err.message));
+    return newItem;
+  },
+
+  updatePembayaranSPP(id, updatedData) {
+    const list = this.getPembayaranSPP();
+    const index = list.findIndex(item => item.id === id);
+    if (index !== -1) {
+      list[index] = { ...list[index], ...updatedData, updatedAt: new Date().toISOString() };
+      localStorage.setItem(STORAGE_KEYS.PEMBAYARAN_SPP, JSON.stringify(list));
+      apiService.saveSPP(list[index]).catch(err => console.warn('Sync SPP error:', err.message));
+      return list[index];
+    }
+    return null;
+  },
+
+  deletePembayaranSPP(id) {
+    let list = this.getPembayaranSPP();
+    list = list.filter(item => item.id !== id);
+    localStorage.setItem(STORAGE_KEYS.PEMBAYARAN_SPP, JSON.stringify(list));
+    apiService.deleteSPP(id).catch(err => console.warn('Delete SPP error:', err.message));
+    return true;
+  },
+
+  generateInvoiceNo() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const randomSeq = Math.floor(1000 + Math.random() * 9000);
+    return `INV-SPP/${year}${month}/${randomSeq}`;
+  },
+
+  generateMonthlySPP(bulan, tahun = 2026, nominalDefault = 350000) {
+    const existing = this.getPembayaranSPP();
+    const santriList = this.getSantri();
+    const newItems = [];
+
+    santriList.forEach(s => {
+      const alreadyHas = existing.some(item => (item.santriId || item.santri_id) === s.id && item.bulan === bulan);
+      if (!alreadyHas) {
+        newItems.push({
+          id: `spp-${Date.now()}-${s.id}`,
+          invoiceNo: this.generateInvoiceNo(),
+          santriId: s.id,
+          santriNama: s.nama,
+          nis: s.nis,
+          kelas: s.kelas,
+          cabangId: s.cabangId || 'cabang-pusat',
+          bulan: bulan,
+          tahun: Number(tahun),
+          nominal: nominalDefault,
+          status: 'Belum Lunas',
+          tanggalBayar: null,
+          metodeBayar: '-',
+          nomorRef: '-',
+          catatan: `Tagihan SPP Bulan ${bulan}`,
+          namaPetugas: 'Bendahara Pesantren',
+          createdAt: new Date().toISOString()
+        });
+      }
+    });
+
+    if (newItems.length > 0) {
+      const updated = [...newItems, ...existing];
+      localStorage.setItem(STORAGE_KEYS.PEMBAYARAN_SPP, JSON.stringify(updated));
+    }
+    return newItems.length;
   },
 
   resetAllData() {
@@ -2561,6 +2771,7 @@ export const storageService = {
     localStorage.removeItem(STORAGE_KEYS.CABANG);
     localStorage.removeItem(STORAGE_KEYS.SUPERADMIN_ACCOUNTS);
     localStorage.removeItem(STORAGE_KEYS.ACTIVE_BRANCH_ID);
+    localStorage.removeItem(STORAGE_KEYS.PEMBAYARAN_SPP);
     this.init();
   }
 };

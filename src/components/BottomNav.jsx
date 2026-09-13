@@ -28,7 +28,8 @@ import {
   ShieldCheck,
   Layers,
   UserCheck,
-  Database
+  Database,
+  Receipt
 } from 'lucide-react';
 
 export default function BottomNav({
@@ -668,6 +669,25 @@ export default function BottomNav({
                       <CheckSquare size={18} />
                     </div>
                     <span className="menu-text">Persetujuan Izin</span>
+                  </div>
+
+                  {/* KEUANGAN & SPP */}
+                  <div className="sidebar-drawer-category">KEUANGAN & SPP</div>
+
+                  <div 
+                    className={`sidebar-drawer-menu-item ${activeTab === 'sigap-spp' ? 'active' : ''}`}
+                    onClick={() => handleNavigateFromDrawer('sigap-spp')}
+                  >
+                    <div className="menu-active-indicator" />
+                    <div className="menu-icon-box" style={{ background: '#f0fdf4', color: '#16a34a' }}>
+                      <Receipt size={18} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <span className="menu-text" style={{ fontWeight: 800 }}>Pembayaran SPP</span>
+                      <small style={{ display: 'block', fontSize: '0.7rem', color: '#64748b' }}>
+                        Kelola Tagihan & Kuitansi SPP
+                      </small>
+                    </div>
                   </div>
 
                   {/* SISTEM */}

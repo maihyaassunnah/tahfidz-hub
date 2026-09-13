@@ -29,6 +29,7 @@ model Cabang {
   santri          Santri[]
   sesi            Sesi[]
   superadmins     SuperadminAccounts[]
+  pembayaranSpp   PembayaranSPP[]
 
   @@map("cabang")
 }
@@ -100,8 +101,9 @@ model Santri {
 
   cabang      Cabang?   @relation(fields: [cabangId], references: [id], onDelete: Cascade)
   halaqah     Halaqah?  @relation(fields: [halaqahId], references: [id], onDelete: SetNull)
-  absensiList AbsensiSantri[]
-  setoranList SetoranSantri[]
+  absensiList     AbsensiSantri[]
+  setoranList     SetoranSantri[]
+  pembayaranSpp   PembayaranSPP[]
 
   @@map("santri")
 }
@@ -198,4 +200,29 @@ model MonitoringSigap {
   pengampu     Pengampu? @relation(fields: [pengampuId], references: [id], onDelete: SetNull)
 
   @@map("monitoring_sigap")
+}
+
+model PembayaranSPP {
+  id           String    @id @db.VarChar(64)
+  invoiceNo    String    @unique @map("invoice_no") @db.VarChar(64)
+  santriId     String    @map("santri_id") @db.VarChar(64)
+  santriNama   String    @map("santri_nama") @db.VarChar(150)
+  nis          String?   @db.VarChar(64)
+  kelas        String?   @db.VarChar(50)
+  cabangId     String?   @map("cabang_id") @db.VarChar(64)
+  bulan        String    @db.VarChar(32)
+  tahun        Int       @default(2026)
+  nominal      Int       @default(350000)
+  status       String    @default("Lunas") @db.VarChar(32)
+  tanggalBayar DateTime? @map("tanggal_bayar") @db.Date
+  metodeBayar  String?   @default("Transfer Bank BSI") @map("metode_bayar") @db.VarChar(64)
+  nomorRef     String?   @map("nomor_ref") @db.VarChar(100)
+  catatan      String?   @db.Text
+  namaPetugas  String?   @default("Bendahara Pesantren") @map("nama_petugas") @db.VarChar(100)
+  createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  santri       Santri    @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  cabang       Cabang?   @relation(fields: [cabangId], references: [id], onDelete: SetNull)
+
+  @@map("pembayaran_spp")
 }

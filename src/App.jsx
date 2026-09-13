@@ -23,6 +23,7 @@ import MonitoringSigapView from './components/sigap/MonitoringSigapView';
 import PersetujuanIzinSigapView from './components/sigap/PersetujuanIzinSigapView';
 import PrismaStudioView from './components/sigap/PrismaStudioView';
 import OwnerView from './components/owner/OwnerView';
+import SPPView from './components/sigap/SPPView';
 import SetoranModal from './components/SetoranModal';
 import BottomNav from './components/BottomNav';
 import LoginView from './components/LoginView';
@@ -276,6 +277,12 @@ export default function App() {
                   showToast={showToast} 
                 />
               )}
+              {activeTab === 'sigap-spp' && (
+                <SPPView 
+                  showToast={showToast} 
+                  activeBranchId={activeBranchId} 
+                />
+              )}
               {activeTab === 'sigap-prisma-studio' && (
                 <PrismaStudioView 
                   showToast={showToast} 
@@ -355,6 +362,14 @@ export default function App() {
                 />
               )}
 
+              {/* PEMBAYARAN SPP & KEUANGAN */}
+              {activeTab === 'sigap-spp' && (
+                <SPPView 
+                  showToast={showToast} 
+                  activeBranchId={activeBranchId} 
+                />
+              )}
+
               {/* PRISMA STUDIO (DATABASE MANAGEMENT) */}
               {activeTab === 'sigap-prisma-studio' && (
                 <PrismaStudioView 
@@ -391,6 +406,7 @@ export default function App() {
                 'sigap-lokasi-qr',
                 'sigap-monitoring',
                 'sigap-izin',
+                'sigap-spp',
                 'sigap-prisma-studio',
                 'sigap-konfigurasi'
               ].includes(activeTab) && activeTab.startsWith('sigap-') && (

@@ -1,0 +1,546 @@
+/* =========================================================
+   SPP VIEW & INVOICE SYSTEM STYLES
+   Tahfidz HUB - MA Ihya As-Sunnah / PPIAS
+   ========================================================= */
+
+.spp-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 3rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 1. HEADER CARD */
+.spp-header-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.spp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spp-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+}
+
+.spp-header-title h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.spp-header-title p {
+  margin: 0;
+  font-size: 0.825rem;
+  color: var(--text-muted, #64748b);
+}
+
+.spp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* 2. STATS GRID */
+.spp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.spp-stat-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.spp-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.spp-stat-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.spp-stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.spp-stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.spp-stat-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  line-height: 1.2;
+}
+
+.spp-stat-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted, #64748b);
+}
+
+/* 3. TOOLBAR & FILTERS */
+.spp-toolbar-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.spp-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.spp-select {
+  background: var(--bg-main, #f8fafc);
+  border: 1px solid var(--border-color, #cbd5e1);
+  color: var(--text-main, #0f172a);
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.spp-select:focus {
+  border-color: #0d9488;
+}
+
+.spp-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-main, #f8fafc);
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  min-width: 240px;
+}
+
+.spp-search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.825rem;
+  color: var(--text-main, #0f172a);
+  width: 100%;
+}
+
+/* 4. TABLE VIEW */
+.spp-table-card {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.spp-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.spp-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.825rem;
+}
+
+.spp-table th {
+  background: var(--bg-main, #f8fafc);
+  color: var(--text-muted, #64748b);
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.spp-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-color, #f1f5f9);
+  color: var(--text-main, #1e293b);
+  vertical-align: middle;
+}
+
+.spp-table tbody tr:hover {
+  background: rgba(13, 148, 136, 0.02);
+}
+
+.spp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.spp-badge.lunas {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.spp-badge.belum {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.spp-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.spp-btn-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-card, #ffffff);
+  color: var(--text-muted, #64748b);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.spp-btn-icon:hover {
+  background: #f1f5f9;
+  color: var(--text-main, #0f172a);
+  border-color: #cbd5e1;
+}
+
+.spp-btn-icon.invoice {
+  color: #0d9488;
+  border-color: #99f6e4;
+  background: #f0fdfa;
+}
+
+.spp-btn-icon.invoice:hover {
+  background: #0d9488;
+  color: #ffffff;
+}
+
+.spp-btn-icon.wa {
+  color: #16a34a;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.spp-btn-icon.wa:hover {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+/* 5. INVOICE MODAL & PRINT STYLING */
+.invoice-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.invoice-modal-card {
+  background: #ffffff;
+  color: #0f172a;
+  width: 100%;
+  max-width: 620px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.invoice-modal-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.invoice-modal-body-scroll {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+/* THE PRINTABLE INVOICE PAPER */
+.invoice-paper {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.invoice-watermark-lunas {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  border: 4px solid rgba(22, 163, 74, 0.18);
+  color: rgba(22, 163, 74, 0.22);
+  font-size: 3.5rem;
+  font-weight: 900;
+  letter-spacing: 0.25em;
+  padding: 0.5rem 2rem;
+  border-radius: 12px;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.invoice-watermark-pending {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  border: 4px solid rgba(220, 38, 38, 0.18);
+  color: rgba(220, 38, 38, 0.22);
+  font-size: 2.75rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  padding: 0.5rem 1.5rem;
+  border-radius: 12px;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.invoice-kop {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #0d9488;
+  margin-bottom: 1.25rem;
+}
+
+.invoice-kop-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.invoice-kop-text h3 {
+  margin: 0 0 2px 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.invoice-kop-text p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.invoice-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.invoice-title-row h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0d9488;
+  letter-spacing: 0.05em;
+}
+
+.invoice-meta-table {
+  width: 100%;
+  margin-bottom: 1.25rem;
+  font-size: 0.8rem;
+}
+
+.invoice-meta-table td {
+  padding: 3px 0;
+}
+
+.invoice-line-items {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.25rem;
+  font-size: 0.825rem;
+}
+
+.invoice-line-items th {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 8px 10px;
+  text-align: left;
+  border-top: 1px solid #cbd5e1;
+  border-bottom: 1px solid #cbd5e1;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.invoice-line-items td {
+  padding: 10px 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.invoice-total-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  padding: 0.75rem 0;
+  border-bottom: 2px solid #cbd5e1;
+  margin-bottom: 1.5rem;
+}
+
+.invoice-footer-signatures {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 2rem;
+  font-size: 0.775rem;
+  color: #475569;
+}
+
+.invoice-sign-box {
+  text-align: center;
+  min-width: 140px;
+}
+
+.invoice-sign-space {
+  height: 55px;
+}
+
+.invoice-sign-name {
+  font-weight: 700;
+  color: #0f172a;
+  border-top: 1px dashed #94a3b8;
+  padding-top: 4px;
+}
+
+.invoice-actions-footer {
+  padding: 0.85rem 1.25rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+   PRINT MEDIA QUERY: ONLY PRINT THE INVOICE PAPER
+   ========================================================= */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .invoice-paper, .invoice-paper * {
+    visibility: visible;
+  }
+  .invoice-paper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20mm;
+    border: none;
+    box-shadow: none;
+  }
+  .no-print,
+  .invoice-modal-header-bar,
+  .invoice-actions-footer,
+  .sigap-sidebar,
+  .sigap-header,
+  .bottom-nav {
+    display: none !important;
+  }
+}
