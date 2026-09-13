@@ -1540,9 +1540,16 @@ export const storageService = {
     const list = this.getPengampuPresensiList();
     const todayISO = tanggal || new Date().toISOString().split('T')[0];
     const cleanTarget = String(sesiIdOrNama || '').toLowerCase().trim();
+    const cleanGuru = this._cleanName(namaGuru);
 
     const record = list.find(item => {
       if (item.tanggal !== todayISO) return false;
+      if (cleanGuru) {
+        const itemGuru = this._cleanName(item.namaGuru);
+        if (itemGuru && itemGuru !== cleanGuru && !itemGuru.includes(cleanGuru) && !cleanGuru.includes(itemGuru)) {
+          return false;
+        }
+      }
       const sId = (item.sesiId || '').toLowerCase();
       const sNama = (item.sesiNama || '').toLowerCase();
       return sId === cleanTarget || sNama.includes(cleanTarget) || cleanTarget.includes(sNama);
@@ -1565,6 +1572,19 @@ export const storageService = {
     const now = new Date();
     const nowTime = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(':', '.');
     const todayISO = now.toISOString().split('T')[0];
+
+    // Ambil data pengampu aktif
+    const pengampuList = this.getAllPengampuRaw();
+    const cleanG = this._cleanName(namaGuru);
+    const matchedP = pengampuList.find(p => p.nama === namaGuru || this._cleanName(p.nama) === cleanG) || {
+      id: 'p-current',
+      nama: namaGuru || 'Ustadz Pengampu',
+      nip: 'NON-NIP',
+      role: 'Pengampu Halaqoh',
+      halaqahNama: 'Halaqah Tahfidz'
+    };
+
+    const actualGuruNama = namaGuru || matchedP.nama || 'Ustadz Pengampu';
 
     // Cek jadwal halaqoh untuk toleransi waktu & nama sesi
     const jadwal = this.getJadwalHalaqoh();
@@ -1602,17 +1622,19 @@ export const storageService = {
       }
     }
 
-    // 1. Simpan ke PENGAMPU_PRESENSI (untuk status "Sudah" / "Belum" di Jadwal Sesi Hari Ini)
+    // 1. Simpan ke PENGAMPU_PRESENSI (dipisah per pengampu & sesi)
     const list = this.getPengampuPresensiList();
     const existingIndex = list.findIndex(p => 
       p.tanggal === todayISO && 
+      (cleanG ? this._cleanName(p.namaGuru) === cleanG : true) &&
       (p.sesiId === finalSesiId || (p.sesiNama || '').toLowerCase() === finalSesiNama.toLowerCase())
     );
 
     const newRecord = {
       id: 'pp-' + Date.now(),
       tanggal: todayISO,
-      namaGuru: namaGuru || 'Wahyudin Hafiz, S.Pd',
+      namaGuru: actualGuruNama,
+      pengampuId: matchedP.id,
       sesiId: finalSesiId,
       sesiNama: finalSesiNama,
       lokasiKode,
@@ -1629,13 +1651,14 @@ export const storageService = {
     }
     localStorage.setItem(STORAGE_KEYS.PENGAMPU_PRESENSI, JSON.stringify(list));
 
-    // 2. Simpan ke SIGAP_MONITORING (untuk rekap pantauan Super Admin)
+    // 2. Simpan ke SIGAP_MONITORING (untuk pantauan Super Admin)
     try {
       const mon = this.getSigapMonitoring();
       const newFeed = {
         id: 'pres-' + Date.now(),
-        nama: namaGuru || 'Wahyudin Hafiz, S.Pd',
-        role: 'Pengampu Halaqoh',
+        nama: actualGuruNama,
+        nip: matchedP.nip || 'NON-NIP',
+        role: matchedP.role || 'Pengampu Halaqoh',
         jenis: 'Halaqoh Tahfidz',
         jam: nowTime,
         tanggal: todayISO,
@@ -1651,7 +1674,7 @@ export const storageService = {
       };
 
       const existingFeedIdx = mon.liveFeed.findIndex(
-        f => f.nama.toLowerCase() === (namaGuru || '').toLowerCase() && f.sesi === newFeed.sesi
+        f => this._cleanName(f.nama) === cleanG && f.sesi === newFeed.sesi && f.tanggal === todayISO
       );
       if (existingFeedIdx !== -1) {
         mon.liveFeed[existingFeedIdx] = { ...mon.liveFeed[existingFeedIdx], ...newFeed };
@@ -1666,6 +1689,28 @@ export const storageService = {
       }
       mon.kpi.totalPresensi = (mon.kpi.totalPresensi || 0) + 1;
       this.saveSigapMonitoring(mon);
+
+      // Persist ke database PostgreSQL Cloud via API
+      apiService.saveMonitoringPresensi({
+        id: newFeed.id,
+        tanggal: todayISO,
+        pengampu_id: matchedP.id,
+        nama: actualGuruNama,
+        nip: matchedP.nip || 'NON-NIP',
+        role: matchedP.role || 'Pengampu Halaqoh',
+        halaqah: matchedP.halaqahNama || 'Halaqah Tahfidz',
+        mapel: newFeed.mapel,
+        kelas: newFeed.kelas,
+        sesi: newFeed.sesi,
+        jadwal: newFeed.sesi,
+        jam: nowTime,
+        status: status,
+        selisih_menit: lateMinutes,
+        lokasi_gps: newFeed.lokasiGps,
+        metode: newFeed.metode,
+        keterangan: keterangan,
+        manual: false
+      }).catch(err => console.warn('[API] sync monitoring error:', err.message));
     } catch (e) {
       console.warn("Error updating monitoring feed:", e);
     }
@@ -2518,7 +2563,7 @@ export const storageService = {
       const raw = localStorage.getItem(STORAGE_KEYS.SIGAP_LOKASI_QR);
       if (!raw) return INITIAL_SIGAP_LOKASI_QR;
       const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed) || parsed.length < 6) {
+      if (!Array.isArray(parsed)) {
         localStorage.setItem(STORAGE_KEYS.SIGAP_LOKASI_QR, JSON.stringify(INITIAL_SIGAP_LOKASI_QR));
         return INITIAL_SIGAP_LOKASI_QR;
       }

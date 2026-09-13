@@ -1,7 +1,7 @@
 // API Service Client untuk SIMTAH (Tahfidz Hub)
 // Terkoneksi ke Backend Express + PostgreSQL di VPS
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || (typeof process !== 'undefined' && process.env?.VITE_API_BASE_URL) || '/api';
 
 class ApiService {
   constructor() {

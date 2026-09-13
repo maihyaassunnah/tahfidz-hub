@@ -90,7 +90,12 @@ function calculateDistanceInMeters(lat1, lon1, lat2, lon2) {
   return Math.round(R * c);
 }
 
-export default function ScanPresensiView({ santriList, onReload, showToast, setActiveTab }) {
+export default function ScanPresensiView({ santriList, onReload, showToast, setActiveTab, authUser }) {
+  const currentAuth = authUser || storageService.getAuthUser();
+  const currentPengampuNama = currentAuth?.nama || 'Wahyudin Hafiz, S.Pd';
+  const currentPengampuNip = currentAuth?.nip || 'NON-NIP';
+  const currentHalaqahNama = currentAuth?.halaqahNama || `Halaqah ${currentPengampuNama}`;
+
   const jadwalHalaqoh = storageService.getJadwalHalaqoh();
   const lokasiList = storageService.getSigapLokasiQR();
 
@@ -135,11 +140,14 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
 
   // Cek status scan sesi saat ini
   const currentSesiStatus = currentSesiObj 
-    ? storageService.isPengampuSudahScan('Wahyudin Hafiz, S.Pd', currentSesiObj?.id, todayISO) 
+    ? storageService.isPengampuSudahScan(currentPengampuNama, currentSesiObj?.id, todayISO) 
     : { sudah: false, status: 'Belum' };
 
   // Daftar presensi pengampu hari ini
-  const todayPengampuRecords = storageService.getPengampuPresensiList().filter(p => p.tanggal === todayISO);
+  const todayPengampuRecords = storageService.getPengampuPresensiList().filter(p => 
+    p.tanggal === todayISO && 
+    (storageService._cleanName(p.namaGuru) === storageService._cleanName(currentPengampuNama) || p.pengampuId === currentAuth?.id)
+  );
 
   // Eksekusi Simpan Presensi Pengampu
   const executePresensiPengampu = (targetLokasi, gpsDetail) => {
@@ -149,7 +157,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
     }
     setIsScanningPengampu(true);
     const res = storageService.scanPresensiPengampu(
-      'Wahyudin Hafiz, S.Pd', 
+      currentPengampuNama, 
       targetLokasi, 
       selectedSesi, 
       currentSesiObj?.id
@@ -158,7 +166,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
     setGpsWarning(null);
 
     setPengampuScanned({
-      nama: 'Wahyudin Hafiz, S.Pd',
+      nama: currentPengampuNama,
       lokasi: `${targetLokasi.kelas} - ${targetLokasi.lokasi || ''}`,
       kodeQR: targetLokasi.kodeManual,
       jamScan: res.jamScan,
@@ -468,11 +476,11 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
                 fontWeight: 800,
                 fontSize: '13px'
               }}>
-                W
+                {(currentPengampuNama || 'P').charAt(0).toUpperCase()}
               </div>
               <div>
-                <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>Wahyudin Hafiz, S.Pd</div>
-                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Pengampu Halaqah X A (Ikhwan)</div>
+                <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>{currentPengampuNama}</div>
+                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{currentHalaqahNama} {currentPengampuNip && currentPengampuNip !== 'NON-NIP' ? `• NIP: ${currentPengampuNip}` : ''}</div>
               </div>
             </div>
 
@@ -551,7 +559,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
           {jadwalHalaqoh.sesiList.map(sesi => {
             const isMasukHariIni = jadwalHalaqoh?.hariAktif?.[todayIndo]?.[sesi.id] !== false;
             const isLibur = !isMasukHariIni || sesi.aktif === false;
-            const presensi = storageService.isPengampuSudahScan('Wahyudin Hafiz, S.Pd', sesi.id, todayISO);
+            const presensi = storageService.isPengampuSudahScan(currentPengampuNama, sesi.id, todayISO);
             const isSudah = presensi.sudah;
             const isSelected = selectedSesi === sesi.nama;
 
@@ -1071,7 +1079,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
               {jadwalHalaqoh.sesiList.map(sesi => {
                 const isMasukHariIni = jadwalHalaqoh?.hariAktif?.[todayIndo]?.[sesi.id] !== false;
                 const isLibur = !isMasukHariIni || sesi.aktif === false;
-                const presensi = storageService.isPengampuSudahScan('Wahyudin Hafiz, S.Pd', sesi.id, todayISO);
+                const presensi = storageService.isPengampuSudahScan(currentPengampuNama, sesi.id, todayISO);
 
                 return (
                   <tr key={sesi.id} style={{ borderBottom: '1px solid #f1f5f9' }}>

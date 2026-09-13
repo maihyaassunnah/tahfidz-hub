@@ -40,7 +40,8 @@ export default function AbsensiView({
   currentRole = 'pengampu',
   activeCategory = 'santri',
   onCategoryChange,
-  setActiveTab
+  setActiveTab,
+  authUser
 }) {
   const [presensiCategory, setPresensiCategory] = useState(activeCategory || 'santri');
 
@@ -496,6 +497,7 @@ export default function AbsensiView({
           currentRole={currentRole}
           showToast={showToast}
           setActiveTab={setActiveTab}
+          authUser={authUser}
         />
       ) : (
         <>

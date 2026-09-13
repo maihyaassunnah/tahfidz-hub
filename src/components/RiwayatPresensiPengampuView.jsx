@@ -30,7 +30,8 @@ import { storageService } from '../services/storage';
 export default function RiwayatPresensiPengampuView({ 
   currentRole = 'pengampu', 
   showToast, 
-  setActiveTab 
+  setActiveTab,
+  authUser
 }) {
   const todayISO = new Date().toISOString().split('T')[0];
   const yesterdayISO = new Date(Date.now() - 86400000).toISOString().split('T')[0];
@@ -74,11 +75,22 @@ export default function RiwayatPresensiPengampuView({
   ];
 
   // Logged in teacher details
-  const myName = 'Wahyudin Hafiz, S.Pd';
-  const myGuru = guruList.find(g => g.nama.includes('Wahyudin')) || {
+  const currentAuth = authUser || storageService.getAuthUser();
+  const myName = currentAuth?.nama || 'Wahyudin Hafiz, S.Pd';
+  const cleanMyName = (myName || '').toLowerCase().replace(/^(ustadz\s+|ustadzah\s+)/i, '').trim();
+  const myGuru = guruList.find(g => {
+    const gn = (g.nama || '').toLowerCase().replace(/^(ustadz\s+|ustadzah\s+)/i, '').trim();
+    return gn && (gn.includes(cleanMyName) || cleanMyName.includes(gn));
+  }) || {
     nama: myName,
-    nip: '19880101201501',
-    jabatan: 'Koordinator Tahfidz & Wali Kelas X A'
+    nip: currentAuth?.nip || '19880101201501',
+    jabatan: currentAuth?.halaqahNama || 'Koordinator Tahfidz & Wali Kelas X A'
+  };
+
+  const isTeacherMatch = (targetNama) => {
+    if (!targetNama) return false;
+    const cleanTarget = (targetNama || '').toLowerCase().replace(/^(ustadz\s+|ustadzah\s+)/i, '').trim();
+    return cleanTarget.includes(cleanMyName) || cleanMyName.includes(cleanTarget);
   };
 
   // Map session icon
@@ -111,13 +123,13 @@ export default function RiwayatPresensiPengampuView({
 
     // 1. From real-time scans in PENGAMPU_PRESENSI for this teacher
     pengampuPresensiList.forEach(p => {
-      if ((p.namaGuru || '').includes('Wahyudin')) {
+      if (isTeacherMatch(p.namaGuru)) {
         const sesiObj = masterSesiList.find(s => s.id === p.sesiId) || {};
         const isLate = (p.keterangan || '').toLowerCase().includes('telat') || (p.status || '').toLowerCase().includes('telat');
         records.push({
           id: p.id || `pp-${p.tanggal}-${p.sesiId}`,
-          nama: myName,
-          nip: myGuru.nip || '19880101201501',
+          nama: p.namaGuru || myName,
+          nip: p.nip || myGuru.nip || '19880101201501',
           role: 'Pengampu Halaqoh',
           tanggal: p.tanggal,
           sesiId: p.sesiId,
@@ -137,7 +149,7 @@ export default function RiwayatPresensiPengampuView({
     // 2. From liveFeed in SIGAP_MONITORING for this teacher (if not duplicate)
     const liveFeeds = monitoringData?.liveFeed || [];
     liveFeeds.forEach(feed => {
-      if ((feed.nama || '').includes('Wahyudin')) {
+      if (isTeacherMatch(feed.nama)) {
         const feedDate = feed.tanggal || todayISO;
         const cleanDate = feedDate.includes('-') && feedDate.split('-')[0].length === 2 
           ? feedDate.split('-').reverse().join('-') 
@@ -151,7 +163,7 @@ export default function RiwayatPresensiPengampuView({
         if (!isDuplicate) {
           records.push({
             id: feed.id || `feed-${cleanDate}-${feed.sesi}`,
-            nama: myName,
+            nama: feed.nama || myName,
             nip: feed.nip || myGuru.nip || '19880101201501',
             role: feed.role || 'Pengampu Halaqoh',
             tanggal: cleanDate,
@@ -172,7 +184,7 @@ export default function RiwayatPresensiPengampuView({
 
     // 3. From approved teacher leaves for this teacher
     izinList.forEach(iz => {
-      if ((iz.nama || '').includes('Wahyudin')) {
+      if (isTeacherMatch(iz.nama)) {
         const tgl = iz.tanggalMulai || todayISO;
         const exists = records.some(r => r.tanggal === tgl && r.status === 'Izin');
         if (!exists) {
@@ -504,7 +516,7 @@ export default function RiwayatPresensiPengampuView({
                 </span>
               </div>
               <p style={{ margin: '3px 0 0 0', fontSize: '0.78rem', color: '#a7f3d0' }}>
-                Halaqah Ustadz Wahyudin (X A - Ikhwan) • Lokal Ikhwan Lantai 2 (MAIAS-XA)
+                {currentAuth?.halaqahNama || `Halaqah ${myName}`} • Presensi Terverifikasi GPS & QR
               </p>
             </div>
           </div>

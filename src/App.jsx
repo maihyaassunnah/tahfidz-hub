@@ -477,6 +477,7 @@ export default function App() {
                     currentRole={currentRole}
                     setActiveTab={setActiveTab}
                     onSelectSantri={(id) => { setSelectedSantriId(id); setActiveTab('santri'); }}
+                    authUser={authUser}
                   />
                 )}
 
@@ -490,6 +491,7 @@ export default function App() {
                     onReload={loadData}
                     showToast={showToast}
                     setActiveTab={setActiveTab}
+                    authUser={authUser}
                   />
                 )}
 
@@ -507,6 +509,7 @@ export default function App() {
                         setActiveTab(cat === 'pengampu' ? 'riwayat-presensi-pengampu' : 'riwayat-presensi-santri');
                       }}
                       setActiveTab={setActiveTab}
+                      authUser={authUser}
                     />
                   </div>
                 )}
@@ -517,6 +520,7 @@ export default function App() {
                     currentRole={currentRole}
                     onReload={loadData}
                     showToast={showToast}
+                    authUser={authUser}
                   />
                 )}
 

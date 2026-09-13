@@ -26,8 +26,13 @@ export default function DashboardView({
   absensiList, 
   currentRole, 
   setActiveTab, 
-  onSelectSantri 
+  onSelectSantri,
+  authUser
 }) {
+  const currentAuth = authUser || storageService.getAuthUser();
+  const currentPengampuNama = currentAuth?.nama || 'Wahyudin Hafiz, S.Pd';
+  const currentHalaqahNama = currentAuth?.halaqahNama || `Halaqah ${currentPengampuNama}`;
+
   const [timeFilter, setTimeFilter] = useState('bulan-ini');
   const [sortOrder, setSortOrder] = useState('total-halaman');
   const [showSuperAdminAddSiswa, setShowSuperAdminAddSiswa] = useState(false);
@@ -52,7 +57,7 @@ export default function DashboardView({
 
   const dynamicSesiList = rawSesiList.map(sesi => {
     const isMasukHariIni = jadwalHalaqoh?.hariAktif?.[todayIndo]?.[sesi.id] !== false;
-    const presensi = storageService.isPengampuSudahScan('Wahyudin Hafiz, S.Pd', sesi.id, todayISO);
+    const presensi = storageService.isPengampuSudahScan(currentPengampuNama, sesi.id, todayISO);
 
     return {
       ...sesi,
@@ -494,8 +499,8 @@ export default function DashboardView({
     <div className="page-content-wrapper">
       {/* 1. GREEN BANNER HALAQAH */}
       <div className="halaqah-green-banner">
-        <div className="banner-sub">HALAQAH USTADZ</div>
-        <h1 className="banner-title">Wahyudin Hafiz</h1>
+        <div className="banner-sub">HALAQAH PENGAMPU</div>
+        <h1 className="banner-title">{currentPengampuNama.replace(/^(Ustadz\s+|Ustadzah\s+)/i, '')}</h1>
         <div className="banner-location">
           <MapPin size={18} />
           <span>Masjid Tahfiz Ikhwan PPIAS</span>
@@ -605,7 +610,7 @@ export default function DashboardView({
             </div>
             <div>
               <div className="podium-main-title">Peringkat Setoran Halaqah</div>
-              <div className="podium-sub-title">Halaqah Ustadz Wahyudin Hafiz</div>
+              <div className="podium-sub-title">{currentHalaqahNama}</div>
             </div>
           </div>
 

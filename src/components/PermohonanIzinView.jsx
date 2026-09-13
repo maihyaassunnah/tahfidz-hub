@@ -24,8 +24,15 @@ export default function PermohonanIzinView({
   santriList, 
   currentRole = 'pengampu', 
   onReload, 
-  showToast 
+  showToast,
+  authUser
 }) {
+  const currentAuth = authUser || storageService.getAuthUser();
+  const currentPengampuNama = currentAuth?.nama || 'Wahyudin Hafiz, S.Pd';
+  const currentPengampuNip = currentAuth?.nip || '19880101201501';
+  const currentHalaqahNama = currentAuth?.halaqahNama || `Halaqah ${currentPengampuNama}`;
+  const cleanMyName = (currentPengampuNama || '').toLowerCase().replace(/^(ustadz\s+|ustadzah\s+)/i, '').trim();
+
   // Data Izin Pengampu ke Super Admin
   const [sigapIzinList, setSigapIzinList] = useState(storageService.getSigapIzinGuru());
   
@@ -38,26 +45,27 @@ export default function PermohonanIzinView({
   // Form State untuk Pengampu Mengajukan Izin ke Super Admin
   const todayISO = new Date().toISOString().split('T')[0];
   const [formData, setFormData] = useState({
-    nama: 'Wahyudin Hafiz, S.Pd',
-    nip: '19880101201501',
+    nama: currentPengampuNama,
+    nip: currentPengampuNip,
     role: 'Pengampu Halaqoh',
     unit: "MA IHYA' AS-SUNNAH",
-    halaqahNama: 'Halaqah Ustadz Wahyudin (X A - Ikhwan)',
+    halaqahNama: currentHalaqahNama,
     jenisIzin: 'Sakit',
     tanggalMulai: todayISO,
     tanggalSelesai: todayISO,
     sesi: 'Semua Sesi Hari Ini',
     alasan: '',
     guruBadal: 'Ustadz Agus Rinaldi',
-    tugasSiswa: "Muroja'ah mandiri Juz 30 didampingi Guru Badal: Ustadz Agus Rinaldi"
+    tugasSiswa: "Muroja'ah mandiri Juz 30 didampingi Guru Badal"
   });
 
-  // Filter izin khusus pengampu Wahyudin Hafiz
-  const pengampuIzinList = sigapIzinList.filter(i => 
-    (i.nama || '').toLowerCase().includes('wahyudin') || 
-    i.role === 'Pengampu Halaqoh' || 
-    !i.role // fallback
-  );
+  // Filter izin khusus pengampu aktif
+  const pengampuIzinList = sigapIzinList.filter(i => {
+    const iName = (i.nama || '').toLowerCase().replace(/^(ustadz\s+|ustadzah\s+)/i, '').trim();
+    return (iName && (cleanMyName.includes(iName) || iName.includes(cleanMyName))) || 
+      i.role === 'Pengampu Halaqoh' || 
+      !i.role;
+  });
 
   const reloadData = () => {
     setSigapIzinList(storageService.getSigapIzinGuru());
