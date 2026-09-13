@@ -21,6 +21,7 @@ import JadwalSigapView from './components/sigap/JadwalSigapView';
 import LokasiQRSigapView from './components/sigap/LokasiQRSigapView';
 import MonitoringSigapView from './components/sigap/MonitoringSigapView';
 import PersetujuanIzinSigapView from './components/sigap/PersetujuanIzinSigapView';
+import PrismaStudioView from './components/sigap/PrismaStudioView';
 import OwnerView from './components/owner/OwnerView';
 import SetoranModal from './components/SetoranModal';
 import BottomNav from './components/BottomNav';
@@ -275,6 +276,12 @@ export default function App() {
                   showToast={showToast} 
                 />
               )}
+              {activeTab === 'sigap-prisma-studio' && (
+                <PrismaStudioView 
+                  showToast={showToast} 
+                  activeBranchId={activeBranchId} 
+                />
+              )}
             </>
           )}
 
@@ -348,6 +355,14 @@ export default function App() {
                 />
               )}
 
+              {/* PRISMA STUDIO (DATABASE MANAGEMENT) */}
+              {activeTab === 'sigap-prisma-studio' && (
+                <PrismaStudioView 
+                  showToast={showToast} 
+                  activeBranchId={activeBranchId} 
+                />
+              )}
+
               {/* PENGATURAN ADMIN / KONFIGURASI */}
               {activeTab === 'sigap-konfigurasi' && (
                 <PengaturanAdminView 
@@ -376,6 +391,7 @@ export default function App() {
                 'sigap-lokasi-qr',
                 'sigap-monitoring',
                 'sigap-izin',
+                'sigap-prisma-studio',
                 'sigap-konfigurasi'
               ].includes(activeTab) && activeTab.startsWith('sigap-') && (
                 <AdminEmptyMenuView 

@@ -29,7 +29,8 @@ import {
   Layers,
   Sparkles,
   Sliders,
-  ChevronDown
+  ChevronDown,
+  Database
 } from 'lucide-react';
 import { storageService } from '../services/storage';
 import TahfidzHubLogo from './TahfidzHubLogo';
@@ -336,6 +337,15 @@ export default function Sidebar({
             <ClipboardCheck size={18} className="sigap-nav-icon" />
             <span>Rekap Monitoring</span>
           </div>
+
+          <div 
+            className={`sigap-nav-item ${activeTab === 'sigap-prisma-studio' ? 'active' : ''}`}
+            onClick={() => setActiveTab('sigap-prisma-studio')}
+            style={{ marginTop: '4px' }}
+          >
+            <Database size={18} className="sigap-nav-icon" />
+            <span>Prisma Studio (DB)</span>
+          </div>
         </div>
 
         {/* BOTTOM ACTION BAR (4 IKON SEIMBANG SEPERTI SIGAP) */}
@@ -549,8 +559,16 @@ export default function Sidebar({
 
           {/* 5. SISTEM */}
           <div className="sigap-section-divider">
-            <span className="sigap-section-title">SISTEM</span>
+            <span className="sigap-section-title">SISTEM & DATABASE</span>
             <div className="sigap-section-line"></div>
+          </div>
+
+          <div 
+            className={`sigap-nav-item ${activeTab === 'sigap-prisma-studio' ? 'active' : ''}`}
+            onClick={() => setActiveTab('sigap-prisma-studio')}
+          >
+            <Database size={18} className="sigap-nav-icon" />
+            <span>Prisma Studio</span>
           </div>
 
           <div 

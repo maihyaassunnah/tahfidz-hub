@@ -27,7 +27,8 @@ import {
   Building2,
   ShieldCheck,
   Layers,
-  UserCheck
+  UserCheck,
+  Database
 } from 'lucide-react';
 
 export default function BottomNav({
@@ -670,7 +671,23 @@ export default function BottomNav({
                   </div>
 
                   {/* SISTEM */}
-                  <div className="sidebar-drawer-category">SISTEM</div>
+                  <div className="sidebar-drawer-category">SISTEM & DATABASE</div>
+
+                  <div 
+                    className={`sidebar-drawer-menu-item ${activeTab === 'sigap-prisma-studio' ? 'active' : ''}`}
+                    onClick={() => handleNavigateFromDrawer('sigap-prisma-studio')}
+                  >
+                    <div className="menu-active-indicator" />
+                    <div className="menu-icon-box" style={{ background: '#ecfdf5', color: '#0d9488' }}>
+                      <Database size={18} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <span className="menu-text" style={{ fontWeight: 800 }}>Prisma Studio</span>
+                      <small style={{ display: 'block', fontSize: '0.7rem', color: '#64748b' }}>
+                        Visual Database Editor PostgreSQL
+                      </small>
+                    </div>
+                  </div>
 
                   <div 
                     className={`sidebar-drawer-menu-item ${activeTab === 'sigap-konfigurasi' ? 'active' : ''}`}

@@ -36,6 +36,7 @@ export default function Header({
       case 'sigap-lokasi-qr': return 'Tahfidz HUB • Lokasi & QR Kelas';
       case 'sigap-monitoring': return 'Tahfidz HUB • Monitoring & Rekap';
       case 'sigap-izin': return 'Tahfidz HUB • Persetujuan Izin';
+      case 'sigap-prisma-studio': return 'Tahfidz HUB • Prisma Studio (Database PostgreSQL)';
       case 'sigap-konfigurasi': return 'Tahfidz HUB • Konfigurasi Unit';
       case 'mushaf': return 'Tahfidz HUB • Mushaf Al-Qur\'an';
       case 'scan': return 'Tahfidz HUB • Scan Presensi Pengampu';
