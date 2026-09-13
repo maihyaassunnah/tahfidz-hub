@@ -217,7 +217,7 @@ app.post('/api/monitoring-sigap', async (req, res) => {
 
 // 8. 1-CLICK SYNC-ALL: MENGIRIM DARI BROWSER LOCALSTORAGE KE POSTGRESQL
 app.post('/api/sync-all', async (req, res) => {
-  const { santri, pengampu, sesi, cabang, monitoring } = req.body;
+  const { santri, pengampu, sesi, cabang, halaqah, monitoring } = req.body;
   const client = await pool.connect();
 
   try {
@@ -228,8 +228,11 @@ app.post('/api/sync-all', async (req, res) => {
         await client.query(`
           INSERT INTO cabang (id, nama, kode, kota, alamat, no_hp, penanggung_jawab, email, status, warna_aksen, didirikan)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-          ON CONFLICT (id) DO NOTHING;
-        `, [c.id, c.nama, c.kode, c.kota, c.alamat, c.noHp, c.penanggungJawab, c.email, c.status, c.warnaAksen, c.didirikan]);
+          ON CONFLICT (id) DO UPDATE SET
+            nama = EXCLUDED.nama, kode = EXCLUDED.kode, kota = EXCLUDED.kota,
+            alamat = EXCLUDED.alamat, no_hp = EXCLUDED.no_hp, penanggung_jawab = EXCLUDED.penanggung_jawab,
+            email = EXCLUDED.email, status = EXCLUDED.status, warna_aksen = EXCLUDED.warna_aksen;
+        `, [c.id, c.nama, c.kode, c.kota, c.alamat, c.noHp || c.no_hp, c.penanggungJawab || c.penanggung_jawab, c.email, c.status, c.warnaAksen || c.warna_aksen, c.didirikan]);
       }
     }
 
@@ -238,8 +241,40 @@ app.post('/api/sync-all', async (req, res) => {
         await client.query(`
           INSERT INTO pengampu (id, nip, nama, kontak, no_hp, role, cabang_id)
           VALUES ($1, $2, $3, $4, $5, $6, $7)
-          ON CONFLICT (id) DO UPDATE SET nama = EXCLUDED.nama, nip = EXCLUDED.nip;
-        `, [p.id, p.nip, p.nama, p.kontak, p.noHp, p.role || 'Pengampu', p.cabangId || 'cabang-pusat']);
+          ON CONFLICT (id) DO UPDATE SET nama = EXCLUDED.nama, nip = EXCLUDED.nip, kontak = EXCLUDED.kontak;
+        `, [p.id, p.nip, p.nama, p.kontak, p.noHp || p.no_hp, p.role || 'Pengampu', p.cabangId || p.cabang_id || 'cabang-pusat']);
+      }
+    }
+
+    if (Array.isArray(halaqah)) {
+      for (const h of halaqah) {
+        await client.query(`
+          INSERT INTO halaqah (id, nama, pengampu_id, target, keterangan, cabang_id)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          ON CONFLICT (id) DO UPDATE SET nama = EXCLUDED.nama, target = EXCLUDED.target;
+        `, [h.id, h.nama, h.pengampuId || h.pengampu_id, h.target, h.keterangan, h.cabangId || h.cabang_id || 'cabang-pusat']);
+      }
+    }
+
+    if (Array.isArray(santri)) {
+      for (const s of santri) {
+        await client.query(`
+          INSERT INTO santri (id, nis, nama, kelas, halaqah_id, status, target, kontak, wali, no_hp_wali, cabang_id)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          ON CONFLICT (id) DO UPDATE SET
+            nama = EXCLUDED.nama, nis = EXCLUDED.nis, kelas = EXCLUDED.kelas,
+            status = EXCLUDED.status, target = EXCLUDED.target;
+        `, [s.id, s.nis, s.nama, s.kelas, s.halaqahId || s.halaqah_id, s.status || 'Aktif', s.target, s.kontak, s.wali, s.noHpWali || s.no_hp_wali, s.cabangId || s.cabang_id || 'cabang-pusat']);
+      }
+    }
+
+    if (Array.isArray(sesi)) {
+      for (const s of sesi) {
+        await client.query(`
+          INSERT INTO sesi (id, nama, jam_mulai, jam_selesai, toleransi_menit, hari, status, cabang_id)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          ON CONFLICT (id) DO UPDATE SET nama = EXCLUDED.nama, jam_mulai = EXCLUDED.jam_mulai, jam_selesai = EXCLUDED.jam_selesai;
+        `, [s.id, s.nama, s.jamMulai || s.jam_mulai || s.mulai || '05:00', s.jamSelesai || s.jam_selesai || s.selesai || '06:00', s.toleransiMenit || 15, s.hari || 'Setiap Hari', s.status || 'Aktif', s.cabangId || s.cabang_id || 'cabang-pusat']);
       }
     }
 
@@ -253,20 +288,48 @@ app.post('/api/sync-all', async (req, res) => {
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
           ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status, keterangan = EXCLUDED.keterangan;
         `, [
-          m.id, m.tanggal || new Date().toISOString().split('T')[0], m.pengampuId, m.nama, m.nip, m.role,
-          m.halaqah, m.mapel, m.kelas, m.sesi, m.jadwal, m.jam || '-', m.status, m.selisihMenit || 0,
-          m.lokasiGps, m.metode, m.keterangan, m.alasanIzin, m.tugasSiswa, !!m.manual
+          m.id, m.tanggal || new Date().toISOString().split('T')[0], m.pengampuId || m.pengampu_id, m.nama, m.nip, m.role,
+          m.halaqah, m.mapel, m.kelas, m.sesi, m.jadwal, m.jam || '-', m.status, m.selisihMenit || m.selisih_menit || 0,
+          m.lokasiGps || m.lokasi_gps, m.metode, m.keterangan, m.alasanIzin || m.alasan_izin, m.tugasSiswa || m.tugas_siswa, !!m.manual
         ]);
       }
     }
 
     await client.query('COMMIT');
-    res.json({ success: true, message: 'Data berhasil disinkronkan ke PostgreSQL' });
+    res.json({ success: true, message: 'Seluruh data berhasil disinkronkan ke PostgreSQL Cloud' });
   } catch (err) {
     await client.query('ROLLBACK');
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
+  }
+});
+
+// 9. PULL-ALL: MENGAMBIL SELURUH DATA DARI POSTGRESQL UNTUK SYNC KE PERANGKAT/BROWSER
+app.get('/api/pull-all', async (req, res) => {
+  try {
+    const [cabang, pengampu, santri, halaqah, sesi, monitoring] = await Promise.all([
+      query('SELECT * FROM cabang ORDER BY created_at ASC'),
+      query('SELECT * FROM pengampu ORDER BY nama ASC'),
+      query('SELECT * FROM santri ORDER BY nama ASC'),
+      query('SELECT * FROM halaqah ORDER BY created_at ASC'),
+      query('SELECT * FROM sesi ORDER BY jam_mulai ASC'),
+      query('SELECT * FROM monitoring_sigap ORDER BY created_at DESC LIMIT 200')
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        cabang: cabang.rows,
+        pengampu: pengampu.rows,
+        santri: santri.rows,
+        halaqah: halaqah.rows,
+        sesi: sesi.rows,
+        monitoring: monitoring.rows
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

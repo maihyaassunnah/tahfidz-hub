@@ -95,6 +95,21 @@ class ApiService {
       throw err;
     }
   }
+
+  // 7. Tarik Seluruh Data Terbaru dari Database Cloud PostgreSQL
+  async pullAllData() {
+    try {
+      const res = await fetch(`${this.baseUrl}/pull-all`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to pull data from cloud server:', err);
+      throw err;
+    }
+  }
 }
 
 export const apiService = new ApiService();

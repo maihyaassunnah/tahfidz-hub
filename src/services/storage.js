@@ -2503,11 +2503,41 @@ export const storageService = {
     const payload = {
       cabang: this.getCabang(),
       pengampu: this.getPengampu(),
+      halaqah: this.getHalaqah(),
       santri: this.getSantri(),
       sesi: this.getSesi(),
       monitoring: (this.getSigapMonitoring() || {}).liveFeed || []
     };
     return await apiService.syncAllToDatabase(payload);
+  },
+
+  async syncFromPostgres() {
+    try {
+      const res = await apiService.pullAllData();
+      if (res && res.success && res.data) {
+        const { cabang, pengampu, santri, halaqah, sesi } = res.data;
+        if (Array.isArray(cabang) && cabang.length > 0) {
+          localStorage.setItem(STORAGE_KEYS.CABANG, JSON.stringify(cabang));
+        }
+        if (Array.isArray(pengampu) && pengampu.length > 0) {
+          localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(pengampu));
+        }
+        if (Array.isArray(santri) && santri.length > 0) {
+          localStorage.setItem(STORAGE_KEYS.SANTRI, JSON.stringify(santri));
+        }
+        if (Array.isArray(halaqah) && halaqah.length > 0) {
+          localStorage.setItem(STORAGE_KEYS.HALAQAH, JSON.stringify(halaqah));
+        }
+        if (Array.isArray(sesi) && sesi.length > 0) {
+          localStorage.setItem(STORAGE_KEYS.SESI, JSON.stringify(sesi));
+        }
+        return { success: true, message: 'Berhasil mengunduh data terbaru dari PostgreSQL Cloud!' };
+      }
+      return { success: false, message: 'Data tidak ditemukan di server.' };
+    } catch (err) {
+      console.error('[STORAGE] Error pulling from postgres:', err);
+      return { success: false, message: err.message };
+    }
   },
 
   resetAllData() {

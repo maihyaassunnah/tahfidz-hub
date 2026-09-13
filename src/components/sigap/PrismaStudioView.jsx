@@ -23,7 +23,12 @@ import {
   FileText,
   X,
   Save,
-  Server
+  Server,
+  Download,
+  Upload,
+  Smartphone,
+  Laptop,
+  Key
 } from 'lucide-react';
 import { storageService } from '../../services/storage';
 import './PrismaStudioView.css';
@@ -33,6 +38,7 @@ export default function PrismaStudioView({ showToast }) {
   const [selectedModel, setSelectedModel] = useState('santri');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isPulling, setIsPulling] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
 
   // Prisma Studio URL configuration
@@ -94,16 +100,17 @@ export default function PrismaStudioView({ showToast }) {
   const handleCopyCode = (code, index) => {
     navigator.clipboard.writeText(code);
     setCopiedIndex(index);
-    if (showToast) showToast("Perintah berhasil disalin ke clipboard!");
+    if (showToast) showToast("Kredensial/perintah berhasil disalin ke clipboard!");
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  // Push local to PostgreSQL
   const handleSyncDatabase = async () => {
     setIsSyncing(true);
     try {
       const res = await storageService.syncToPostgres();
       if (res && res.success) {
-        if (showToast) showToast("✅ Berhasil menyinkronkan seluruh tabel ke PostgreSQL VPS!");
+        if (showToast) showToast("✅ Berhasil mengunggah (Push) data ke PostgreSQL Cloud VPS!");
       } else {
         if (showToast) showToast(res?.message || "ℹ️ Sinkronisasi lokal selesai. Pastikan backend aktif.");
       }
@@ -112,6 +119,24 @@ export default function PrismaStudioView({ showToast }) {
     } finally {
       setIsSyncing(false);
       loadModelData();
+    }
+  };
+
+  // Pull PostgreSQL to local
+  const handlePullDatabase = async () => {
+    setIsPulling(true);
+    try {
+      const res = await storageService.syncFromPostgres();
+      if (res && res.success) {
+        if (showToast) showToast("✅ Berhasil mengunduh (Pull) data terbaru dari PostgreSQL Cloud!");
+        loadModelData();
+      } else {
+        if (showToast) showToast(res?.message || "Gagal mengunduh data dari cloud.");
+      }
+    } catch (err) {
+      if (showToast) showToast("Gagal mengambil data dari database cloud.");
+    } finally {
+      setIsPulling(false);
     }
   };
 
@@ -242,16 +267,29 @@ export default function PrismaStudioView({ showToast }) {
           </div>
         </div>
 
-        <div className="studio-header-actions">
+        <div className="studio-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <button 
             type="button" 
             className="btn btn-outline"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#0369a1', borderColor: '#bae6fd' }}
+            onClick={handlePullDatabase}
+            disabled={isPulling}
+            title="Tarik data terbaru dari database PostgreSQL di VPS ke perangkat ini"
+          >
+            <Download size={14} className={isPulling ? "animate-bounce" : ""} />
+            <span>{isPulling ? "Mengunduh..." : "Tarik dari Cloud (Pull)"}</span>
+          </button>
+
+          <button 
+            type="button" 
+            className="btn btn-outline"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#0d9488', borderColor: '#99f6e4' }}
             onClick={handleSyncDatabase}
             disabled={isSyncing}
+            title="Unggah perubahan data dari perangkat ini ke database PostgreSQL di VPS"
           >
-            <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
-            <span>{isSyncing ? "Menyinkronkan..." : "Sinkronkan ke PostgreSQL"}</span>
+            <Upload size={14} className={isSyncing ? "animate-bounce" : ""} />
+            <span>{isSyncing ? "Mengunggah..." : "Kirim ke Cloud (Push)"}</span>
           </button>
 
           <a 
@@ -268,7 +306,7 @@ export default function PrismaStudioView({ showToast }) {
       </div>
 
       {/* =========================================================
-          NAV TABS (VISUAL EDITOR | EMBED WEB | PANDUAN VPS)
+          NAV TABS (VISUAL EDITOR | EMBED WEB | PANDUAN MULTI-PERANGKAT)
           ========================================================= */}
       <div className="studio-nav-tabs">
         <button 
@@ -294,8 +332,8 @@ export default function PrismaStudioView({ showToast }) {
           className={`studio-tab-btn ${activeTab === 'vps' ? 'active' : ''}`}
           onClick={() => setActiveTab('vps')}
         >
-          <Terminal size={16} />
-          <span>Panduan Menjalankan di VPS</span>
+          <Smartphone size={16} />
+          <span>Akses Multi-Perangkat (HP, Laptop, DBeaver)</span>
         </button>
       </div>
 
@@ -501,67 +539,103 @@ export default function PrismaStudioView({ showToast }) {
       )}
 
       {/* =========================================================
-          TAB 3: PANDUAN MENJALANKAN PRISMA STUDIO DI VPS
+          TAB 3: PANDUAN AKSES DATABASE DARI BERBAGAI PERANGKAT (HP, LAPTOP, DBEAVER)
           ========================================================= */}
       {activeTab === 'vps' && (
         <div className="vps-guide-grid">
+          {/* Card 1: Browser HP & Laptop */}
           <div className="vps-step-card">
             <h4>
-              <Terminal size={17} color="#0d9488" />
-              <span>1. Menjalankan Prisma Studio di VPS</span>
+              <Smartphone size={18} color="#0d9488" />
+              <span>1. Akses Browser Langsung (HP, Tablet, Laptop)</span>
             </h4>
             <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-              Masuk ke SSH VPS Anda, arahkan ke direktori server Tahfidz HUB dan jalankan Prisma Studio pada port 5555:
+              <strong>Cara paling mudah & praktis:</strong> Buka tautan Prisma Studio Cloud langsung di Google Chrome, Safari, atau Edge dari HP Android, iPhone, iPad, atau PC mana saja:
             </p>
             <div className="terminal-code-box">
-              <code>cd /var/www/tahfidz/server && npx prisma studio --port 5555 --browser none</code>
+              <code>https://tahfidz.wahyudinhafiz.my.id/studio/</code>
               <button 
                 type="button" 
                 className="btn-copy-code"
-                onClick={() => handleCopyCode("cd /var/www/tahfidz/server && npx prisma studio --port 5555 --browser none", 1)}
+                onClick={() => handleCopyCode("https://tahfidz.wahyudinhafiz.my.id/studio/", 1)}
               >
-                {copiedIndex === 1 ? "Disalin!" : "Salin"}
+                {copiedIndex === 1 ? "Disalin!" : "Salin URL"}
+              </button>
+            </div>
+            <div style={{ marginTop: '0.6rem' }}>
+              <a 
+                href="https://tahfidz.wahyudinhafiz.my.id/studio/" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="btn btn-sm btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.75rem', background: '#0d9488', borderColor: '#0d9488' }}
+              >
+                <ExternalLink size={13} />
+                <span>Buka Studio di HP / Tab Ini</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Card 2: Software Database Laptop / PC */}
+          <div className="vps-step-card">
+            <h4>
+              <Laptop size={18} color="#2563eb" />
+              <span>2. Software Database PC (DBeaver, TablePlus, pgAdmin)</span>
+            </h4>
+            <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>
+              Gunakan software database manager favorit Anda untuk akses query SQL, export/import data, dan backup:
+            </p>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '0.6rem', fontSize: '0.8rem', lineHeight: '1.6' }}>
+              <div><strong>Host / Server:</strong> <code>43.173.12.46</code></div>
+              <div><strong>Port:</strong> <code>5432</code></div>
+              <div><strong>Database:</strong> <code>tahfidz_db</code></div>
+              <div><strong>Username:</strong> <code>postgres</code></div>
+              <div><strong>Password:</strong> <code>31122000Hfz</code></div>
+            </div>
+            <div className="terminal-code-box" style={{ marginTop: '0.5rem' }}>
+              <code>postgresql://postgres:31122000Hfz@43.173.12.46:5432/tahfidz_db</code>
+              <button 
+                type="button" 
+                className="btn-copy-code"
+                onClick={() => handleCopyCode("postgresql://postgres:31122000Hfz@43.173.12.46:5432/tahfidz_db", 2)}
+              >
+                {copiedIndex === 2 ? "Disalin!" : "Salin URI"}
               </button>
             </div>
           </div>
 
+          {/* Card 3: Aplikasi Mobile Android & iOS */}
           <div className="vps-step-card">
             <h4>
-              <Server size={17} color="#0369a1" />
-              <span>2. Menjalankan Permanen dengan PM2</span>
+              <Server size={18} color="#059669" />
+              <span>3. Aplikasi Mobile Database (Android & iOS)</span>
             </h4>
             <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-              Agar Prisma Studio terus berjalan di latar belakang tanpa harus membiarkan terminal SSH terbuka:
+              Jika ingin aplikasi khusus di smartphone (Play Store / App Store):
             </p>
-            <div className="terminal-code-box">
-              <code>pm2 start "npx prisma studio --port 5555 --browser none" --name "tahfidz-studio"</code>
-              <button 
-                type="button" 
-                className="btn-copy-code"
-                onClick={() => handleCopyCode('pm2 start "npx prisma studio --port 5555 --browser none" --name "tahfidz-studio"', 2)}
-              >
-                {copiedIndex === 2 ? "Disalin!" : "Salin"}
-              </button>
-            </div>
+            <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.8rem', color: 'var(--text-main)', lineHeight: '1.6' }}>
+              <li><strong>iOS / iPadOS:</strong> Unduh aplikasi <strong>TablePlus</strong> atau <strong>Postgres Client</strong>.</li>
+              <li><strong>Android:</strong> Unduh aplikasi <strong>SQLTool Mobile Client</strong> atau <strong>PostgreSQL Database Manager</strong>.</li>
+              <li>Pilih koneksi baru (Type: PostgreSQL), masukkan Host: <code>43.173.12.46</code>, Port: <code>5432</code>, User: <code>postgres</code>, DB: <code>tahfidz_db</code>.</li>
+            </ul>
           </div>
 
+          {/* Card 4: Sinkronisasi Cloud Dua Arah */}
           <div className="vps-step-card">
             <h4>
-              <Shield size={17} color="#f59e0b" />
-              <span>3. Keamanan Port Firewall & Cloudflare</span>
+              <RefreshCw size={18} color="#d97706" />
+              <span>4. Sinkronisasi Data Cloud Antar Perangkat</span>
             </h4>
             <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-              Pastikan port 5555 diizinkan di Security Group Tencent Cloud / Firewall VPS Anda, atau gunakan reverse proxy Nginx pada lokasi <code>/studio/</code>.
+              Aplikasi Tahfidz HUB mendukung sinkronisasi data cloud secara instan:
             </p>
-            <div className="terminal-code-box">
-              <code>sudo ufw allow 5555/tcp</code>
-              <button 
-                type="button" 
-                className="btn-copy-code"
-                onClick={() => handleCopyCode("sudo ufw allow 5555/tcp", 3)}
-              >
-                {copiedIndex === 3 ? "Disalin!" : "Salin"}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem', color: 'var(--text-main)' }}>
+              <div>
+                <strong style={{ color: '#0369a1' }}>⬇️ Tarik dari Cloud (Pull):</strong> Ambil update data terbaru dari PostgreSQL VPS ke perangkat ini (berguna saat baru membuka di HP/laptop baru).
+              </div>
+              <div>
+                <strong style={{ color: '#0d9488' }}>⬆️ Kirim ke Cloud (Push):</strong> Unggah data lokal ke PostgreSQL VPS agar dapat dilihat oleh pengguna di perangkat lain.
+              </div>
             </div>
           </div>
         </div>
