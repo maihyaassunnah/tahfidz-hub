@@ -37,7 +37,10 @@ export default function PrismaStudioView({ showToast }) {
 
   // Prisma Studio URL configuration
   const [studioUrl, setStudioUrl] = useState(() => {
-    return localStorage.getItem('simtah_prisma_studio_url') || 'http://localhost:5555';
+    return localStorage.getItem('simtah_prisma_studio_url') || 
+      (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+        ? `${window.location.origin}/studio/` 
+        : 'http://localhost:5555');
   });
 
   // Modal State for Add/Edit
