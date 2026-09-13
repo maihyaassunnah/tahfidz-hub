@@ -1,0 +1,201 @@
+// Prisma Schema untuk SIMTAH (Tahfidz Hub)
+// PostgreSQL Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cabang {
+  id              String                @id @db.VarChar(64)
+  nama            String                @db.VarChar(255)
+  kode            String                @unique @db.VarChar(32)
+  kota            String?               @db.VarChar(100)
+  alamat          String?               @db.Text
+  noHp            String?               @map("no_hp") @db.VarChar(32)
+  penanggungJawab String?               @map("penanggung_jawab") @db.VarChar(150)
+  email           String?               @db.VarChar(100)
+  status          String?               @default("Aktif") @db.VarChar(32)
+  warnaAksen      String?               @default("#0d9488") @map("warna_aksen") @db.VarChar(16)
+  didirikan       String?               @db.VarChar(16)
+  createdAt       DateTime?             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  pengampu        Pengampu[]
+  halaqah         Halaqah[]
+  santri          Santri[]
+  sesi            Sesi[]
+  superadmins     SuperadminAccounts[]
+
+  @@map("cabang")
+}
+
+model SuperadminAccounts {
+  id        String    @id @db.VarChar(64)
+  nama      String    @db.VarChar(150)
+  username  String    @unique @db.VarChar(100)
+  password  String    @db.VarChar(255)
+  role      String?   @default("Super Admin Cabang") @db.VarChar(64)
+  cabangId  String?   @map("cabang_id") @db.VarChar(64)
+  status    String?   @default("Aktif") @db.VarChar(32)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cabang    Cabang?   @relation(fields: [cabangId], references: [id], onDelete: SetNull)
+
+  @@map("superadmin_accounts")
+}
+
+model Pengampu {
+  id        String    @id @db.VarChar(64)
+  nip       String?   @db.VarChar(64)
+  nama      String    @db.VarChar(150)
+  kontak    String?   @db.VarChar(50)
+  noHp      String?   @map("no_hp") @db.VarChar(50)
+  role      String?   @default("Pengampu Halaqoh") @db.VarChar(64)
+  halaqahId String?   @map("halaqah_id") @db.VarChar(64)
+  foto      String?   @db.Text
+  cabangId  String?   @map("cabang_id") @db.VarChar(64)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cabang    Cabang?   @relation(fields: [cabangId], references: [id], onDelete: Cascade)
+  halaqahList Halaqah[]
+  setoranList SetoranSantri[]
+  monitoringList MonitoringSigap[]
+
+  @@map("pengampu")
+}
+
+model Halaqah {
+  id          String    @id @db.VarChar(64)
+  nama        String    @db.VarChar(150)
+  pengampuId  String?   @map("pengampu_id") @db.VarChar(64)
+  target      String?   @db.VarChar(100)
+  keterangan  String?   @db.Text
+  cabangId    String?   @map("cabang_id") @db.VarChar(64)
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cabang      Cabang?   @relation(fields: [cabangId], references: [id], onDelete: Cascade)
+  pengampu    Pengampu? @relation(fields: [pengampuId], references: [id], onDelete: SetNull)
+  santriList  Santri[]
+
+  @@map("halaqah")
+}
+
+model Santri {
+  id          String    @id @db.VarChar(64)
+  nis         String?   @db.VarChar(64)
+  nama        String    @db.VarChar(150)
+  kelas       String?   @db.VarChar(50)
+  halaqahId   String?   @map("halaqah_id") @db.VarChar(64)
+  status      String?   @default("Aktif") @db.VarChar(32)
+  target      String?   @db.VarChar(100)
+  kontak      String?   @db.VarChar(50)
+  wali        String?   @db.VarChar(150)
+  noHpWali    String?   @map("no_hp_wali") @db.VarChar(50)
+  cabangId    String?   @map("cabang_id") @db.VarChar(64)
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cabang      Cabang?   @relation(fields: [cabangId], references: [id], onDelete: Cascade)
+  halaqah     Halaqah?  @relation(fields: [halaqahId], references: [id], onDelete: SetNull)
+  absensiList AbsensiSantri[]
+  setoranList SetoranSantri[]
+
+  @@map("santri")
+}
+
+model Sesi {
+  id             String    @id @db.VarChar(64)
+  nama           String    @db.VarChar(100)
+  jamMulai       String    @map("jam_mulai") @db.VarChar(16)
+  jamSelesai     String    @map("jam_selesai") @db.VarChar(16)
+  toleransiMenit Int?      @default(15) @map("toleransi_menit")
+  hari           String?   @default("Setiap Hari") @db.VarChar(50)
+  status         String?   @default("Aktif") @db.VarChar(32)
+  cabangId       String?   @map("cabang_id") @db.VarChar(64)
+  createdAt      DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cabang         Cabang?   @relation(fields: [cabangId], references: [id], onDelete: Cascade)
+
+  @@map("sesi")
+}
+
+model AbsensiSantri {
+  id         String    @id @db.VarChar(64)
+  tanggal    DateTime  @db.Date
+  sesiId     String?   @map("sesi_id") @db.VarChar(64)
+  santriId   String    @map("santri_id") @db.VarChar(64)
+  status     String    @db.VarChar(32)
+  keterangan String?   @db.Text
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  santri     Santri    @relation(fields: [santriId], references: [id], onDelete: Cascade)
+
+  @@unique([tanggal, sesiId, santriId])
+  @@map("absensi_santri")
+}
+
+model SetoranSantri {
+  id          String    @id @db.VarChar(64)
+  tanggal     DateTime  @db.Date
+  santriId    String    @map("santri_id") @db.VarChar(64)
+  pengampuId  String?   @map("pengampu_id") @db.VarChar(64)
+  jenis       String?   @default("Ziyadah") @db.VarChar(32)
+  surat       String    @db.VarChar(100)
+  ayatMulai   Int       @map("ayat_mulai")
+  ayatSelesai Int       @map("ayat_selesai")
+  nilai       String?   @default("A") @db.VarChar(16)
+  catatan     String?   @db.Text
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  santri      Santri    @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  pengampu    Pengampu? @relation(fields: [pengampuId], references: [id], onDelete: SetNull)
+
+  @@map("setoran_santri")
+}
+
+model Izin {
+  id              String    @id @db.VarChar(64)
+  pemohonId       String    @map("pemohon_id") @db.VarChar(64)
+  tipePemohon     String?   @default("Pengampu") @map("tipe_pemohon") @db.VarChar(32)
+  jenis           String?   @default("Izin") @db.VarChar(32)
+  tanggalMulai    DateTime  @map("tanggal_mulai") @db.Date
+  tanggalSelesai  DateTime  @map("tanggal_selesai") @db.Date
+  alasan          String    @db.Text
+  tugasPengganti  String?   @map("tugas_pengganti") @db.Text
+  statusApproval  String?   @default("Menunggu") @map("status_approval") @db.VarChar(32)
+  buktiUrl        String?   @map("bukti_url") @db.Text
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("izin")
+}
+
+model MonitoringSigap {
+  id           String    @id @db.VarChar(64)
+  tanggal      DateTime  @db.Date
+  pengampuId   String?   @map("pengampu_id") @db.VarChar(64)
+  nama         String    @db.VarChar(150)
+  nip          String?   @db.VarChar(64)
+  role         String?   @db.VarChar(64)
+  halaqah      String?   @db.VarChar(150)
+  mapel        String?   @db.VarChar(150)
+  kelas        String?   @db.VarChar(100)
+  sesi         String?   @db.VarChar(64)
+  jadwal       String?   @db.VarChar(64)
+  jam          String?   @default("-") @db.VarChar(16)
+  status       String    @db.VarChar(32)
+  selisihMenit Int?      @default(0) @map("selisih_menit")
+  lokasiGps    String?   @map("lokasi_gps") @db.VarChar(150)
+  metode       String?   @default("Scan QR GPS") @db.VarChar(64)
+  keterangan   String?   @db.Text
+  alasanIzin   String?   @map("alasan_izin") @db.Text
+  tugasSiswa   String?   @map("tugas_siswa") @db.Text
+  manual       Boolean?  @default(false)
+  createdAt    DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  pengampu     Pengampu? @relation(fields: [pengampuId], references: [id], onDelete: SetNull)
+
+  @@map("monitoring_sigap")
+}
