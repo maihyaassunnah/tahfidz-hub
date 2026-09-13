@@ -1,0 +1,5772 @@
+/* ==========================================================
+   SIMTAH - SISTEM INFORMASI MANAJEMEN TAHFIDZ
+   Theme & Styles matching exact UI screenshot
+   ========================================================== */
+
+:root {
+  --primary-green: #1b7a3e;
+  --primary-dark: #145a2d;
+  --primary-light: #22c55e;
+  --primary-bg: #eef7f0;
+  
+  --gold-primary: #d97706;
+  --gold-light: #f59e0b;
+  --gold-bg: #fffdf5;
+  --gold-border: #f59e0b;
+
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+
+  --bg-app: #f4f7f6;
+  --bg-card: #ffffff;
+  --border-color: #e2e8f0;
+
+  --sidebar-width: 250px;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-arabic: 'Amiri', serif;
+}
+
+/* Dark Mode Variables */
+body.dark-mode {
+  --bg-app: #0f172a;
+  --bg-card: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --primary-bg: #064e3b;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Main Layout: Sidebar + Main Content */
+.simtah-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* SIDEBAR STYLES (Identical to Screenshot) */
+.simtah-sidebar {
+  width: var(--sidebar-width);
+  background: #ffffff;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  overflow-y: auto;
+}
+
+body.dark-mode .simtah-sidebar {
+  background: #111827;
+  border-right-color: #1f2937;
+}
+
+.sidebar-brand {
+  padding: 24px 20px 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon-geom {
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.brand-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+body.dark-mode .brand-name {
+  color: #f8fafc;
+}
+
+.brand-dot {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* User Card in Sidebar */
+.sidebar-user-card {
+  margin: 0 16px 16px 16px;
+  padding: 12px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 10px;
+}
+
+.user-avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+body.dark-mode .user-name {
+  color: #f8fafc;
+}
+
+.user-link-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  cursor: pointer;
+}
+
+.user-link-sub:hover {
+  color: var(--primary-green);
+}
+
+/* Sidebar Nav Groups */
+.sidebar-nav-group {
+  margin-bottom: 18px;
+}
+
+.nav-group-title {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  padding: 0 20px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  margin: 2px 14px;
+  border-radius: 10px;
+  color: #475569;
+  text-decoration: none;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+body.dark-mode .nav-item {
+  color: #cbd5e1;
+}
+
+.nav-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-item:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+body.dark-mode .nav-item:hover {
+  background: #1e293b;
+  color: #fff;
+}
+
+/* Active Nav Pill (Identical to Screenshot) */
+.nav-item.active {
+  background: var(--primary-bg);
+  color: #15803d;
+  font-weight: 800;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+body.dark-mode .nav-item.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.nav-item.active .nav-icon {
+  color: #15803d;
+}
+
+.nav-chevron {
+  color: #15803d;
+  font-size: 0.9rem;
+}
+
+/* Sidebar Bottom / Sign Out */
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-signout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fdf2f2;
+  border: 1px solid #fee2e2;
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-signout:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ==========================================================
+   MAIN CONTENT AREA WITH ISLAMIC GEOMETRIC BACKGROUND
+   ========================================================== */
+.simtah-main {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  /* Subtle Islamic Geometric Pattern Background */
+  background-color: #f7faf8;
+  background-image: radial-gradient(#d1fae5 0.75px, transparent 0.75px), radial-gradient(#d1fae5 0.75px, #f7faf8 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+body.dark-mode .simtah-main {
+  background-color: #0b1120;
+  background-image: radial-gradient(#1e293b 0.75px, transparent 0.75px), radial-gradient(#1e293b 0.75px, #0b1120 0.75px);
+}
+
+/* TOP HEADER BAR */
+.simtah-header {
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+}
+
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+body.dark-mode .page-title {
+  color: #f8fafc;
+}
+
+.header-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Role Switcher Pill Group */
+.role-badge-group {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  padding: 3px;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+body.dark-mode .role-badge-group {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.role-btn {
+  border: none;
+  background: transparent;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.role-btn.active {
+  background: #15803d;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(21, 128, 61, 0.3);
+}
+
+.header-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: #ffffff;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+body.dark-mode .header-icon-btn {
+  background: #1e293b;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+.header-icon-btn:hover {
+  transform: translateY(-1px);
+  color: #0f172a;
+}
+
+/* Page Container */
+.page-content-wrapper {
+  padding: 0 32px 48px 32px;
+  max-width: 1400px;
+  width: 100%;
+}
+
+/* ==========================================================
+   DASHBOARD COMPONENTS (MATCHING SCREENSHOT)
+   ========================================================== */
+
+/* GREEN BANNER HALAQAH */
+.halaqah-green-banner {
+  background: linear-gradient(135deg, #1b7a3e 0%, #156633 100%);
+  border-radius: 16px;
+  padding: 26px 32px;
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 25px -5px rgba(27, 122, 62, 0.3);
+}
+
+.banner-sub {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.banner-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.banner-location {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.95;
+}
+
+.banner-watermark-quran {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* KPI CARDS (10 Daftar Santri & 386 Riwayat Setoran) */
+.kpi-row-screenshot {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .kpi-row-screenshot {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .kpi-card-white {
+    padding: 14px 16px;
+    border-radius: 14px;
+  }
+}
+
+.kpi-card-white {
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+body.dark-mode .kpi-card-white {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.kpi-card-white:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.04);
+}
+
+.kpi-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-circle-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.kpi-circle-icon.green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.kpi-circle-icon.purple {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.kpi-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+
+body.dark-mode .kpi-number {
+  color: #f8fafc;
+}
+
+.kpi-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.kpi-arrow {
+  color: #94a3b8;
+  align-self: flex-start;
+}
+
+/* JADWAL SESI HARI INI CARD */
+.sesi-card-container {
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+body.dark-mode .sesi-card-container {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sesi-header-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+body.dark-mode .sesi-header-title {
+  color: #f8fafc;
+}
+
+.sesi-header-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-bottom: 18px;
+}
+
+.sesi-chips-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sesi-chip {
+  padding: 12px 18px;
+  border-radius: 12px;
+  min-width: 145px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.sesi-chip.active-green {
+  background: #ffffff;
+  border: 1.5px solid #15803d;
+  box-shadow: 0 2px 6px rgba(21, 128, 61, 0.08);
+}
+
+body.dark-mode .sesi-chip.active-green {
+  background: #064e3b;
+  border-color: #10b981;
+}
+
+.sesi-chip.libur-pink {
+  background: #fff5f5;
+  border: 1px solid #ffe3e3;
+}
+
+body.dark-mode .sesi-chip.libur-pink {
+  background: #451a1a;
+  border-color: #7f1d1d;
+}
+
+.sesi-chip.belum-amber {
+  background: #fffdf5;
+  border: 1.5px solid #f59e0b;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.08);
+  transition: all 0.2s ease;
+}
+
+.sesi-chip.belum-amber:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.18);
+  border-color: #d97706;
+}
+
+body.dark-mode .sesi-chip.belum-amber {
+  background: #78350f22;
+  border-color: #d97706;
+}
+
+.sesi-badge-status {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+
+.sesi-badge-status.green {
+  background: #15803d;
+  color: #ffffff;
+}
+
+.sesi-badge-status.amber {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+body.dark-mode .sesi-badge-status.amber {
+  background: #78350f55;
+  color: #fde68a;
+  border-color: #b45309;
+}
+
+.sesi-badge-status.pink {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.sesi-name {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+body.dark-mode .sesi-name {
+  color: #f8fafc;
+}
+
+.sesi-sub-info {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+/* PERINGKAT SETORAN HALAQAH (PODIUM CARD) - LEBIH RINGKAS & SEBARIS SAJA */
+.podium-card-container {
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  margin-bottom: 18px;
+}
+
+body.dark-mode .podium-card-container {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.podium-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.podium-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trophy-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fef3c7;
+  color: #d97706;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.podium-main-title {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+body.dark-mode .podium-main-title {
+  color: #f8fafc;
+}
+
+.podium-sub-title {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.podium-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.time-filter-pill-group {
+  display: flex;
+  background: #f1f5f9;
+  padding: 2px;
+  border-radius: 8px;
+}
+
+body.dark-mode .time-filter-pill-group {
+  background: #0f172a;
+}
+
+.time-filter-btn {
+  border: none;
+  background: transparent;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.time-filter-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+body.dark-mode .time-filter-btn.active {
+  background: #1e293b;
+  color: #fff;
+}
+
+.podium-sort-select {
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+}
+
+body.dark-mode .podium-sort-select {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+/* 3 PODIUM CARDS GRID - SEBARIS SAJA (1 SINGLE ROW) */
+.podium-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1.08fr 1fr;
+  gap: 8px;
+  align-items: stretch;
+}
+
+@media (max-width: 600px) {
+  .podium-card-container {
+    padding: 12px 10px;
+  }
+  .podium-header-row {
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+  .podium-grid-3 {
+    grid-template-columns: 1fr 1.06fr 1fr;
+    gap: 6px;
+  }
+}
+
+.podium-box {
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  position: relative;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  transition: all 0.2s ease;
+}
+
+@media (max-width: 600px) {
+  .podium-box {
+    padding: 8px 4px;
+    min-height: 72px;
+    border-radius: 10px;
+  }
+}
+
+body.dark-mode .podium-box {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* Juara 1 (Center) */
+.podium-box.rank-1 {
+  background: #fffdf5;
+  border: 2px solid #f59e0b;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.12);
+}
+
+body.dark-mode .podium-box.rank-1 {
+  background: #2a220b;
+  border-color: #f59e0b;
+}
+
+.badge-rank-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: -10px;
+}
+
+.badge-rank-circle.silver {
+  background: #94a3b8;
+}
+
+.badge-rank-circle.bronze {
+  background: #c2410c;
+}
+
+.badge-terbanyak-crown {
+  position: absolute;
+  top: -10px;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 1px 8px;
+  border-radius: 9999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.podium-student-name {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  width: 100%;
+  padding: 0 2px;
+}
+
+@media (max-width: 600px) {
+  .podium-student-name {
+    font-size: 0.72rem;
+    margin-top: 2px;
+    margin-bottom: 2px;
+  }
+}
+
+body.dark-mode .podium-student-name {
+  color: #f8fafc;
+}
+
+.podium-score-hlm {
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.15;
+}
+
+@media (max-width: 600px) {
+  .podium-score-hlm {
+    font-size: 0.98rem;
+  }
+}
+
+body.dark-mode .podium-score-hlm {
+  color: #f8fafc;
+}
+
+.podium-score-hlm span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #0284c7;
+  margin-left: 2px;
+}
+
+.podium-sub-brs {
+  font-size: 0.65rem;
+  color: #64748b;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+@media (max-width: 600px) {
+  .podium-sub-brs {
+    font-size: 0.6rem;
+  }
+}
+
+body.dark-mode .podium-sub-brs {
+  color: #94a3b8;
+}
+
+/* MONITOR PRESENSI PENGAMPU HARI INI */
+.pengampu-monitor-container {
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
+}
+
+body.dark-mode .pengampu-monitor-container {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.pengampu-monitor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pengampu-monitor-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pengampu-monitor-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+body.dark-mode .pengampu-monitor-icon-badge {
+  background: #064e3b;
+  color: #6ee7b7;
+}
+
+.pengampu-monitor-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+body.dark-mode .pengampu-monitor-title {
+  color: #f8fafc;
+}
+
+.pengampu-monitor-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+body.dark-mode .pengampu-monitor-sub {
+  color: #94a3b8;
+}
+
+.pengampu-counter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pengampu-counter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.pengampu-counter-pill.sudah {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+body.dark-mode .pengampu-counter-pill.sudah {
+  background: #064e3b;
+  color: #6ee7b7;
+  border-color: #047857;
+}
+
+.pengampu-counter-pill.belum {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+body.dark-mode .pengampu-counter-pill.belum {
+  background: #451a03;
+  color: #fde68a;
+  border-color: #78350f;
+}
+
+.pengampu-counter-pill .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.pengampu-counter-pill .dot.green {
+  background: #10b981;
+}
+
+.pengampu-counter-pill .dot.amber {
+  background: #f59e0b;
+}
+
+.pengampu-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pengampu-filter-pills {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
+  gap: 2px;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+body.dark-mode .pengampu-filter-pills {
+  background: #0f172a;
+}
+
+.pengampu-pill-btn {
+  border: none;
+  background: transparent;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.pengampu-pill-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+body.dark-mode .pengampu-pill-btn.active {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.pengampu-pill-btn.sudah.active {
+  color: #059669;
+}
+
+.pengampu-pill-btn.belum.active {
+  color: #d97706;
+}
+
+/* Grid of Pengampu Items */
+.pengampu-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .pengampu-list-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+.pengampu-card-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.18s ease;
+}
+
+body.dark-mode .pengampu-card-item {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.pengampu-card-item.sudah-border {
+  border-left: 3.5px solid #10b981;
+}
+
+.pengampu-card-item.belum-border {
+  border-left: 3.5px solid #f59e0b;
+}
+
+.pengampu-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pengampu-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.pengampu-avatar.green-bg {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.pengampu-avatar.amber-bg {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.pengampu-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+
+body.dark-mode .pengampu-status-dot {
+  border-color: #0f172a;
+}
+
+.pengampu-status-dot.green {
+  background: #10b981;
+}
+
+.pengampu-status-dot.amber {
+  background: #f59e0b;
+}
+
+.pengampu-info-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.pengampu-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.pengampu-nama {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.dark-mode .pengampu-nama {
+  color: #f8fafc;
+}
+
+.pengampu-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pengampu-badge-tag.sudah {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+body.dark-mode .pengampu-badge-tag.sudah {
+  background: #064e3b;
+  color: #86efac;
+  border-color: #059669;
+}
+
+.pengampu-badge-tag.belum {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+body.dark-mode .pengampu-badge-tag.belum {
+  background: #451a03;
+  color: #fcd34d;
+  border-color: #78350f;
+}
+
+.pengampu-badge-tag.izin {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.pengampu-halaqah-row {
+  margin-bottom: 4px;
+}
+
+.pengampu-halaqah-text {
+  font-size: 0.71rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+body.dark-mode .pengampu-halaqah-text {
+  color: #94a3b8;
+}
+
+.pengampu-detail-time {
+  font-size: 0.69rem;
+}
+
+.pengampu-detail-time .time-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pengampu-detail-time .time-text.green {
+  color: #059669;
+  font-weight: 600;
+}
+
+body.dark-mode .pengampu-detail-time .time-text.green {
+  color: #34d399;
+}
+
+.pengampu-detail-time .time-text.amber {
+  color: #d97706;
+  font-weight: 600;
+}
+
+body.dark-mode .pengampu-detail-time .time-text.amber {
+  color: #fbbf24;
+}
+
+.pengampu-detail-time .time-text.purple {
+  color: #7e22ce;
+  font-weight: 600;
+}
+
+/* ==========================================================
+   GENERAL UTILITIES & COMPONENTS
+   ========================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: #1b7a3e;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #156633;
+}
+
+.btn-outline {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.btn-outline:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 0.75rem;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+body.dark-mode .card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+body.dark-mode .form-label {
+  color: #cbd5e1;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+body.dark-mode .form-input, 
+body.dark-mode .form-select, 
+body.dark-mode .form-textarea {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.table-container {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+body.dark-mode .table-container {
+  border-color: #334155;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.table th {
+  background: #f8fafc;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 700;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+body.dark-mode .table th {
+  background: #0f172a;
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+.table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1e293b;
+}
+
+body.dark-mode .table td {
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+}
+
+body.dark-mode .modal-content {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+body.dark-mode .modal-footer {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 200;
+}
+
+.toast {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-left: 4px solid #10b981;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+/* Print Rules */
+@media print {
+  .simtah-sidebar,
+  .simtah-header,
+  .no-print,
+  .btn,
+  .role-badge-group {
+    display: none !important;
+  }
+
+  .simtah-main {
+    margin-left: 0 !important;
+    background: #fff !important;
+  }
+
+  .page-content-wrapper {
+    padding: 0 !important;
+  }
+}
+
+/* =========================================================
+   SIGAP ADMIN PANEL STYLES (SISTEM GURU & ADMIN)
+   ========================================================= */
+
+.sigap-sidebar {
+  width: var(--sidebar-width);
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  overflow: hidden;
+}
+
+body.dark-mode .sigap-sidebar {
+  background: #111827;
+  border-right-color: #1f2937;
+}
+
+.sigap-brand {
+  padding: 22px 20px 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sigap-logo-box {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+  flex-shrink: 0;
+}
+
+.sigap-brand-title {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+body.dark-mode .sigap-brand-title {
+  color: #f8fafc;
+}
+
+.sigap-brand-subtitle {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* User Card Admin MA */
+.sigap-profile-card {
+  margin: 6px 14px 16px 14px;
+  padding: 14px;
+  background: #f0fdf4;
+  border: 1.5px solid #ccfbf1;
+  border-radius: 18px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(13, 148, 136, 0.04);
+}
+
+body.dark-mode .sigap-profile-card {
+  background: #064e3b22;
+  border-color: #04785755;
+}
+
+.sigap-online-dot {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+body.dark-mode .sigap-online-dot {
+  box-shadow: 0 0 0 2px #111827;
+}
+
+.sigap-profile-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sigap-avatar-wrapper {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sigap-avatar-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid #38bdf8;
+  background: #e0f2fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sigap-camera-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #0f766e;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #ffffff;
+  cursor: pointer;
+}
+
+.sigap-admin-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+body.dark-mode .sigap-admin-name {
+  color: #f8fafc;
+}
+
+.sigap-badge-jenjang {
+  display: inline-block;
+  background: #ccfbf1;
+  color: #0f766e;
+  font-size: 0.64rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+  margin-top: 3px;
+}
+
+body.dark-mode .sigap-badge-jenjang {
+  background: #0f766e44;
+  color: #5eead4;
+}
+
+.sigap-btn-ubah-pass {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: #ffffff;
+  border: 1px solid #d1fae5;
+  border-radius: 20px;
+  padding: 7px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+body.dark-mode .sigap-btn-ubah-pass {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.sigap-btn-ubah-pass:hover {
+  background: #f8fafc;
+  border-color: #10b981;
+  color: #0f766e;
+}
+
+/* Menu Group Divider */
+.sigap-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  margin: 16px 0 6px 0;
+}
+
+.sigap-section-title {
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sigap-section-line {
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+body.dark-mode .sigap-section-line {
+  background: #1f2937;
+}
+
+/* Menu Navigation Items */
+.sigap-menu-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 10px;
+}
+
+.sigap-menu-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sigap-menu-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.sigap-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 18px;
+  margin: 2px 14px;
+  border-radius: 12px;
+  color: #475569;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+body.dark-mode .sigap-nav-item {
+  color: #94a3b8;
+}
+
+.sigap-nav-item:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+body.dark-mode .sigap-nav-item:hover {
+  background: #1f2937;
+  color: #f8fafc;
+}
+
+.sigap-nav-item.active {
+  background: #f0fdf4;
+  color: #047857;
+  font-weight: 700;
+}
+
+body.dark-mode .sigap-nav-item.active {
+  background: #064e3b33;
+  color: #34d399;
+}
+
+.sigap-nav-item .sigap-nav-icon {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.sigap-nav-item:hover .sigap-nav-icon {
+  color: #0f172a;
+}
+
+.sigap-nav-item.active .sigap-nav-icon {
+  color: #059669;
+}
+
+body.dark-mode .sigap-nav-item.active .sigap-nav-icon {
+  color: #34d399;
+}
+
+/* Owner Role Sidebar Enhancements */
+.sigap-sidebar-owner .sigap-nav-item.active {
+  background: #fffbeb;
+  color: #b45309;
+  font-weight: 700;
+  border-left: 3.5px solid #d97706;
+}
+
+.sigap-sidebar-owner .sigap-nav-item.active .sigap-nav-icon {
+  color: #d97706;
+}
+
+body.dark-mode .sigap-sidebar-owner .sigap-nav-item.active {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border-left: 3.5px solid #f59e0b;
+}
+
+body.dark-mode .sigap-sidebar-owner .sigap-nav-item.active .sigap-nav-icon {
+  color: #f59e0b;
+}
+
+.sigap-sidebar-owner .sigap-nav-item:hover {
+  background: #fffdf5;
+  color: #92400e;
+}
+
+body.dark-mode .sigap-sidebar-owner .sigap-nav-item:hover {
+  background: #1f2937;
+  color: #fde68a;
+}
+
+/* Bottom Action Capsule */
+.sigap-bottom-bar {
+  margin: 12px 14px 16px 14px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+body.dark-mode .sigap-bottom-bar {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-bottom-icon-btn {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: 8px;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.sigap-bottom-icon-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+body.dark-mode .sigap-bottom-icon-btn:hover {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.sigap-bottom-logout {
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #ef4444;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+
+.sigap-bottom-logout:hover {
+  background: #fee2e2;
+}
+
+body.dark-mode .sigap-bottom-logout:hover {
+  background: #7f1d1d33;
+}
+
+/* =========================================================
+   SIGAP DASHBOARD (GAMBAR 1)
+   ========================================================= */
+.sigap-dash-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.sigap-dash-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+body.dark-mode .sigap-dash-title {
+  color: #f8fafc;
+}
+
+.sigap-dash-subtitle {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+.sigap-dash-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sigap-btn-icon-refresh {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sigap-btn-icon-refresh:hover {
+  background: #dbeafe;
+}
+
+.sigap-btn-konfigurasi {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: #334155;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+body.dark-mode .sigap-btn-konfigurasi {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.sigap-btn-konfigurasi:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+/* BANNER NOTIFIKASI IZIN PENGAMPU UNTUK SUPER ADMIN */
+.sigap-admin-alert-banner {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1.5px solid #fcd34d;
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.12);
+  transition: all 0.2s ease;
+  animation: slideDown 0.3s ease-out;
+}
+
+body.dark-mode .sigap-admin-alert-banner {
+  background: linear-gradient(135deg, #2a2012 0%, #36240d 100%);
+  border-color: #78350f;
+}
+
+.sigap-admin-alert-banner:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+}
+
+.sigap-alert-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sigap-alert-bell-wrap {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #f59e0b;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sigap-alert-bell-ping {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  background: #ef4444;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: pingDot 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes pingDot {
+  0% { transform: scale(0.95); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.8; }
+  100% { transform: scale(0.95); opacity: 1; }
+}
+
+.sigap-alert-text {
+  font-size: 0.82rem;
+  color: #78350f;
+  line-height: 1.35;
+}
+
+body.dark-mode .sigap-alert-text {
+  color: #fef3c7;
+}
+
+.sigap-alert-highlight {
+  font-weight: 800;
+  color: #b45309;
+}
+
+body.dark-mode .sigap-alert-highlight {
+  color: #fde68a;
+}
+
+.sigap-alert-btn-tinjau {
+  background: #f59e0b;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.sigap-alert-btn-tinjau:hover {
+  background: #d97706;
+}
+
+@media (max-width: 640px) {
+  .sigap-admin-alert-banner {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .sigap-alert-bell-wrap {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+  .sigap-alert-bell-wrap svg {
+    width: 14px;
+    height: 14px;
+  }
+  .sigap-alert-text {
+    font-size: 0.72rem;
+  }
+  .sigap-alert-btn-tinjau {
+    padding: 5px 8px;
+    font-size: 0.7rem;
+  }
+}
+
+/* KPI Metrik Baris 1 (4 Kartu Sebaris Saja) */
+.sigap-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.sigap-kpi-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: transform 0.2s, box-shadow 0.2s;
+  min-width: 0;
+}
+
+body.dark-mode .sigap-kpi-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.sigap-kpi-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sigap-kpi-label {
+  font-size: 0.74rem;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.dark-mode .sigap-kpi-label {
+  color: #94a3b8;
+}
+
+.sigap-kpi-val {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+body.dark-mode .sigap-kpi-val {
+  color: #f8fafc;
+}
+
+.sigap-kpi-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.sigap-kpi-icon-box.blue {
+  background: #2563eb;
+}
+
+.sigap-kpi-icon-box.green {
+  background: #059669;
+}
+
+.sigap-kpi-icon-box.orange {
+  background: #f97316;
+}
+
+.sigap-kpi-icon-box.purple {
+  background: #9333ea;
+}
+
+@media (max-width: 1024px) {
+  .sigap-kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sigap-kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .sigap-kpi-card {
+    padding: 8px 4px;
+    border-radius: 12px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-align: center;
+  }
+
+  .sigap-kpi-icon-box {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+
+  .sigap-kpi-icon-box svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .sigap-kpi-content {
+    align-items: center;
+  }
+
+  .sigap-kpi-val {
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+
+  .sigap-kpi-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+  }
+}
+
+/* Quick Actions Baris 2 (4 Kartu Sebaris) */
+.sigap-action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 1024px) {
+  .sigap-action-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sigap-action-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .sigap-action-card {
+    padding: 10px 4px;
+    border-radius: 12px;
+  }
+
+  .sigap-action-circle-icon {
+    width: 34px;
+    height: 34px;
+    margin-bottom: 4px;
+  }
+
+  .sigap-action-circle-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sigap-action-label {
+    font-size: 0.64rem;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+  }
+}
+
+.pulse-badge {
+  animation: pulseBadge 2s infinite;
+}
+
+@keyframes pulseBadge {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.sigap-action-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+body.dark-mode .sigap-action-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+
+.sigap-action-card.active-border {
+  border: 1.5px solid #0d9488;
+}
+
+.sigap-action-circle-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.sigap-action-circle-icon.green {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.sigap-action-circle-icon.blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.sigap-action-circle-icon.purple {
+  background: #faf5ff;
+  color: #9333ea;
+}
+
+.sigap-action-circle-icon.orange {
+  background: #fff7ed;
+  color: #f97316;
+}
+
+.sigap-action-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: center;
+}
+
+body.dark-mode .sigap-action-label {
+  color: #f8fafc;
+}
+
+.sigap-red-badge-corner {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  background: #ef4444;
+  color: #ffffff;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
+}
+
+/* =========================================================
+   PAGE HEADER & ACTION BUTTONS (GAMBAR 2, 3, 4)
+   ========================================================= */
+.sigap-page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.sigap-page-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sigap-page-icon-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #ecfdf5;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sigap-page-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+body.dark-mode .sigap-page-title {
+  color: #f8fafc;
+}
+
+.sigap-page-subtitle {
+  font-size: 0.86rem;
+  color: #64748b;
+  margin: 3px 0 0 0;
+}
+
+.sigap-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Button Variants */
+.sigap-btn-orange {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ea580c;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.sigap-btn-orange:hover {
+  background: #c2410c;
+}
+
+.sigap-btn-teal {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #0f766e;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.sigap-btn-teal:hover {
+  background: #115e59;
+}
+
+.sigap-btn-blue {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.sigap-btn-blue:hover {
+  background: #1d4ed8;
+}
+
+.sigap-btn-slate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #334155;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.sigap-btn-slate:hover {
+  background: #1e293b;
+}
+
+.sigap-btn-green {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.sigap-btn-green:hover {
+  background: #15803d;
+}
+
+/* Filter & Search Bar */
+.sigap-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.sigap-search-input-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  flex: 1;
+  min-width: 260px;
+}
+
+body.dark-mode .sigap-search-input-box {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-search-icon {
+  color: #94a3b8;
+}
+
+.sigap-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-size: 0.86rem;
+  color: #0f172a;
+}
+
+body.dark-mode .sigap-search-input {
+  color: #f8fafc;
+}
+
+.sigap-filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sigap-select-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+body.dark-mode .sigap-select-box {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-filter-icon {
+  color: #94a3b8;
+}
+
+.sigap-select {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.84rem;
+  color: #334155;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+body.dark-mode .sigap-select {
+  color: #e2e8f0;
+}
+
+.sigap-btn-sort {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: #475569;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body.dark-mode .sigap-btn-sort {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+/* Table Styles (Data Siswa & Alumni) */
+.sigap-table-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow-x: auto;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+body.dark-mode .sigap-table-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 750px;
+}
+
+.sigap-table th {
+  background: #f8fafc;
+  padding: 12px 16px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+body.dark-mode .sigap-table th {
+  background: #0f172a;
+  color: #94a3b8;
+  border-bottom-color: #334155;
+}
+
+.sigap-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.86rem;
+  vertical-align: middle;
+}
+
+body.dark-mode .sigap-table td {
+  border-bottom-color: #334155;
+}
+
+.sigap-student-name {
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+body.dark-mode .sigap-student-name {
+  color: #f8fafc;
+}
+
+.sigap-student-nik {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.sigap-nisn-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 700;
+  color: #15803d;
+  font-size: 0.84rem;
+}
+
+body.dark-mode .sigap-nisn-text {
+  color: #4ade80;
+}
+
+.sigap-kelas-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+body.dark-mode .sigap-kelas-pill {
+  background: #1e3a8a33;
+  color: #60a5fa;
+  border-color: #1e40af;
+}
+
+.sigap-tahun-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.sigap-wali-name {
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.84rem;
+}
+
+body.dark-mode .sigap-wali-name {
+  color: #e2e8f0;
+}
+
+.sigap-wali-phone {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.sigap-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.sigap-btn-action {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+body.dark-mode .sigap-btn-action {
+  border-color: #334155;
+}
+
+.sigap-btn-action.view {
+  color: #64748b;
+}
+
+.sigap-btn-action.view:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.sigap-btn-action.edit {
+  color: #2563eb;
+}
+
+.sigap-btn-action.edit:hover {
+  background: #eff6ff;
+}
+
+.sigap-btn-action.delete {
+  color: #ef4444;
+}
+
+.sigap-btn-action.delete:hover {
+  background: #fee2e2;
+}
+
+/* =========================================================
+   DATA GURU & PEGAWAI GRID (GAMBAR 3)
+   ========================================================= */
+.sigap-guru-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .sigap-guru-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .sigap-guru-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sigap-guru-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+body.dark-mode .sigap-guru-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-guru-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+
+.sigap-guru-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.sigap-guru-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #047857;
+  flex-shrink: 0;
+}
+
+.sigap-guru-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.sigap-guru-name {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.dark-mode .sigap-guru-name {
+  color: #f8fafc;
+}
+
+.sigap-guru-nip {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.sigap-guru-badges-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.sigap-badge-gray {
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+body.dark-mode .sigap-badge-gray {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.sigap-badge-purple {
+  background: #faf5ff;
+  color: #9333ea;
+  border: 1px solid #e9d5ff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.sigap-badge-orange-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #ffedd5;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.sigap-guru-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 12px 0;
+}
+
+body.dark-mode .sigap-guru-divider {
+  background: #334155;
+}
+
+.sigap-guru-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #475569;
+  flex: 1;
+}
+
+body.dark-mode .sigap-guru-details {
+  color: #94a3b8;
+}
+
+.sigap-guru-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sigap-guru-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.sigap-guru-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sigap-guru-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px dashed #f1f5f9;
+}
+
+body.dark-mode .sigap-guru-card-footer {
+  border-top-color: #334155;
+}
+
+.sigap-btn-card-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+body.dark-mode .sigap-btn-card-action {
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.sigap-btn-card-action:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.sigap-btn-card-action.danger {
+  color: #ef4444;
+}
+
+.sigap-btn-card-action.danger:hover {
+  background: #fee2e2;
+}
+
+/* =========================================================
+   SIGAP COMMON HEADERS & ACTION BUTTONS
+   ========================================================= */
+.sigap-page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.sigap-page-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sigap-page-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+body.dark-mode .sigap-page-icon-badge {
+  background: #064e3b33;
+  border-color: #065f46;
+  color: #34d399;
+}
+
+.sigap-page-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+body.dark-mode .sigap-page-title {
+  color: #f8fafc;
+}
+
+.sigap-page-subtitle {
+  font-size: 0.84rem;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+body.dark-mode .sigap-page-subtitle {
+  color: #94a3b8;
+}
+
+.sigap-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sigap-btn-blue {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(37,99,235,0.2);
+  transition: all 0.2s;
+}
+
+.sigap-btn-blue:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.sigap-btn-teal {
+  background: #007a5a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,122,90,0.2);
+  transition: all 0.2s;
+}
+
+.sigap-btn-teal:hover {
+  background: #065f46;
+  transform: translateY(-1px);
+}
+
+.sigap-btn-action {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sigap-btn-action.edit {
+  color: #3b82f6;
+  background: #eff6ff;
+  border-color: #dbeafe;
+}
+
+.sigap-btn-action.edit:hover {
+  background: #dbeafe;
+}
+
+.sigap-btn-action.delete {
+  color: #94a3b8;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.sigap-btn-action.delete:hover {
+  color: #ef4444;
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+body.dark-mode .sigap-btn-action.edit {
+  background: #1e3a8a33;
+  border-color: #1e40af;
+  color: #60a5fa;
+}
+
+body.dark-mode .sigap-btn-action.delete {
+  background: #334155;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+body.dark-mode .sigap-btn-action.delete:hover {
+  background: #7f1d1d44;
+  color: #f87171;
+}
+
+/* =========================================================
+   SIGAP: QR & LOKASI KELAS (GAMBAR 2 - EXACT MATCH)
+   ========================================================= */
+.sigap-qr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 10px;
+}
+
+@media (max-width: 1180px) {
+  .sigap-qr-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .sigap-qr-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sigap-qr-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+body.dark-mode .sigap-qr-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-qr-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.sigap-qr-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.sigap-kelas-icon-box {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+body.dark-mode .sigap-kelas-icon-box {
+  background: #064e3b33;
+  border-color: #065f46;
+  color: #34d399;
+}
+
+.sigap-qr-class-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+body.dark-mode .sigap-qr-class-name {
+  color: #f8fafc;
+}
+
+.sigap-qr-location-text {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+body.dark-mode .sigap-qr-location-text {
+  color: #94a3b8;
+}
+
+.sigap-qr-body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.sigap-qr-visual-box {
+  width: 86px;
+  height: 86px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+}
+
+body.dark-mode .sigap-qr-visual-box {
+  background: #ffffff;
+  border-color: #475569;
+}
+
+.sigap-qr-manual-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.sigap-qr-manual-code {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+}
+
+body.dark-mode .sigap-qr-manual-code {
+  color: #f8fafc;
+}
+
+.sigap-qr-gps-status {
+  display: flex;
+  align-items: center;
+}
+
+.sigap-gps-badge-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+body.dark-mode .sigap-gps-badge-locked {
+  background: #064e3b33;
+  border-color: #065f46;
+  color: #4ade80;
+}
+
+.sigap-gps-badge-unlocked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+body.dark-mode .sigap-gps-badge-unlocked {
+  background: #334155;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+.sigap-btn-save-qr {
+  width: 100%;
+  height: 38px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+body.dark-mode .sigap-btn-save-qr {
+  background: #334155;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+.sigap-btn-save-qr:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+body.dark-mode .sigap-btn-save-qr:hover {
+  background: #475569;
+  color: #ffffff;
+}
+
+/* =========================================================
+   SIGAP: DATA KELAS & WALI
+   ========================================================= */
+.sigap-kelas-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 10px;
+}
+
+@media (max-width: 1180px) {
+  .sigap-kelas-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .sigap-kelas-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sigap-kelas-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+body.dark-mode .sigap-kelas-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-kelas-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.sigap-kelas-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sigap-kelas-title-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sigap-kelas-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+body.dark-mode .sigap-kelas-name {
+  color: #f8fafc;
+}
+
+.sigap-unit-badge {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+body.dark-mode .sigap-unit-badge {
+  background: #1e3a8a33;
+  border-color: #1e40af;
+  color: #93c5fd;
+}
+
+.sigap-switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.sigap-switch-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.sigap-switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: .2s;
+  border-radius: 24px;
+}
+
+.sigap-switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked + .sigap-switch-slider {
+  background-color: #059669;
+}
+
+input:checked + .sigap-switch-slider:before {
+  transform: translateX(20px);
+}
+
+.sigap-wali-box {
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+body.dark-mode .sigap-wali-box {
+  background: #0f172a55;
+  border-color: #334155;
+}
+
+.sigap-wali-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.sigap-wali-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+body.dark-mode .sigap-wali-name {
+  color: #f8fafc;
+}
+
+.sigap-kelas-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+body.dark-mode .sigap-kelas-card-footer {
+  border-top-color: #334155;
+}
+
+.sigap-btn-agenda {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #059669;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 5px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sigap-btn-agenda:hover {
+  background: #d1fae5;
+}
+
+/* =========================================================
+   SIGAP: ATUR JADWAL PELAJARAN
+   ========================================================= */
+.sigap-jadwal-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .sigap-jadwal-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sigap-setup-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+body.dark-mode .sigap-setup-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-mapel-pills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.sigap-mapel-pill {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sigap-mapel-pill:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.sigap-mapel-pill.active {
+  background: #059669;
+  border-color: #059669;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+body.dark-mode .sigap-mapel-pill {
+  background: #334155;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+
+body.dark-mode .sigap-mapel-pill.active {
+  background: #059669;
+  color: #ffffff;
+}
+
+.sigap-jadwal-table-wrap {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+body.dark-mode .sigap-jadwal-table-wrap {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-jadwal-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.sigap-jadwal-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 12px 8px;
+  border-bottom: 2px solid #e2e8f0;
+  border-right: 1px solid #f1f5f9;
+}
+
+body.dark-mode .sigap-jadwal-table th {
+  background: #0f172a;
+  color: #cbd5e1;
+  border-bottom-color: #334155;
+  border-right-color: #334155;
+}
+
+.sigap-jadwal-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid #f1f5f9;
+  font-size: 0.82rem;
+  vertical-align: middle;
+}
+
+body.dark-mode .sigap-jadwal-table td {
+  border-bottom-color: #334155;
+  border-right-color: #334155;
+}
+
+.sigap-cell-filled {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #166534;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sigap-cell-filled:hover {
+  background: #dcfce7;
+  transform: scale(1.02);
+}
+
+.sigap-cell-empty {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.sigap-cell-empty:hover {
+  background: #f1f5f9;
+  color: #059669;
+}
+
+.sigap-istirahat-row {
+  background: #fff7ed !important;
+  color: #c2410c;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+body.dark-mode .sigap-istirahat-row {
+  background: #7c2d1233 !important;
+  color: #fdba74;
+}
+
+/* =========================================================
+   SIGAP: MONITORING & REKAP
+   ========================================================= */
+.sigap-rank-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+body.dark-mode .sigap-rank-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.sigap-livefeed-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.82rem;
+}
+
+body.dark-mode .sigap-livefeed-item {
+  border-bottom-color: #334155;
+}
+
+/* =========================================================
+   SIGAP: PERSETUJUAN IZIN GURU
+   ========================================================= */
+.sigap-izin-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+body.dark-mode .sigap-izin-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* =========================================================
+   SIGAP: MONITORING PRESENSI PENGAMPU DASHBOARD
+   ========================================================= */
+.sigap-presensi-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+  margin-top: 24px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+body.dark-mode .sigap-presensi-panel {
+  background: #0f172a;
+  border-color: #334155;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+}
+
+.sigap-presensi-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+body.dark-mode .sigap-presensi-header {
+  border-bottom-color: #1e293b;
+}
+
+.sigap-mini-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+body.dark-mode .sigap-mini-kpi-grid {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+@media (max-width: 768px) {
+  .sigap-mini-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.sigap-mini-kpi-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+body.dark-mode .sigap-mini-kpi-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.sigap-filter-tabs-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  overflow-x: auto;
+}
+
+body.dark-mode .sigap-filter-tabs-row {
+  border-bottom-color: #1e293b;
+}
+
+.sigap-tab-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+body.dark-mode .sigap-tab-pill {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.sigap-tab-pill:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+body.dark-mode .sigap-tab-pill:hover {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.sigap-tab-pill.active {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #ffffff;
+}
+
+.sigap-badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.sigap-tab-pill.active .sigap-badge-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* Status Badges */
+.badge-status-ontime {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+body.dark-mode .badge-status-ontime {
+  background: rgba(5, 150, 105, 0.15);
+  border-color: #059669;
+  color: #34d399;
+}
+
+.badge-status-late {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  animation: pulse-soft 2s infinite ease-in-out;
+}
+
+body.dark-mode .badge-status-late {
+  background: rgba(234, 88, 12, 0.15);
+  border-color: #ea580c;
+  color: #fb923c;
+}
+
+.badge-status-izin {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+body.dark-mode .badge-status-izin {
+  background: rgba(29, 78, 216, 0.15);
+  border-color: #2563eb;
+  color: #60a5fa;
+}
+
+.badge-status-sakit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+body.dark-mode .badge-status-sakit {
+  background: rgba(126, 34, 206, 0.15);
+  border-color: #9333ea;
+  color: #c084fc;
+}
+
+.badge-status-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+body.dark-mode .badge-status-pending {
+  background: #1e293b;
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.3);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 4px rgba(234, 88, 12, 0);
+  }
+}
+
+/* SIGAP MONITOR PRESENSI PENGAMPU CARDS (SUPER ADMIN) */
+.sigap-monitor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+  padding: 18px 20px;
+}
+
+/* Responsive Card Display */
+.sigap-monitor-card-mobile {
+  display: none;
+}
+
+.sigap-monitor-card-desktop {
+  display: flex;
+}
+
+.badge-status-alpa {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+body.dark-mode .badge-status-alpa {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: #dc2626;
+  color: #f87171;
+}
+
+@media (max-width: 640px) {
+  .sigap-monitor-grid {
+    grid-template-columns: 1fr;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .sigap-monitor-card-desktop {
+    display: none !important;
+  }
+
+  .sigap-monitor-card-mobile {
+    display: flex !important;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 12px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  body.dark-mode .sigap-monitor-card-mobile {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  .sigap-monitor-card-mobile:active {
+    transform: scale(0.99);
+    background: #f8fafc;
+  }
+
+  body.dark-mode .sigap-monitor-card-mobile:active {
+    background: #334155;
+  }
+
+  .sigap-monitor-mobile-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .sigap-monitor-mobile-avatar {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.76rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .sigap-mobile-avatar-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 1.5px solid #ffffff;
+  }
+
+  body.dark-mode .sigap-mobile-avatar-dot {
+    border-color: #1e293b;
+  }
+
+  .sigap-monitor-mobile-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .sigap-monitor-mobile-name {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+  }
+
+  body.dark-mode .sigap-monitor-mobile-name {
+    color: #f8fafc;
+  }
+
+  .sigap-monitor-mobile-sesi {
+    font-size: 0.72rem;
+    color: #0f766e;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  body.dark-mode .sigap-monitor-mobile-sesi {
+    color: #2dd4bf;
+  }
+
+  .sigap-monitor-mobile-right {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .sigap-mobile-pill {
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
+    letter-spacing: 0.01em !important;
+  }
+}
+
+.sigap-monitor-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+body.dark-mode .sigap-monitor-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.sigap-monitor-card:hover {
+  transform: translateY(-2.5px);
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.04);
+  border-color: #cbd5e1;
+}
+
+body.dark-mode .sigap-monitor-card:hover {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  border-color: #475569;
+}
+
+.sigap-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.sigap-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.sigap-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+body.dark-mode .sigap-table th {
+  background: #1e293b;
+  color: #94a3b8;
+  border-bottom-color: #334155;
+}
+
+.sigap-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.83rem;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+body.dark-mode .sigap-table td {
+  border-bottom-color: #1e293b;
+  color: #f1f5f9;
+}
+
+.sigap-table tr:hover td {
+  background: #f8fafc;
+}
+
+body.dark-mode .sigap-table tr:hover td {
+  background: #1e293b;
+}
+
+.sigap-btn-detail {
+  padding: 6px 13px;
+  border-radius: 9px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: #f0fdf4;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.sigap-btn-detail:hover {
+  background: #047857;
+  color: #ffffff;
+  border-color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(4, 120, 87, 0.2);
+}
+
+.sigap-btn-detail:active {
+  transform: scale(0.96);
+}
+
+.sigap-btn-koreksi {
+  padding: 6px 11px;
+  border-radius: 9px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.sigap-btn-koreksi:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.sigap-btn-koreksi:active {
+  transform: scale(0.96);
+}
+
+/* ==========================================================
+   SIGAP MODAL DIALOG & MOBILE BOTTOM SHEET SYSTEM
+   Desktop: Centered backdrop-blurred card
+   Mobile (< 768px): Smooth Slide-Up Bottom Sheet Drawer
+   ========================================================== */
+.sigap-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: fadeInOverlay 0.22s ease-out;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sigap-modal-card {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  overflow: hidden;
+  animation: zoomInModal 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+body.dark-mode .sigap-modal-card {
+  background: #0f172a;
+  border-color: #334155;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+@keyframes zoomInModal {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.sheet-drag-handle {
+  display: none;
+}
+
+.sigap-modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+}
+
+body.dark-mode .sigap-modal-header {
+  background: #0f172a;
+  border-bottom-color: #1e293b;
+}
+
+.sigap-modal-title {
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+body.dark-mode .sigap-modal-title {
+  color: #f8fafc;
+}
+
+.sigap-modal-close-btn {
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.sigap-modal-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.sigap-modal-close-btn:active {
+  transform: scale(0.92);
+}
+
+.sigap-modal-footer {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+body.dark-mode .sigap-modal-footer {
+  background: #1e293b;
+  border-top-color: #334155;
+}
+
+/* RESPONSIVE MOBILE: BOTTOM SHEET DRAWER */
+@media (max-width: 768px) {
+  .sigap-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .sigap-modal-card {
+    max-width: 100% !important;
+    border-radius: 24px 24px 0 0 !important;
+    max-height: 88vh;
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+    animation: slideUpSheet 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes slideUpSheet {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .sheet-drag-handle {
+    display: block;
+    width: 44px;
+    height: 5px;
+    background: #cbd5e1;
+    border-radius: 9999px;
+    margin: 10px auto 4px auto;
+  }
+}
+
+/* ==========================================================
+   MOBILE BOTTOM NAVIGATION (CURVED NOTCH FLOATING BUBBLE BAR)
+   Contoh Desain: Elevated Active Circle + Seamless Scoop Notch
+   ========================================================== */
+
+:root {
+  --bottom-nav-bg: #ffffff;
+  --bottom-nav-text: #0f172a;
+  --bottom-nav-muted: #64748b;
+  --bottom-nav-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+body.dark-mode {
+  --bottom-nav-bg: #1e293b;
+  --bottom-nav-text: #f8fafc;
+  --bottom-nav-muted: #94a3b8;
+  --bottom-nav-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.45), 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+/* Default: hidden on desktop */
+.bottom-nav-root {
+  display: none;
+}
+
+@media (max-width: 850px) {
+  /* Sembunyikan sidebar desktop */
+  .simtah-sidebar,
+  .sigap-sidebar {
+    display: none !important;
+  }
+
+  /* Konten utama membentang penuh dengan padding bawah untuk bottom nav */
+  .simtah-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-bottom: 110px !important;
+  }
+
+  .simtah-header {
+    padding: 12px 16px !important;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .role-badge-group {
+    overflow-x: auto;
+    max-width: 100%;
+    scrollbar-width: none;
+  }
+  .role-badge-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Tampilkan bilah navigasi bawah mengambang */
+  .bottom-nav-root {
+    display: block;
+    position: fixed;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    margin: 0 auto;
+    max-width: 480px;
+    z-index: 1000;
+    pointer-events: none;
+  }
+}
+
+.bottom-nav-wrapper {
+  position: relative;
+  background: var(--bottom-nav-bg);
+  border-radius: 26px;
+  box-shadow: var(--bottom-nav-shadow);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  pointer-events: auto;
+  padding: 6px 4px 5px 4px;
+  user-select: none;
+}
+
+body.dark-mode .bottom-nav-wrapper {
+  border-color: rgba(51, 65, 85, 0.9);
+}
+
+/* 1. SLIDING TRACK FOR ELEVATED BUBBLE & SCOOP */
+.bottom-nav-sliding-bubble-track {
+  position: absolute;
+  top: -24px;
+  left: 0;
+  width: 20%;
+  height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
+  transition: transform 0.38s cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+/* Seamless SVG scoop framing the bubble */
+.bottom-nav-scoop-container {
+  position: absolute;
+  bottom: -4px;
+  width: 84px;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  filter: drop-shadow(0 -3px 4px rgba(0, 0, 0, 0.03));
+}
+
+.bottom-nav-scoop-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.bottom-nav-scoop-fill {
+  fill: var(--bottom-nav-bg);
+}
+
+/* Elevated Circular Active Bubble */
+.bottom-nav-raised-bubble {
+  position: absolute;
+  top: -4px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--bottom-nav-bg);
+  border: 3.5px solid var(--active-theme-color, #0d9488);
+  box-shadow: 0 8px 18px rgba(13, 148, 136, 0.28), 0 2px 6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+body.dark-mode .bottom-nav-raised-bubble {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.bottom-nav-bubble-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: navBubblePop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes navBubblePop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  65% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 2. THE 5 BOTTOM NAV BUTTONS */
+.bottom-nav-items-row {
+  display: flex;
+  position: relative;
+  z-index: 5;
+  width: 100%;
+}
+
+.bottom-nav-item-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 52px;
+  padding: 5px 0 4px 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-icon-slot {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.bottom-nav-inactive-icon {
+  color: var(--bottom-nav-muted);
+  transition: color 0.2s, transform 0.2s;
+}
+
+.bottom-nav-item-btn:hover .bottom-nav-inactive-icon {
+  color: var(--bottom-nav-text);
+  transform: translateY(-2px);
+}
+
+.bottom-nav-label-text {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--bottom-nav-muted);
+  transition: color 0.2s, font-weight 0.2s;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.bottom-nav-item-btn.is-active .bottom-nav-label-text {
+  font-weight: 800;
+  color: var(--bottom-nav-text);
+  font-size: 0.75rem;
+}
+
+/* 3. HOME INDICATOR PILL */
+.bottom-nav-home-indicator-bar {
+  width: 125px;
+  height: 4.5px;
+  border-radius: 9999px;
+  background: var(--bottom-nav-text);
+  opacity: 0.22;
+  margin: 4px auto 1px auto;
+}
+
+/* ==========================================================
+   SIDEBAR DRAWER NAVIGATION (PERSIS SEPERTI GAMBAR 2)
+   Slide-in dari kiri dengan profil, 3-kolom stats, dan menu
+   ========================================================== */
+.sidebar-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(5px);
+  z-index: 1100;
+  display: flex;
+  justify-content: flex-start;
+  animation: drawerFadeIn 0.25s ease;
+}
+
+@keyframes drawerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sidebar-drawer-panel {
+  width: 86%;
+  max-width: 320px;
+  height: 100vh;
+  background: var(--bottom-nav-bg, #ffffff);
+  border-radius: 0 28px 28px 0;
+  box-shadow: 12px 0 35px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  animation: drawerSlideFromLeft 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes drawerSlideFromLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+/* 1. Top Bar */
+.sidebar-drawer-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 12px 18px;
+}
+
+.sidebar-drawer-circle-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+body.dark-mode .sidebar-drawer-circle-btn {
+  border-color: #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.sidebar-drawer-circle-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+body.dark-mode .sidebar-drawer-circle-btn:hover {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.sidebar-drawer-center-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+}
+
+body.dark-mode .sidebar-drawer-center-pill {
+  background: #0d9488;
+  color: #ffffff;
+}
+
+.pill-dot {
+  color: #f59e0b;
+  font-size: 0.8rem;
+}
+
+/* 2. Profile Section & 3-Column Stats Card */
+.sidebar-drawer-profile-section {
+  padding: 8px 18px 16px 18px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+body.dark-mode .sidebar-drawer-profile-section {
+  border-bottom-color: #1f2937;
+}
+
+.sidebar-drawer-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-drawer-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.sidebar-drawer-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-drawer-user-name {
+  margin: 0;
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: var(--bottom-nav-text, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-drawer-user-role {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+body.dark-mode .sidebar-drawer-user-role {
+  color: #94a3b8;
+}
+
+.sidebar-drawer-edit-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.72rem;
+  color: #0d9488;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 2px;
+  display: block;
+}
+
+.sidebar-drawer-edit-link:hover {
+  text-decoration: underline;
+}
+
+/* 3-Column Stats Card (Persis gambar 2) */
+.sidebar-drawer-stats-card {
+  margin-top: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 8px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+body.dark-mode .sidebar-drawer-stats-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.sidebar-drawer-stat-col {
+  text-align: center;
+  flex: 1;
+}
+
+.sidebar-drawer-stat-col:not(:last-child) {
+  border-right: 1px solid #e2e8f0;
+}
+
+body.dark-mode .sidebar-drawer-stat-col:not(:last-child) {
+  border-right-color: #334155;
+}
+
+.stat-number {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--bottom-nav-text, #0f172a);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* 3. Menu List Scrollable */
+.sidebar-drawer-menu-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+  scrollbar-width: thin;
+}
+
+.sidebar-drawer-category {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin: 14px 10px 6px 10px;
+  text-transform: uppercase;
+}
+
+.sidebar-drawer-menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 3px;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sidebar-drawer-menu-item:hover {
+  background: #f1f5f9;
+  transform: translateX(3px);
+}
+
+body.dark-mode .sidebar-drawer-menu-item:hover {
+  background: #1e293b;
+}
+
+.sidebar-drawer-menu-item.active {
+  background: #f0fdf4;
+}
+
+body.dark-mode .sidebar-drawer-menu-item.active {
+  background: rgba(13, 148, 136, 0.15);
+}
+
+.menu-active-indicator {
+  position: absolute;
+  left: 0;
+  width: 3.5px;
+  height: 24px;
+  border-radius: 0 4px 4px 0;
+  background: transparent;
+  transition: background 0.2s;
+}
+
+.sidebar-drawer-menu-item.active .menu-active-indicator {
+  background: #0d9488;
+}
+
+.menu-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.sidebar-drawer-menu-item:hover .menu-icon-box {
+  transform: scale(1.08);
+}
+
+.menu-text {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #334155;
+  transition: color 0.2s, font-weight 0.2s;
+}
+
+body.dark-mode .menu-text {
+  color: #cbd5e1;
+}
+
+.sidebar-drawer-menu-item.active .menu-text {
+  font-weight: 800;
+  color: #0d9488;
+}
+
+body.dark-mode .sidebar-drawer-menu-item.active .menu-text {
+  color: #2dd4bf;
+}
+
+/* 4. Drawer Footer Actions & Version Tag */
+.sidebar-drawer-footer {
+  padding: 12px 16px 20px 16px;
+  border-top: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+body.dark-mode .sidebar-drawer-footer {
+  border-top-color: #1f2937;
+  background: #0b1120;
+}
+
+.sidebar-drawer-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+body.dark-mode .sidebar-drawer-action-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.sidebar-drawer-action-btn:hover {
+  background: #f1f5f9;
+}
+
+/* Logout Button (Mirip Icon Cyan Logout Gambar 2) */
+.sidebar-drawer-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #e0f2fe;
+  background: #ffffff;
+  color: #0284c7;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+body.dark-mode .sidebar-drawer-logout-btn {
+  background: #0f172a;
+  border-color: #1e3a8a;
+  color: #38bdf8;
+}
+
+.sidebar-drawer-logout-btn:hover {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  transform: translateY(-1px);
+}
+
+.logout-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #e0f2fe;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.dark-mode .logout-icon-box {
+  background: #1e3a8a;
+  color: #38bdf8;
+}
+
+.sidebar-drawer-version-tag {
+  text-align: center;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  margin-top: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================ */
+/* NEW ATTRACTIVE ATTENDANCE STATUS BUTTONS & RECAP CARDS       */
+/* ============================================================ */
+
+.attendance-status-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+body.dark-mode .attendance-status-container {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.att-status-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background: transparent;
+  color: #64748b;
+  transition: all 0.16s ease;
+  user-select: none;
+  line-height: 1;
+}
+
+.att-status-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* HADIR (H) */
+.att-status-btn.att-hadir {
+  color: #047857;
+}
+.att-status-btn.att-hadir:hover {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+.att-status-btn.att-hadir.active {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #ffffff;
+  border-color: #047857;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35);
+  font-weight: 800;
+}
+
+/* IZIN (I) */
+.att-status-btn.att-izin {
+  color: #0284c7;
+}
+.att-status-btn.att-izin:hover {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+.att-status-btn.att-izin.active {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border-color: #0369a1;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+  font-weight: 800;
+}
+
+/* SAKIT (S) */
+.att-status-btn.att-sakit {
+  color: #b45309;
+}
+.att-status-btn.att-sakit:hover {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+.att-status-btn.att-sakit.active {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border-color: #d97706;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+  font-weight: 800;
+}
+
+/* ALPA (A) */
+.att-status-btn.att-alpa {
+  color: #e11d48;
+}
+.att-status-btn.att-alpa:hover {
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+.att-status-btn.att-alpa.active {
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  color: #ffffff;
+  border-color: #e11d48;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.35);
+  font-weight: 800;
+}
+
+/* ATTENDANCE RECAP CARDS */
+.att-recap-card {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.att-recap-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.att-recap-card.hadir {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-color: #a7f3d0;
+}
+
+.att-recap-card.izin {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #bae6fd;
+}
+
+.att-recap-card.sakit {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #fde68a;
+}
+
+.att-recap-card.alpa {
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
+  border-color: #fecdd3;
+}
+
+body.dark-mode .att-recap-card.hadir {
+  background: #064e3b33;
+  border-color: #059669;
+}
+body.dark-mode .att-recap-card.izin {
+  background: #0c4a6e33;
+  border-color: #0284c7;
+}
+body.dark-mode .att-recap-card.sakit {
+  background: #78350f33;
+  border-color: #d97706;
+}
+body.dark-mode .att-recap-card.alpa {
+  background: #88133733;
+  border-color: #e11d48;
+}
+
+/* ==========================================================
+   SETORAN SANTRI - LAYOUT & TAMPILAN SESUAI SCREENSHOT
+   ========================================================== */
+.setoran-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.setoran-page-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.setoran-grid-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .setoran-grid-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.setoran-card-main {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+}
+
+body.dark-mode .setoran-card-main {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
+}
+
+.setoran-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.setoran-card-title-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.setoran-icon-square {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1.5px solid #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+  background: #ffffff;
+}
+
+body.dark-mode .setoran-icon-square {
+  background: #0f172a;
+  border-color: #10b981;
+  color: #34d399;
+}
+
+.setoran-date-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+body.dark-mode .setoran-date-pill {
+  background: #0f172a;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.setoran-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+body.dark-mode .setoran-label {
+  color: #94a3b8;
+}
+
+/* Santri Select dropdown */
+.setoran-santri-select {
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  border: 1.5px solid #1e293b;
+  padding: 0 16px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  background-color: #ffffff;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+body.dark-mode .setoran-santri-select {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #64748b;
+}
+
+/* Segmented Jenis Setoran buttons */
+.setoran-jenis-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.setoran-jenis-btn {
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+}
+
+.setoran-jenis-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.setoran-jenis-btn.active-sabaq {
+  background: #6d28d9;
+  border-color: #6d28d9;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.32);
+}
+
+.setoran-jenis-btn.active-sabqi {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
+}
+
+.setoran-jenis-btn.active-manzil {
+  background: #059669;
+  border-color: #059669;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.32);
+}
+
+body.dark-mode .setoran-jenis-btn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+/* Card Mode Setoran Ganda */
+.setoran-ganda-card {
+  border: 1px solid #bbf7d0;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+  border-radius: 18px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+  margin-bottom: 18px;
+}
+
+body.dark-mode .setoran-ganda-card {
+  border-color: #065f46;
+  background: #064e3b22;
+}
+
+/* Inner Card Sabaq/Sabqi/Manzil */
+.setoran-inner-card {
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 20px;
+  padding: 22px 24px;
+}
+
+body.dark-mode .setoran-inner-card {
+  background: #581c8715;
+  border-color: #6b21a844;
+}
+
+/* Posisi Mushaf Banner */
+.posisi-mushaf-banner {
+  background: #ecfdf5;
+  border: 1.5px solid #86efac;
+  border-radius: 16px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+body.dark-mode .posisi-mushaf-banner {
+  background: #064e3b33;
+  border-color: #059669;
+}
+
+/* Counter Stepper */
+.setoran-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 4px;
+  height: 42px;
+}
+
+body.dark-mode .setoran-stepper {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.setoran-stepper-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: #f1f5f9;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.setoran-stepper-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+body.dark-mode .setoran-stepper-btn {
+  background: #1e293b;
+  color: #cbd5e1;
+}
+
+/* Predikat Pills */
+.predikat-pills-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.predikat-pill-btn {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.predikat-pill-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.predikat-pill-btn.active {
+  background: #0ea5e9;
+  border-color: #0ea5e9;
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.35);
+}
+
+body.dark-mode .predikat-pill-btn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+/* Timeline in Right Card */
+.setoran-timeline-container {
+  position: relative;
+  padding-left: 28px;
+  margin-top: 18px;
+}
+
+.setoran-timeline-container::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 9px;
+  width: 2px;
+  background: #e2e8f0;
+}
+
+body.dark-mode .setoran-timeline-container::before {
+  background: #334155;
+}
+
+.setoran-timeline-item {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.setoran-timeline-dot {
+  position: absolute;
+  left: -28px;
+  top: 14px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #16a34a;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.3);
+}
+
+body.dark-mode .setoran-timeline-dot {
+  border-color: #1e293b;
+}
+
+.setoran-timeline-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.setoran-timeline-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+body.dark-mode .setoran-timeline-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+/* Submit Big Button */
+.btn-simpan-setoran {
+  width: 100%;
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  padding: 16px 24px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.25);
+  margin-top: 24px;
+}
+
+.btn-simpan-setoran:hover {
+  background: #1e293b;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.35);
+}
+
+.btn-simpan-setoran:active {
+  transform: translateY(0);
+}

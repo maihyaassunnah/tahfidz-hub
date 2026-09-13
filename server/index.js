@@ -1,0 +1,280 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { pool, query } from './db.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+const app = express();
+const PORT = process.env.PORT || 5001;
+
+// Middleware
+app.use(cors({
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json({ limit: '10mb' }));
+
+// 1. HEALTHCHECK
+app.get('/api/health', async (req, res) => {
+  try {
+    const dbTest = await query('SELECT NOW() as time');
+    res.json({
+      status: 'ok',
+      service: 'tahfidz-api',
+      database: 'connected',
+      dbTime: dbTest.rows[0].time,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      service: 'tahfidz-api',
+      database: 'disconnected',
+      error: err.message
+    });
+  }
+});
+
+// 2. CABANG ENDPOINTS
+app.get('/api/cabang', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM cabang ORDER BY created_at ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/cabang', async (req, res) => {
+  const { id, nama, kode, kota, alamat, no_hp, penanggung_jawab, email, status, warna_aksen, didirikan } = req.body;
+  try {
+    const sql = `
+      INSERT INTO cabang (id, nama, kode, kota, alamat, no_hp, penanggung_jawab, email, status, warna_aksen, didirikan)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ON CONFLICT (id) DO UPDATE SET
+        nama = EXCLUDED.nama, kode = EXCLUDED.kode, kota = EXCLUDED.kota,
+        alamat = EXCLUDED.alamat, no_hp = EXCLUDED.no_hp, penanggung_jawab = EXCLUDED.penanggung_jawab,
+        email = EXCLUDED.email, status = EXCLUDED.status, warna_aksen = EXCLUDED.warna_aksen
+      RETURNING *;
+    `;
+    const result = await query(sql, [id, nama, kode, kota, alamat, no_hp, penanggung_jawab, email, status, warna_aksen, didirikan]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. PENGAMPU ENDPOINTS
+app.get('/api/pengampu', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM pengampu ORDER BY nama ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. SANTRI ENDPOINTS
+app.get('/api/santri', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM santri ORDER BY nama ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/santri', async (req, res) => {
+  const { id, nis, nama, kelas, halaqah_id, status, target, kontak, wali, no_hp_wali, cabang_id } = req.body;
+  try {
+    const sql = `
+      INSERT INTO santri (id, nis, nama, kelas, halaqah_id, status, target, kontak, wali, no_hp_wali, cabang_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ON CONFLICT (id) DO UPDATE SET
+        nis = EXCLUDED.nis, nama = EXCLUDED.nama, kelas = EXCLUDED.kelas,
+        halaqah_id = EXCLUDED.halaqah_id, status = EXCLUDED.status, target = EXCLUDED.target,
+        kontak = EXCLUDED.kontak, wali = EXCLUDED.wali, no_hp_wali = EXCLUDED.no_hp_wali
+      RETURNING *;
+    `;
+    const result = await query(sql, [id, nis, nama, kelas, halaqah_id, status || 'Aktif', target, kontak, wali, no_hp_wali, cabang_id]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 5. SESI ENDPOINTS
+app.get('/api/sesi', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM sesi ORDER BY jam_mulai ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 6. ABSENSI SANTRI ENDPOINTS
+app.get('/api/absensi-santri', async (req, res) => {
+  const { tanggal, sesi_id } = req.query;
+  try {
+    let sql = 'SELECT * FROM absensi_santri';
+    const params = [];
+    if (tanggal) {
+      params.push(tanggal);
+      sql += ` WHERE tanggal = $${params.length}`;
+    }
+    if (sesi_id) {
+      params.push(sesi_id);
+      sql += params.length === 1 ? ` WHERE sesi_id = $${params.length}` : ` AND sesi_id = $${params.length}`;
+    }
+    sql += ' ORDER BY created_at DESC';
+    const result = await query(sql, params);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/absensi-santri/batch', async (req, res) => {
+  const { records } = req.body; // Array of { id, tanggal, sesi_id, santri_id, status, keterangan }
+  if (!Array.isArray(records)) {
+    return res.status(400).json({ error: 'Payload harus berupa array records' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const item of records) {
+      const sql = `
+        INSERT INTO absensi_santri (id, tanggal, sesi_id, santri_id, status, keterangan)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (tanggal, sesi_id, santri_id) DO UPDATE SET
+          status = EXCLUDED.status,
+          keterangan = EXCLUDED.keterangan;
+      `;
+      await client.query(sql, [item.id, item.tanggal, item.sesi_id || item.sesiId, item.santri_id || item.santriId, item.status, item.keterangan]);
+    }
+    await client.query('COMMIT');
+    res.json({ success: true, count: records.length });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
+// 7. MONITORING SIGAP (PRESENSI PENGAMPU REALTIME)
+app.get('/api/monitoring-sigap', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM monitoring_sigap ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/monitoring-sigap', async (req, res) => {
+  const {
+    id, tanggal, pengampu_id, nama, nip, role, halaqah, mapel, kelas, sesi, jadwal,
+    jam, status, selisih_menit, lokasi_gps, metode, keterangan, alasan_izin, tugas_siswa, manual
+  } = req.body;
+
+  try {
+    const sql = `
+      INSERT INTO monitoring_sigap (
+        id, tanggal, pengampu_id, nama, nip, role, halaqah, mapel, kelas, sesi, jadwal,
+        jam, status, selisih_menit, lokasi_gps, metode, keterangan, alasan_izin, tugas_siswa, manual
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+      ON CONFLICT (id) DO UPDATE SET
+        status = EXCLUDED.status,
+        jam = EXCLUDED.jam,
+        selisih_menit = EXCLUDED.selisih_menit,
+        keterangan = EXCLUDED.keterangan,
+        alasan_izin = EXCLUDED.alasan_izin,
+        tugas_siswa = EXCLUDED.tugas_siswa,
+        manual = EXCLUDED.manual
+      RETURNING *;
+    `;
+    const result = await query(sql, [
+      id, tanggal || new Date().toISOString().split('T')[0], pengampu_id, nama, nip, role,
+      halaqah, mapel, kelas, sesi, jadwal, jam || '-', status, selisih_menit || 0,
+      lokasi_gps, metode || 'Scan QR GPS', keterangan, alasan_izin, tugas_siswa, !!manual
+    ]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 8. 1-CLICK SYNC-ALL: MENGIRIM DARI BROWSER LOCALSTORAGE KE POSTGRESQL
+app.post('/api/sync-all', async (req, res) => {
+  const { santri, pengampu, sesi, cabang, monitoring } = req.body;
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    if (Array.isArray(cabang)) {
+      for (const c of cabang) {
+        await client.query(`
+          INSERT INTO cabang (id, nama, kode, kota, alamat, no_hp, penanggung_jawab, email, status, warna_aksen, didirikan)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          ON CONFLICT (id) DO NOTHING;
+        `, [c.id, c.nama, c.kode, c.kota, c.alamat, c.noHp, c.penanggungJawab, c.email, c.status, c.warnaAksen, c.didirikan]);
+      }
+    }
+
+    if (Array.isArray(pengampu)) {
+      for (const p of pengampu) {
+        await client.query(`
+          INSERT INTO pengampu (id, nip, nama, kontak, no_hp, role, cabang_id)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          ON CONFLICT (id) DO UPDATE SET nama = EXCLUDED.nama, nip = EXCLUDED.nip;
+        `, [p.id, p.nip, p.nama, p.kontak, p.noHp, p.role || 'Pengampu', p.cabangId || 'cabang-pusat']);
+      }
+    }
+
+    if (Array.isArray(monitoring)) {
+      for (const m of monitoring) {
+        await client.query(`
+          INSERT INTO monitoring_sigap (
+            id, tanggal, pengampu_id, nama, nip, role, halaqah, mapel, kelas, sesi, jadwal,
+            jam, status, selisih_menit, lokasi_gps, metode, keterangan, alasan_izin, tugas_siswa, manual
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+          ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status, keterangan = EXCLUDED.keterangan;
+        `, [
+          m.id, m.tanggal || new Date().toISOString().split('T')[0], m.pengampuId, m.nama, m.nip, m.role,
+          m.halaqah, m.mapel, m.kelas, m.sesi, m.jadwal, m.jam || '-', m.status, m.selisihMenit || 0,
+          m.lokasiGps, m.metode, m.keterangan, m.alasanIzin, m.tugasSiswa, !!m.manual
+        ]);
+      }
+    }
+
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'Data berhasil disinkronkan ke PostgreSQL' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
+// START SERVER
+app.listen(PORT, () => {
+  console.log(`===========================================`);
+  console.log(`🚀 Tahfidz Hub REST API is running!`);
+  console.log(`📡 Port: ${PORT}`);
+  console.log(`🔗 Endpoint: http://localhost:${PORT}/api/health`);
+  console.log(`===========================================`);
+});
