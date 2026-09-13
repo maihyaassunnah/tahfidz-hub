@@ -81,6 +81,69 @@ app.get('/api/pengampu', async (req, res) => {
   }
 });
 
+app.post('/api/pengampu', async (req, res) => {
+  const { id, nip, nama, kontak, no_hp, role, halaqah_id, cabang_id } = req.body;
+  try {
+    const sql = `
+      INSERT INTO pengampu (id, nip, nama, kontak, no_hp, role, halaqah_id, cabang_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      ON CONFLICT (id) DO UPDATE SET
+        nama = EXCLUDED.nama,
+        nip = EXCLUDED.nip,
+        kontak = EXCLUDED.kontak,
+        no_hp = EXCLUDED.no_hp,
+        role = EXCLUDED.role,
+        halaqah_id = EXCLUDED.halaqah_id,
+        cabang_id = EXCLUDED.cabang_id
+      RETURNING *;
+    `;
+    const result = await query(sql, [id, nip, nama, kontak, no_hp, role || 'Pengampu', halaqah_id, cabang_id || 'cabang-pusat']);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/pengampu/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM pengampu WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3b. HALAQAH ENDPOINTS
+app.get('/api/halaqah', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM halaqah ORDER BY nama ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/halaqah', async (req, res) => {
+  const { id, nama, pengampu_id, target, keterangan, cabang_id } = req.body;
+  try {
+    const sql = `
+      INSERT INTO halaqah (id, nama, pengampu_id, target, keterangan, cabang_id)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (id) DO UPDATE SET
+        nama = EXCLUDED.nama,
+        pengampu_id = EXCLUDED.pengampu_id,
+        target = EXCLUDED.target,
+        keterangan = EXCLUDED.keterangan,
+        cabang_id = EXCLUDED.cabang_id
+      RETURNING *;
+    `;
+    const result = await query(sql, [id, nama, pengampu_id, target, keterangan, cabang_id || 'cabang-pusat']);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 4. SANTRI ENDPOINTS
 app.get('/api/santri', async (req, res) => {
   try {
@@ -94,17 +157,34 @@ app.get('/api/santri', async (req, res) => {
 app.post('/api/santri', async (req, res) => {
   const { id, nis, nama, kelas, halaqah_id, status, target, kontak, wali, no_hp_wali, cabang_id } = req.body;
   try {
+    if (halaqah_id) {
+      await query(`
+        INSERT INTO halaqah (id, nama, cabang_id)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (id) DO NOTHING
+      `, [halaqah_id, 'Halaqah Santri', cabang_id || 'cabang-pusat']);
+    }
     const sql = `
       INSERT INTO santri (id, nis, nama, kelas, halaqah_id, status, target, kontak, wali, no_hp_wali, cabang_id)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       ON CONFLICT (id) DO UPDATE SET
         nis = EXCLUDED.nis, nama = EXCLUDED.nama, kelas = EXCLUDED.kelas,
         halaqah_id = EXCLUDED.halaqah_id, status = EXCLUDED.status, target = EXCLUDED.target,
-        kontak = EXCLUDED.kontak, wali = EXCLUDED.wali, no_hp_wali = EXCLUDED.no_hp_wali
+        kontak = EXCLUDED.kontak, wali = EXCLUDED.wali, no_hp_wali = EXCLUDED.no_hp_wali,
+        cabang_id = EXCLUDED.cabang_id
       RETURNING *;
     `;
-    const result = await query(sql, [id, nis, nama, kelas, halaqah_id, status || 'Aktif', target, kontak, wali, no_hp_wali, cabang_id]);
+    const result = await query(sql, [id, nis, nama, kelas, halaqah_id, status || 'Aktif', target, kontak, wali, no_hp_wali, cabang_id || 'cabang-pusat']);
     res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/santri/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM santri WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

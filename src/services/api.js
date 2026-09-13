@@ -48,6 +48,97 @@ class ApiService {
     }
   }
 
+  async saveSantri(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/santri`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to save santri to server:', err.message);
+      return null;
+    }
+  }
+
+  async deleteSantri(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/santri/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to delete santri from server:', err.message);
+      return null;
+    }
+  }
+
+  // 3b. Pengampu & Guru
+  async getPengampu() {
+    try {
+      const res = await fetch(`${this.baseUrl}/pengampu`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to fetch pengampu from server:', err.message);
+      return null;
+    }
+  }
+
+  async savePengampu(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/pengampu`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to save pengampu to server:', err.message);
+      return null;
+    }
+  }
+
+  async deletePengampu(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/pengampu/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to delete pengampu from server:', err.message);
+      return null;
+    }
+  }
+
+  // 3c. Halaqah
+  async getHalaqah() {
+    try {
+      const res = await fetch(`${this.baseUrl}/halaqah`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to fetch halaqah from server:', err.message);
+      return null;
+    }
+  }
+
+  async saveHalaqah(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/halaqah`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to save halaqah to server:', err.message);
+      return null;
+    }
+  }
+
   // 4. Simpan / Update Presensi Realtime Pengampu (Monitoring Sigap)
   async saveMonitoringPresensi(data) {
     try {

@@ -64,8 +64,8 @@ export default function DashboardView({
     };
   });
 
-  // Total santri di halaqah Wahyudin (10 santri sesuai screenshot)
-  const halaqahSantri = santriList.filter(s => s.halaqahId === 'h-wahyudin');
+  // Total santri di halaqah pengampu (santriList sudah disaring dinamis sesuai pengampu aktif dari App.jsx)
+  const halaqahSantri = santriList;
   const totalDaftarSantri = halaqahSantri.length || 10;
   const totalRiwayatSetoran = storageService.getTotalSetoranCount();
 

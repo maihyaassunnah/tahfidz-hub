@@ -669,6 +669,207 @@ export const storageService = {
       localStorage.setItem(STORAGE_KEYS.SELECTED_STUDENT_PARENT, 's-akbar');
     }
 
+    // Auto-Harmonisasi data antara SIGAP, SIMTAH, dan Akun Pengampu
+    this._harmonizeGuruAndPengampu();
+    this._harmonizeSiswaAndSantri();
+  },
+
+  // ==========================================
+  // HARMONISASI DATA SIGAP <-> SIMTAH <-> PRISMA
+  // ==========================================
+  _cleanName(str) {
+    if (!str) return '';
+    return str.toLowerCase()
+      .replace(/^(ustadz|ustadzah|ust\.|dr\.|drh\.|ir\.|prof\.|kh\.|k\.h\.)\s*/gi, '')
+      .replace(/,\s*(s\.pd|lc\.|m\.pd|b\.a\.|m\.ag|s\.th\.i|s\.sos|s\.ag|m\.si|a\.md).*$/gi, '')
+      .trim();
+  },
+
+  _harmonizeGuruAndPengampu() {
+    try {
+      const guruRaw = localStorage.getItem(STORAGE_KEYS.SIGAP_GURU);
+      const pengampuRaw = localStorage.getItem(STORAGE_KEYS.PENGAMPU);
+      const halaqahRaw = localStorage.getItem(STORAGE_KEYS.HALAQAH);
+      if (!guruRaw) return;
+
+      const guruList = JSON.parse(guruRaw) || [];
+      const pengampuList = pengampuRaw ? JSON.parse(pengampuRaw) : [...INITIAL_PENGAMPU];
+      const halaqahList = halaqahRaw ? JSON.parse(halaqahRaw) : [...INITIAL_HALAQAH];
+      let pChanged = false;
+      let hChanged = false;
+
+      guruList.forEach(g => {
+        const cleanG = this._cleanName(g.nama);
+        let p = pengampuList.find(x => 
+          (x.email && g.email && x.email.toLowerCase() === g.email.toLowerCase()) ||
+          (x.nama && g.nama && (x.nama === g.nama || this._cleanName(x.nama) === cleanG))
+        );
+
+        const targetBranch = g.cabangId || 'cabang-pusat';
+        let halaqahId = p?.halaqahId;
+
+        if (!p) {
+          const pId = 'p-' + (g.id ? g.id.replace(/^sg-/, '') : Date.now());
+          halaqahId = 'hq-' + (g.id ? g.id.replace(/^sg-/, '') : Date.now());
+          p = {
+            id: pId,
+            cabangId: targetBranch,
+            nama: g.nama,
+            nip: g.nip || 'NON-NIP',
+            username: g.email || g.username || ('pengampu.' + cleanG.replace(/\s+/g, '')),
+            email: g.email || '',
+            password: g.password || 'bismillah123',
+            noHp: g.noHp || '',
+            halaqahId: halaqahId,
+            halaqahNama: 'Halaqah ' + g.nama,
+            lokasi: 'Pesantren Persatuan Islam As-Sunnah',
+            status: 'Aktif',
+            role: 'Pengampu',
+            terakhirLogin: 'Baru Didaftarkan'
+          };
+          pengampuList.push(p);
+          pChanged = true;
+        } else {
+          if (g.password && p.password !== g.password) {
+            p.password = g.password;
+            pChanged = true;
+          }
+          if (g.email && p.email !== g.email) {
+            p.email = g.email;
+            p.username = g.email;
+            pChanged = true;
+          }
+          if (!p.halaqahId) {
+            p.halaqahId = 'hq-' + p.id.replace(/^u-|^p-/, '');
+            p.halaqahNama = 'Halaqah ' + p.nama;
+            pChanged = true;
+          }
+          halaqahId = p.halaqahId;
+        }
+
+        const hExists = halaqahList.find(h => h.id === halaqahId || (h.musyrif && this._cleanName(h.musyrif) === cleanG));
+        if (!hExists) {
+          halaqahList.push({
+            id: halaqahId,
+            nama: p.halaqahNama || ('Halaqah ' + p.nama),
+            pengampuId: p.id,
+            musyrif: p.nama,
+            cabangId: targetBranch,
+            lokasi: 'Pesantren Persatuan Islam As-Sunnah',
+            targetJuzPekan: 0.5
+          });
+          hChanged = true;
+        } else if (!hExists.pengampuId) {
+          hExists.pengampuId = p.id;
+          hChanged = true;
+        }
+      });
+
+      if (pChanged) {
+        localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(pengampuList));
+      }
+      if (hChanged) {
+        localStorage.setItem(STORAGE_KEYS.HALAQAH, JSON.stringify(halaqahList));
+      }
+    } catch (e) {
+      console.warn('[STORAGE] _harmonizeGuruAndPengampu error:', e);
+    }
+  },
+
+  _harmonizeSiswaAndSantri() {
+    try {
+      const siswaRaw = localStorage.getItem(STORAGE_KEYS.SIGAP_SISWA);
+      const santriRaw = localStorage.getItem(STORAGE_KEYS.SANTRI);
+      const pengampuRaw = localStorage.getItem(STORAGE_KEYS.PENGAMPU);
+      const halaqahRaw = localStorage.getItem(STORAGE_KEYS.HALAQAH);
+      if (!siswaRaw) return;
+
+      const siswaList = JSON.parse(siswaRaw) || [];
+      const santriList = santriRaw ? JSON.parse(santriRaw) : [...INITIAL_SANTRI];
+      const pengampuList = pengampuRaw ? JSON.parse(pengampuRaw) : [...INITIAL_PENGAMPU];
+      const halaqahList = halaqahRaw ? JSON.parse(halaqahRaw) : [...INITIAL_HALAQAH];
+      let sChanged = false;
+
+      siswaList.forEach(siswa => {
+        let santri = santriList.find(s => 
+          s.id === siswa.id || 
+          (s.nis && siswa.nisn && String(s.nis) === String(siswa.nisn)) ||
+          (s.nama && siswa.nama && s.nama.trim().toLowerCase() === siswa.nama.trim().toLowerCase())
+        );
+
+        let matchedP = null;
+        if (siswa.pengampu) {
+          const cleanPengampu = this._cleanName(siswa.pengampu);
+          matchedP = pengampuList.find(p => 
+            p.nama === siswa.pengampu || 
+            this._cleanName(p.nama) === cleanPengampu ||
+            (p.nama && p.nama.toLowerCase().includes(cleanPengampu))
+          );
+        }
+
+        const halaqahId = matchedP?.halaqahId || 'hq-1';
+        const halaqahNama = matchedP?.halaqahNama || 'Halaqah Ustadz Wahyudin';
+        const pengampuNama = matchedP?.nama || siswa.pengampu || 'Ustadz Wahyudin Hafiz, S.Pd';
+        const pengampuId = matchedP?.id || 'p-wahyudin';
+        const targetBranch = siswa.cabangId || 'cabang-pusat';
+
+        if (!santri) {
+          santri = {
+            id: siswa.id || ('s-' + Date.now()),
+            nis: siswa.nisn || siswa.nis || String(Date.now()).slice(-6),
+            nama: siswa.nama,
+            kelas: siswa.kelas || 'X A',
+            halaqahId: halaqahId,
+            halaqahNama: halaqahNama,
+            pengampu: pengampuNama,
+            pengampuId: pengampuId,
+            pengampuNama: pengampuNama,
+            status: 'Aktif',
+            target: '3 Juz / Tahun',
+            kontak: siswa.kontakWali || siswa.kontak || '',
+            wali: siswa.wali || '',
+            noHpWali: siswa.kontakWali || siswa.noHpWali || '',
+            cabangId: targetBranch,
+            totalHalaman: 0,
+            rincianHalaman: '0 Hlm 0 Brs',
+            juzMutqin: [],
+            juzZiyadah: []
+          };
+          santriList.push(santri);
+          sChanged = true;
+        } else {
+          let updated = false;
+          if (siswa.pengampu && santri.pengampu !== pengampuNama) {
+            santri.pengampu = pengampuNama;
+            santri.pengampuNama = pengampuNama;
+            santri.pengampuId = pengampuId;
+            santri.halaqahId = halaqahId;
+            santri.halaqahNama = halaqahNama;
+            updated = true;
+          }
+          if (siswa.kelas && santri.kelas !== siswa.kelas) {
+            santri.kelas = siswa.kelas;
+            updated = true;
+          }
+          if (siswa.wali && santri.wali !== siswa.wali) {
+            santri.wali = siswa.wali;
+            updated = true;
+          }
+          if (siswa.kontakWali && santri.noHpWali !== siswa.kontakWali) {
+            santri.noHpWali = siswa.kontakWali;
+            santri.kontak = siswa.kontakWali;
+            updated = true;
+          }
+          if (updated) sChanged = true;
+        }
+      });
+
+      if (sChanged) {
+        localStorage.setItem(STORAGE_KEYS.SANTRI, JSON.stringify(santriList));
+      }
+    } catch (e) {
+      console.warn('[STORAGE] _harmonizeSiswaAndSantri error:', e);
+    }
   },
 
   // ==========================================
@@ -1058,6 +1259,22 @@ export const storageService = {
     };
     all.push(created);
     localStorage.setItem(STORAGE_KEYS.SANTRI, JSON.stringify(all));
+
+    // Persist ke database PostgreSQL Prisma
+    apiService.saveSantri({
+      id: created.id,
+      nis: created.nis,
+      nama: created.nama,
+      kelas: created.kelas,
+      halaqah_id: created.halaqahId,
+      status: created.status || 'Aktif',
+      target: created.target,
+      kontak: created.kontak,
+      wali: created.wali,
+      no_hp_wali: created.noHpWali,
+      cabang_id: targetBranch
+    }).catch(e => console.warn('[API] saveSantri error:', e.message));
+
     return created;
   },
 
@@ -1067,6 +1284,21 @@ export const storageService = {
     if (idx !== -1) {
       all[idx] = { ...all[idx], ...updatedFields };
       localStorage.setItem(STORAGE_KEYS.SANTRI, JSON.stringify(all));
+
+      apiService.saveSantri({
+        id: all[idx].id,
+        nis: all[idx].nis,
+        nama: all[idx].nama,
+        kelas: all[idx].kelas,
+        halaqah_id: all[idx].halaqahId,
+        status: all[idx].status || 'Aktif',
+        target: all[idx].target,
+        kontak: all[idx].kontak,
+        wali: all[idx].wali,
+        no_hp_wali: all[idx].noHpWali,
+        cabang_id: all[idx].cabangId
+      }).catch(e => console.warn('[API] updateSantri error:', e.message));
+
       return all[idx];
     }
     return null;
@@ -1075,6 +1307,7 @@ export const storageService = {
   deleteSantri(id) {
     const all = this.getAllSantriRaw().filter(s => s.id !== id);
     localStorage.setItem(STORAGE_KEYS.SANTRI, JSON.stringify(all));
+    apiService.deleteSantri(id).catch(e => console.warn('[API] deleteSantri error:', e.message));
   },
 
   // HALAQAH (MULTI-BRANCH ISOLATED)
@@ -1830,6 +2063,69 @@ export const storageService = {
     };
     all.push(created);
     localStorage.setItem(STORAGE_KEYS.SIGAP_SISWA, JSON.stringify(all));
+
+    // Bridging ke daftar SANTRI SIMTAH
+    let matchedP = null;
+    if (item.pengampu) {
+      const cleanP = this._cleanName(item.pengampu);
+      const pengampuList = this.getAllPengampuRaw();
+      matchedP = pengampuList.find(p => 
+        p.nama === item.pengampu || 
+        this._cleanName(p.nama) === cleanP ||
+        (p.nama && p.nama.toLowerCase().includes(cleanP))
+      );
+    }
+    const halaqahId = matchedP?.halaqahId || 'hq-1';
+    const halaqahNama = matchedP?.halaqahNama || 'Halaqah Ustadz Wahyudin';
+    const pengampuNama = matchedP?.nama || item.pengampu || 'Ustadz Wahyudin Hafiz, S.Pd';
+    const pengampuId = matchedP?.id || 'p-wahyudin';
+
+    const santriObj = {
+      id: created.id,
+      nis: item.nisn || item.nis || String(Date.now()).slice(-6),
+      nama: item.nama,
+      kelas: item.kelas || 'X A',
+      halaqahId: halaqahId,
+      halaqahNama: halaqahNama,
+      pengampu: pengampuNama,
+      pengampuId: pengampuId,
+      pengampuNama: pengampuNama,
+      status: 'Aktif',
+      target: '3 Juz / Tahun',
+      kontak: item.kontakWali || '',
+      wali: item.wali || '',
+      noHpWali: item.kontakWali || '',
+      cabangId: targetBranch,
+      totalHalaman: 0,
+      rincianHalaman: '0 Hlm 0 Brs',
+      juzMutqin: [],
+      juzZiyadah: []
+    };
+
+    const santriList = this.getAllSantriRaw();
+    const sIdx = santriList.findIndex(s => s.id === created.id || (s.nis && s.nis === santriObj.nis));
+    if (sIdx !== -1) {
+      santriList[sIdx] = { ...santriList[sIdx], ...santriObj };
+    } else {
+      santriList.push(santriObj);
+    }
+    localStorage.setItem(STORAGE_KEYS.SANTRI, JSON.stringify(santriList));
+
+    // Persist langsung ke PostgreSQL Prisma
+    apiService.saveSantri({
+      id: santriObj.id,
+      nis: santriObj.nis,
+      nama: santriObj.nama,
+      kelas: santriObj.kelas,
+      halaqah_id: santriObj.halaqahId,
+      status: 'Aktif',
+      target: santriObj.target,
+      kontak: santriObj.kontak,
+      wali: santriObj.wali,
+      no_hp_wali: santriObj.noHpWali,
+      cabang_id: targetBranch
+    }).catch(e => console.warn('[API] saveSantri error:', e.message));
+
     return created;
   },
 
@@ -1839,6 +2135,52 @@ export const storageService = {
     if (idx !== -1) {
       all[idx] = { ...all[idx], ...fields };
       localStorage.setItem(STORAGE_KEYS.SIGAP_SISWA, JSON.stringify(all));
+
+      // Update juga di SANTRI SIMTAH
+      const santriList = this.getAllSantriRaw();
+      const sIdx = santriList.findIndex(s => s.id === id || (all[idx].nisn && s.nis === all[idx].nisn));
+      if (sIdx !== -1) {
+        let matchedP = null;
+        if (all[idx].pengampu) {
+          const cleanP = this._cleanName(all[idx].pengampu);
+          const pengampuList = this.getAllPengampuRaw();
+          matchedP = pengampuList.find(p => 
+            p.nama === all[idx].pengampu || 
+            this._cleanName(p.nama) === cleanP ||
+            (p.nama && p.nama.toLowerCase().includes(cleanP))
+          );
+        }
+        santriList[sIdx] = {
+          ...santriList[sIdx],
+          nama: all[idx].nama || santriList[sIdx].nama,
+          nis: all[idx].nisn || santriList[sIdx].nis,
+          kelas: all[idx].kelas || santriList[sIdx].kelas,
+          wali: all[idx].wali || santriList[sIdx].wali,
+          noHpWali: all[idx].kontakWali || santriList[sIdx].noHpWali,
+          kontak: all[idx].kontakWali || santriList[sIdx].kontak,
+          pengampu: matchedP ? matchedP.nama : (all[idx].pengampu || santriList[sIdx].pengampu),
+          pengampuNama: matchedP ? matchedP.nama : (all[idx].pengampu || santriList[sIdx].pengampuNama),
+          pengampuId: matchedP ? matchedP.id : santriList[sIdx].pengampuId,
+          halaqahId: matchedP ? matchedP.halaqahId : santriList[sIdx].halaqahId,
+          halaqahNama: matchedP ? matchedP.halaqahNama : santriList[sIdx].halaqahNama
+        };
+        localStorage.setItem(STORAGE_KEYS.SANTRI, JSON.stringify(santriList));
+
+        apiService.saveSantri({
+          id: santriList[sIdx].id,
+          nis: santriList[sIdx].nis,
+          nama: santriList[sIdx].nama,
+          kelas: santriList[sIdx].kelas,
+          halaqah_id: santriList[sIdx].halaqahId,
+          status: santriList[sIdx].status || 'Aktif',
+          target: santriList[sIdx].target,
+          kontak: santriList[sIdx].kontak,
+          wali: santriList[sIdx].wali,
+          no_hp_wali: santriList[sIdx].noHpWali,
+          cabang_id: santriList[sIdx].cabangId
+        }).catch(e => console.warn('[API] updateSantri error:', e.message));
+      }
+
       return all[idx];
     }
     return null;
@@ -1847,6 +2189,10 @@ export const storageService = {
   deleteSigapSiswa(id) {
     const all = this.getAllSigapSiswaRaw().filter(s => s.id !== id);
     localStorage.setItem(STORAGE_KEYS.SIGAP_SISWA, JSON.stringify(all));
+
+    const sList = this.getAllSantriRaw().filter(s => s.id !== id);
+    localStorage.setItem(STORAGE_KEYS.SANTRI, JSON.stringify(sList));
+    apiService.deleteSantri(id).catch(e => console.warn('[API] deleteSantri error:', e.message));
   },
 
   // ==========================================
@@ -1915,30 +2261,74 @@ export const storageService = {
     all.push(created);
     localStorage.setItem(STORAGE_KEYS.SIGAP_GURU, JSON.stringify(all));
 
-    // Sinkronkan ke daftar akun pengampu agar bisa login langsung
-    if (item.email) {
-      const pengampuList = this.getAllPengampuRaw();
-      const existing = pengampuList.find(p => p.email === item.email || p.nama === item.nama);
-      if (!existing) {
-        pengampuList.push({
-          id: 'u-' + Date.now(),
-          cabangId: targetBranch,
-          nama: item.nama,
-          nip: item.nip || 'NON-NIP',
-          username: item.email,
-          email: item.email,
-          password: item.password || '123456',
-          noHp: item.noHp || '',
-          halaqahId: 'h-' + Date.now(),
-          halaqahNama: 'Halaqah ' + item.nama,
-          lokasi: 'Pesantren Persatuan Islam As-Sunnah',
-          status: 'Aktif',
-          role: 'Pengampu',
-          terakhirLogin: 'Baru Didaftarkan'
-        });
-        localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(pengampuList));
-      }
+    // Sinkronkan ke daftar akun pengampu dan halaqah
+    const halaqahId = 'hq-' + created.id.replace(/^sg-/, '');
+    const pengampuId = 'p-' + created.id.replace(/^sg-/, '');
+    const pengampuObj = {
+      id: pengampuId,
+      cabangId: targetBranch,
+      nama: item.nama,
+      nip: item.nip || 'NON-NIP',
+      username: item.email || created.username,
+      email: item.email || '',
+      password: item.password || '123456',
+      noHp: item.noHp || '',
+      halaqahId: halaqahId,
+      halaqahNama: 'Halaqah ' + item.nama,
+      lokasi: 'Pesantren Persatuan Islam As-Sunnah',
+      status: 'Aktif',
+      role: item.jabatan || 'Pengampu',
+      terakhirLogin: 'Baru Didaftarkan'
+    };
+
+    const pengampuList = this.getAllPengampuRaw();
+    const pIdx = pengampuList.findIndex(p => (item.email && p.email === item.email) || p.nama === item.nama || p.id === pengampuId);
+    if (pIdx !== -1) {
+      pengampuList[pIdx] = { ...pengampuList[pIdx], ...pengampuObj };
+    } else {
+      pengampuList.push(pengampuObj);
     }
+    localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(pengampuList));
+
+    // Daftarkan halaqah
+    const halaqahList = this.getAllHalaqahRaw();
+    const hIdx = halaqahList.findIndex(h => h.id === halaqahId || h.pengampuId === pengampuId);
+    const halaqahObj = {
+      id: halaqahId,
+      nama: 'Halaqah ' + item.nama,
+      pengampuId: pengampuId,
+      musyrif: item.nama,
+      cabangId: targetBranch,
+      lokasi: 'Pesantren Persatuan Islam As-Sunnah',
+      targetJuzPekan: 0.5
+    };
+    if (hIdx !== -1) {
+      halaqahList[hIdx] = { ...halaqahList[hIdx], ...halaqahObj };
+    } else {
+      halaqahList.push(halaqahObj);
+    }
+    localStorage.setItem(STORAGE_KEYS.HALAQAH, JSON.stringify(halaqahList));
+
+    // Persist langsung ke PostgreSQL Prisma
+    apiService.savePengampu({
+      id: pengampuId,
+      nip: pengampuObj.nip,
+      nama: pengampuObj.nama,
+      kontak: pengampuObj.noHp,
+      no_hp: pengampuObj.noHp,
+      role: pengampuObj.role,
+      halaqah_id: halaqahId,
+      cabang_id: targetBranch
+    }).catch(e => console.warn('[API] savePengampu error:', e.message));
+
+    apiService.saveHalaqah({
+      id: halaqahId,
+      nama: halaqahObj.nama,
+      pengampu_id: pengampuId,
+      target: '3 Juz / Tahun',
+      keterangan: 'Halaqah Ustadz ' + item.nama,
+      cabang_id: targetBranch
+    }).catch(e => console.warn('[API] saveHalaqah error:', e.message));
 
     return created;
   },
@@ -1954,20 +2344,29 @@ export const storageService = {
       localStorage.setItem(STORAGE_KEYS.SIGAP_GURU, JSON.stringify(all));
 
       // Sinkronkan update akun pengampu
-      if (fields.email || fields.password || fields.nama) {
-        const pengampuList = this.getAllPengampuRaw();
-        const pIdx = pengampuList.findIndex(p => p.email === all[idx].email || p.nama === all[idx].nama);
-        if (pIdx !== -1) {
-          pengampuList[pIdx] = {
-            ...pengampuList[pIdx],
-            nama: fields.nama || pengampuList[pIdx].nama,
-            email: fields.email || pengampuList[pIdx].email,
-            username: fields.email || pengampuList[pIdx].username,
-            password: fields.password || pengampuList[pIdx].password,
-            noHp: fields.noHp || pengampuList[pIdx].noHp
-          };
-          localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(pengampuList));
-        }
+      const pengampuList = this.getAllPengampuRaw();
+      const pIdx = pengampuList.findIndex(p => p.email === all[idx].email || p.nama === all[idx].nama || p.id === ('p-' + id.replace(/^sg-/, '')));
+      if (pIdx !== -1) {
+        pengampuList[pIdx] = {
+          ...pengampuList[pIdx],
+          nama: fields.nama || pengampuList[pIdx].nama,
+          email: fields.email || pengampuList[pIdx].email,
+          username: fields.email || pengampuList[pIdx].username,
+          password: fields.password || pengampuList[pIdx].password,
+          noHp: fields.noHp || pengampuList[pIdx].noHp
+        };
+        localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(pengampuList));
+
+        apiService.savePengampu({
+          id: pengampuList[pIdx].id,
+          nip: pengampuList[pIdx].nip,
+          nama: pengampuList[pIdx].nama,
+          kontak: pengampuList[pIdx].noHp,
+          no_hp: pengampuList[pIdx].noHp,
+          role: pengampuList[pIdx].role,
+          halaqah_id: pengampuList[pIdx].halaqahId,
+          cabang_id: pengampuList[pIdx].cabangId
+        }).catch(e => console.warn('[API] updatePengampu error:', e.message));
       }
 
       return all[idx];
@@ -1978,6 +2377,11 @@ export const storageService = {
   deleteSigapGuru(id) {
     const all = this.getAllSigapGuruRaw().filter(g => g.id !== id);
     localStorage.setItem(STORAGE_KEYS.SIGAP_GURU, JSON.stringify(all));
+
+    const pId = 'p-' + id.replace(/^sg-/, '');
+    const pList = this.getAllPengampuRaw().filter(p => p.id !== pId);
+    localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(pList));
+    apiService.deletePengampu(pId).catch(e => console.warn('[API] deletePengampu error:', e.message));
   },
 
   // ==========================================
@@ -2595,12 +2999,14 @@ export const storageService = {
   },
 
   async syncToPostgres() {
+    this._harmonizeGuruAndPengampu();
+    this._harmonizeSiswaAndSantri();
     const payload = {
-      cabang: this.getCabang(),
-      pengampu: this.getPengampu(),
-      halaqah: this.getHalaqah(),
-      santri: this.getSantri(),
-      sesi: this.getSesi(),
+      cabang: this.getCabang('ALL'),
+      pengampu: this.getAllPengampuRaw(),
+      halaqah: this.getAllHalaqahRaw(),
+      santri: this.getAllSantriRaw(),
+      sesi: this.getSesi('ALL'),
       spp: this.getPembayaranSPP(),
       monitoring: (this.getSigapMonitoring() || {}).liveFeed || []
     };
@@ -2630,6 +3036,11 @@ export const storageService = {
         if (Array.isArray(spp) && spp.length > 0) {
           localStorage.setItem(STORAGE_KEYS.PEMBAYARAN_SPP, JSON.stringify(spp));
         }
+
+        // Harmonisasikan data lokal dengan data yang baru ditarik
+        this._harmonizeGuruAndPengampu();
+        this._harmonizeSiswaAndSantri();
+
         return { success: true, message: 'Berhasil mengunduh data terbaru dari PostgreSQL Cloud!' };
       }
       return { success: false, message: 'Data tidak ditemukan di server.' };

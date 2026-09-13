@@ -54,17 +54,10 @@ export default function AbsensiView({
     setPresensiCategory(cat);
     if (onCategoryChange) onCategoryChange(cat);
   };
-  // Filter khusus role Pengampu: HANYA santri yang ditetapkan di halaqah pengampu tersebut!
-  const targetHalaqahId = 'h-wahyudin';
-  const effectiveHalaqahList = (currentRole === 'pengampu') 
-    ? halaqahList.filter(h => h.id === targetHalaqahId)
-    : halaqahList;
-
-  const effectiveSantriList = (currentRole === 'pengampu')
-    ? santriList.filter(s => s.halaqahId === targetHalaqahId)
-    : santriList;
-
-  const defaultHalaqahId = effectiveHalaqahList[0]?.id || targetHalaqahId;
+  // Filter santri & halaqah khusus role Pengampu (sudah disaring secara dinamis dari App.jsx)
+  const effectiveHalaqahList = halaqahList;
+  const effectiveSantriList = santriList;
+  const defaultHalaqahId = effectiveHalaqahList[0]?.id || 'hq-1';
   const [selectedHalaqahId, setSelectedHalaqahId] = useState(defaultHalaqahId);
 
   const todayISO = new Date().toISOString().split('T')[0];

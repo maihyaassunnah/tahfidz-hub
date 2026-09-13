@@ -140,6 +140,55 @@ export default function App() {
     });
   };
 
+  // Saring santri & halaqah khusus role pengampu secara dinamis
+  const cleanAuthName = (authUser?.nama || '')
+    .toLowerCase()
+    .replace(/^(ustadz|ustadzah|ust\.|dr\.|drh\.|ir\.|prof\.|kh\.|k\.h\.)\s*/gi, '')
+    .replace(/,\s*(s\.pd|lc\.|m\.pd|b\.a\.|m\.ag|s\.th\.i|s\.sos|s\.ag|m\.si|a\.md).*$/gi, '')
+    .trim();
+
+  let effectiveHalaqahList = halaqahList;
+  let effectiveSantriList = santriList;
+
+  if (currentRole === 'pengampu' && authUser) {
+    effectiveHalaqahList = halaqahList.filter(h => {
+      if (authUser.halaqahId && h.id === authUser.halaqahId) return true;
+      if (authUser.id && (h.pengampuId === authUser.id || h.musyrifId === authUser.id)) return true;
+      if (cleanAuthName && h.musyrif) {
+        const cleanMusyrif = h.musyrif.toLowerCase();
+        if (cleanMusyrif.includes(cleanAuthName) || cleanAuthName.includes(cleanMusyrif)) return true;
+      }
+      return false;
+    });
+
+    const validHalaqahIds = new Set(effectiveHalaqahList.map(h => h.id));
+    if (authUser.halaqahId) validHalaqahIds.add(authUser.halaqahId);
+
+    effectiveSantriList = santriList.filter(s => {
+      if (s.halaqahId && validHalaqahIds.has(s.halaqahId)) return true;
+      if (s.halaqah_id && validHalaqahIds.has(s.halaqah_id)) return true;
+      if (authUser.id && (s.pengampuId === authUser.id || s.pengampu_id === authUser.id)) return true;
+      const sPengampu = (s.pengampu || s.pengampuNama || '').toLowerCase();
+      if (cleanAuthName && sPengampu) {
+        if (sPengampu.includes(cleanAuthName) || cleanAuthName.includes(sPengampu)) return true;
+      }
+      const sHalaqah = (s.halaqahNama || '').toLowerCase();
+      if (cleanAuthName && sHalaqah && sHalaqah.includes(cleanAuthName)) return true;
+      return false;
+    });
+
+    if (effectiveHalaqahList.length === 0) {
+      effectiveHalaqahList = [{
+        id: authUser.halaqahId || ('hq-' + (authUser.id || 'current')),
+        nama: authUser.halaqahNama || (`Halaqah ${authUser.nama || 'Tahfidz'}`),
+        pengampuId: authUser.id || 'p-current',
+        musyrif: authUser.nama || 'Ustadz Pengampu',
+        cabangId: authUser.cabangId || 'cabang-pusat',
+        targetJuzPekan: 0.5
+      }];
+    }
+  }
+
   const handleSaveSetoran = (entry) => {
     const saved = storageService.addSetoran(entry);
     loadData();
@@ -418,20 +467,8 @@ export default function App() {
             </>
           )}
 
-          {/* Saring Santri & Halaqah Khusus Role Pengampu: HANYA tampilkan santri di halaqah pengampu */}
-          {(() => {
-            const activePengampuHalaqahId = 'h-wahyudin';
-            const effectiveSantriList = (currentRole === 'pengampu')
-              ? santriList.filter(s => s.halaqahId === activePengampuHalaqahId)
-              : santriList;
-            const effectiveHalaqahList = (currentRole === 'pengampu')
-              ? halaqahList.filter(h => h.id === activePengampuHalaqahId)
-              : halaqahList;
-
-            return (
-              <>
-                {/* DASHBOARD UNTUK ROLE PENGAMPU & ORANG TUA */}
-                {currentRole !== 'superadmin' && currentRole !== 'owner' && activeTab === 'dashboard' && (
+          {/* TAMPILAN DASHBOARD, PRESENSI, & SETORAN PENGAMPU / WALI SANTRI */}
+          {currentRole !== 'superadmin' && currentRole !== 'owner' && activeTab === 'dashboard' && (
                   <DashboardView 
                     santriList={effectiveSantriList}
                     halaqahList={effectiveHalaqahList}
@@ -542,9 +579,6 @@ export default function App() {
                     />
                   </div>
                 )}
-              </>
-            );
-          })()}
 
           {activeTab === 'pengaturan' && (
             <PengaturanAdminView 
@@ -567,8 +601,8 @@ export default function App() {
         isOpen={isQuickSetorOpen}
         onClose={() => setIsQuickSetorOpen(false)}
         onSave={handleSaveSetoran}
-        santriList={currentRole === 'pengampu' ? santriList.filter(s => s.halaqahId === 'h-wahyudin') : santriList}
-        halaqahList={currentRole === 'pengampu' ? halaqahList.filter(h => h.id === 'h-wahyudin') : halaqahList}
+        santriList={effectiveSantriList}
+        halaqahList={effectiveHalaqahList}
         initialSantriId={selectedSantriId}
       />
 

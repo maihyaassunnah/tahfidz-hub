@@ -74,11 +74,8 @@ export default function SantriTrackerView({
   showToast,
   currentRole = 'pengampu'
 }) {
-  // Filter santri khusus halaqah pengampu ini jika login sebagai pengampu
-  const targetHalaqahId = 'h-wahyudin';
-  const effectiveSantriList = (currentRole === 'pengampu') 
-    ? santriList.filter(s => s.halaqahId === targetHalaqahId)
-    : santriList;
+  // Santri khusus halaqah pengampu (sudah disaring secara dinamis dari App.jsx)
+  const effectiveSantriList = santriList;
 
   const defaultSantriId = (selectedSantriId && effectiveSantriList.some(s => s.id === selectedSantriId))
     ? selectedSantriId
