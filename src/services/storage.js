@@ -944,6 +944,19 @@ export const storageService = {
     };
     list.push(created);
     this.saveCabang(list);
+    apiService.saveCabang({
+      id: created.id,
+      nama: created.nama,
+      kode: created.kode || created.id,
+      kota: created.kota || 'Tasikmalaya',
+      alamat: created.alamat || '',
+      no_hp: created.noHp || '',
+      penanggung_jawab: created.penanggungJawab || '',
+      email: created.email || '',
+      status: created.status,
+      warna_aksen: created.warnaAksen,
+      didirikan: created.didirikan
+    }).catch(e => console.warn('[API] saveCabang error:', e.message));
     return created;
   },
 
@@ -967,6 +980,20 @@ export const storageService = {
         if (changed) this.saveSuperAdminAccounts(saList);
       }
 
+      apiService.saveCabang({
+        id: list[idx].id,
+        nama: list[idx].nama,
+        kode: list[idx].kode || list[idx].id,
+        kota: list[idx].kota || 'Tasikmalaya',
+        alamat: list[idx].alamat || '',
+        no_hp: list[idx].noHp || '',
+        penanggung_jawab: list[idx].penanggungJawab || '',
+        email: list[idx].email || '',
+        status: list[idx].status,
+        warna_aksen: list[idx].warnaAksen,
+        didirikan: list[idx].didirikan
+      }).catch(e => console.warn('[API] updateCabang error:', e.message));
+
       return list[idx];
     }
     return null;
@@ -982,6 +1009,7 @@ export const storageService = {
     if (this.getActiveBranchId() === id) {
       this.setActiveBranchId('cabang-pusat');
     }
+    apiService.deleteCabang(id).catch(e => console.warn('[API] deleteCabang error:', e.message));
     return true;
   },
 
@@ -1017,6 +1045,15 @@ export const storageService = {
     };
     list.push(created);
     this.saveSuperAdminAccounts(list);
+    apiService.saveSuperadmin({
+      id: created.id,
+      nama: created.nama,
+      username: created.username,
+      password: created.password,
+      role: created.role,
+      cabang_id: created.cabangId || 'cabang-pusat',
+      status: created.status
+    }).catch(e => console.warn('[API] saveSuperadmin error:', e.message));
     return created;
   },
 
@@ -1031,6 +1068,15 @@ export const storageService = {
       }
       list[idx] = { ...list[idx], ...fields };
       this.saveSuperAdminAccounts(list);
+      apiService.saveSuperadmin({
+        id: list[idx].id,
+        nama: list[idx].nama,
+        username: list[idx].username,
+        password: list[idx].password,
+        role: list[idx].role,
+        cabang_id: list[idx].cabangId || 'cabang-pusat',
+        status: list[idx].status
+      }).catch(e => console.warn('[API] updateSuperadmin error:', e.message));
       return list[idx];
     }
     return null;
@@ -1039,6 +1085,7 @@ export const storageService = {
   deleteSuperAdminAccount(id) {
     const list = this.getSuperAdminAccounts().filter(s => s.id !== id);
     this.saveSuperAdminAccounts(list);
+    apiService.deleteSuperadmin(id).catch(e => console.warn('[API] deleteSuperadmin error:', e.message));
   },
 
   resetPasswordSuperAdmin(id, newPassword = 'bismillah123') {
@@ -1356,6 +1403,61 @@ export const storageService = {
     return all.filter(h => (h.cabangId || 'cabang-pusat') === targetBranch);
   },
 
+  saveHalaqah(list) {
+    localStorage.setItem(STORAGE_KEYS.HALAQAH, JSON.stringify(list));
+  },
+
+  addHalaqah(item) {
+    const targetBranch = item.cabangId || this.getActiveBranchId();
+    const list = this.getAllHalaqahRaw();
+    const created = {
+      ...item,
+      id: item.id || ('hq-' + Date.now()),
+      nama: item.nama || 'Halaqah Baru',
+      pengampuId: item.pengampuId || '',
+      target: item.target || item.targetJuz || '30',
+      keterangan: item.keterangan || item.level || 'Dasar',
+      cabangId: targetBranch
+    };
+    list.push(created);
+    this.saveHalaqah(list);
+    apiService.saveHalaqah({
+      id: created.id,
+      nama: created.nama,
+      pengampu_id: created.pengampuId,
+      target: created.target,
+      keterangan: created.keterangan,
+      cabang_id: created.cabangId
+    }).catch(e => console.warn('[API] saveHalaqah error:', e.message));
+    return created;
+  },
+
+  updateHalaqah(id, fields) {
+    const list = this.getAllHalaqahRaw();
+    const idx = list.findIndex(h => h.id === id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...fields };
+      this.saveHalaqah(list);
+      apiService.saveHalaqah({
+        id: list[idx].id,
+        nama: list[idx].nama,
+        pengampu_id: list[idx].pengampuId,
+        target: list[idx].target,
+        keterangan: list[idx].keterangan,
+        cabang_id: list[idx].cabangId
+      }).catch(e => console.warn('[API] updateHalaqah error:', e.message));
+      return list[idx];
+    }
+    return null;
+  },
+
+  deleteHalaqah(id) {
+    const list = this.getAllHalaqahRaw().filter(h => h.id !== id);
+    this.saveHalaqah(list);
+    apiService.deleteHalaqah(id).catch(e => console.warn('[API] deleteHalaqah error:', e.message));
+    return true;
+  },
+
   // SETORAN (MULTI-BRANCH ISOLATED)
   getAllSetoranRaw() {
     this.init();
@@ -1384,7 +1486,7 @@ export const storageService = {
     const all = this.getAllSetoranRaw();
     const newEntry = {
       ...entry,
-      id: 'set-' + Date.now(),
+      id: entry.id || ('set-' + Date.now()),
       cabangId: targetBranch,
       tanggal: entry.tanggal || new Date().toISOString().split('T')[0],
       createdAt: new Date().toISOString()
@@ -1411,12 +1513,51 @@ export const storageService = {
       }
     }
 
+    apiService.saveSetoran({
+      id: newEntry.id,
+      tanggal: newEntry.tanggal,
+      santri_id: newEntry.santriId || newEntry.santri_id || 's-1',
+      pengampu_id: newEntry.pengampuId || newEntry.pengampu_id || null,
+      jenis: newEntry.jenis || 'Ziyadah',
+      surat: newEntry.surahName || newEntry.surat || 'Al-Fatihah',
+      ayat_mulai: newEntry.ayatAwal || newEntry.ayat_mulai || 1,
+      ayat_selesai: newEntry.ayatAkhir || newEntry.ayat_selesai || 7,
+      nilai: newEntry.nilai || 'Mumtaz',
+      catatan: newEntry.catatan || ''
+    }).catch(e => console.warn('[API] saveSetoran error:', e.message));
+
     return newEntry;
+  },
+
+  updateSetoran(id, fields) {
+    const all = this.getAllSetoranRaw();
+    const idx = all.findIndex(s => s.id === id);
+    if (idx !== -1) {
+      all[idx] = { ...all[idx], ...fields };
+      localStorage.setItem(STORAGE_KEYS.SETORAN, JSON.stringify(all));
+
+      apiService.saveSetoran({
+        id: all[idx].id,
+        tanggal: all[idx].tanggal,
+        santri_id: all[idx].santriId || all[idx].santri_id || 's-1',
+        pengampu_id: all[idx].pengampuId || all[idx].pengampu_id || null,
+        jenis: all[idx].jenis || 'Ziyadah',
+        surat: all[idx].surahName || all[idx].surat || 'Al-Fatihah',
+        ayat_mulai: all[idx].ayatAwal || all[idx].ayat_mulai || 1,
+        ayat_selesai: all[idx].ayatAkhir || all[idx].ayat_selesai || 7,
+        nilai: all[idx].nilai || 'Mumtaz',
+        catatan: all[idx].catatan || ''
+      }).catch(e => console.warn('[API] updateSetoran error:', e.message));
+
+      return all[idx];
+    }
+    return null;
   },
 
   deleteSetoran(id) {
     const all = this.getAllSetoranRaw().filter(item => item.id !== id);
     localStorage.setItem(STORAGE_KEYS.SETORAN, JSON.stringify(all));
+    apiService.deleteSetoran(id).catch(e => console.warn('[API] deleteSetoran error:', e.message));
   },
 
   // ABSENSI (MULTI-BRANCH ISOLATED)
@@ -1486,6 +1627,52 @@ export const storageService = {
 
     localStorage.setItem(STORAGE_KEYS.ABSENSI, JSON.stringify(all));
     return newRecord;
+  },
+
+  addAbsensiRecord(entry) {
+    const all = this.getAbsensi();
+    const created = {
+      ...entry,
+      id: entry.id || ('abs-' + Date.now()),
+      tanggal: entry.tanggal || new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString()
+    };
+    all.unshift(created);
+    localStorage.setItem(STORAGE_KEYS.ABSENSI, JSON.stringify(all));
+    apiService.saveAbsensi({
+      id: created.id,
+      tanggal: created.tanggal,
+      sesi_id: created.sesiId || 'sesi-shubuh',
+      santri_id: created.santriId || 's-1',
+      status: created.status || 'Hadir',
+      keterangan: created.keterangan || ''
+    }).catch(e => console.warn('[API] saveAbsensi error:', e.message));
+    return created;
+  },
+
+  updateAbsensiRecord(id, fields) {
+    const all = this.getAbsensi();
+    const idx = all.findIndex(a => a.id === id);
+    if (idx !== -1) {
+      all[idx] = { ...all[idx], ...fields };
+      localStorage.setItem(STORAGE_KEYS.ABSENSI, JSON.stringify(all));
+      apiService.saveAbsensi({
+        id: all[idx].id,
+        tanggal: all[idx].tanggal,
+        sesi_id: all[idx].sesiId || 'sesi-shubuh',
+        santri_id: all[idx].santriId || 's-1',
+        status: all[idx].status || 'Hadir',
+        keterangan: all[idx].keterangan || ''
+      }).catch(e => console.warn('[API] updateAbsensi error:', e.message));
+      return all[idx];
+    }
+    return null;
+  },
+
+  deleteAbsensiRecord(id) {
+    const all = this.getAbsensi().filter(item => item.id !== id);
+    localStorage.setItem(STORAGE_KEYS.ABSENSI, JSON.stringify(all));
+    apiService.deleteAbsensi(id).catch(e => console.warn('[API] deleteAbsensi error:', e.message));
   },
 
   // SCAN PRESENSI LOG
@@ -1770,13 +1957,54 @@ export const storageService = {
     const list = this.getIzin();
     const created = {
       ...data,
-      id: 'iz-' + Date.now(),
-      status: 'Menunggu',
+      id: data.id || ('iz-' + Date.now()),
+      status: data.status || 'Menunggu',
       dibuatPada: new Date().toLocaleDateString('id-ID') + ' ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
     list.unshift(created);
     localStorage.setItem(STORAGE_KEYS.IZIN, JSON.stringify(list));
+    apiService.saveIzin({
+      id: created.id,
+      pemohon_id: created.pemohonId || created.pemohon_id || 'p-umum',
+      tipe_pemohon: created.tipePemohon || 'Pengampu',
+      jenis: created.jenis || 'Izin',
+      tanggal_mulai: created.tanggalMulai || new Date().toISOString().split('T')[0],
+      tanggal_selesai: created.tanggalSelesai || new Date().toISOString().split('T')[0],
+      alasan: created.alasan || '',
+      tugas_pengganti: created.tugasPengganti || '-',
+      status_approval: created.status || 'Menunggu',
+      bukti_url: created.buktiUrl || null
+    }).catch(e => console.warn('[API] saveIzin error:', e.message));
     return created;
+  },
+
+  updateIzin(id, fields) {
+    const list = this.getIzin();
+    const idx = list.findIndex(i => i.id === id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...fields };
+      localStorage.setItem(STORAGE_KEYS.IZIN, JSON.stringify(list));
+      apiService.saveIzin({
+        id: list[idx].id,
+        pemohon_id: list[idx].pemohonId || list[idx].pemohon_id || 'p-umum',
+        tipe_pemohon: list[idx].tipePemohon || 'Pengampu',
+        jenis: list[idx].jenis || 'Izin',
+        tanggal_mulai: list[idx].tanggalMulai,
+        tanggal_selesai: list[idx].tanggalSelesai,
+        alasan: list[idx].alasan || '',
+        tugas_pengganti: list[idx].tugasPengganti || '-',
+        status_approval: list[idx].status || list[idx].statusApproval || 'Menunggu',
+        bukti_url: list[idx].buktiUrl || null
+      }).catch(e => console.warn('[API] updateIzin error:', e.message));
+      return list[idx];
+    }
+    return null;
+  },
+
+  deleteIzin(id) {
+    const list = this.getIzin().filter(item => item.id !== id);
+    localStorage.setItem(STORAGE_KEYS.IZIN, JSON.stringify(list));
+    apiService.deleteIzin(id).catch(e => console.warn('[API] deleteIzin error:', e.message));
   },
 
   updateStatusIzin(id, status, catatanUstadz = "") {
@@ -1786,6 +2014,19 @@ export const storageService = {
       list[idx].status = status;
       if (catatanUstadz) list[idx].catatanUstadz = catatanUstadz;
       localStorage.setItem(STORAGE_KEYS.IZIN, JSON.stringify(list));
+
+      apiService.saveIzin({
+        id: list[idx].id,
+        pemohon_id: list[idx].pemohonId || list[idx].pemohon_id || 'p-umum',
+        tipe_pemohon: list[idx].tipePemohon || 'Pengampu',
+        jenis: list[idx].jenis || 'Izin',
+        tanggal_mulai: list[idx].tanggalMulai,
+        tanggal_selesai: list[idx].tanggalSelesai,
+        alasan: list[idx].alasan || '',
+        tugas_pengganti: list[idx].tugasPengganti || '-',
+        status_approval: status,
+        bukti_url: list[idx].buktiUrl || null
+      }).catch(e => console.warn('[API] updateStatusIzin error:', e.message));
 
       // Jika disetujui, update status di absensi harian
       const item = list[idx];
@@ -1941,20 +2182,29 @@ export const storageService = {
     all.push(created);
     localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(all));
 
+    apiService.savePengampu({
+      id: created.id,
+      nip: created.nip || '',
+      nama: created.nama,
+      kontak: created.kontak || created.noHp || '',
+      no_hp: created.noHp || created.kontak || '',
+      role: created.role || 'Pengampu',
+      halaqah_id: created.halaqahId || 'hq-1',
+      cabang_id: targetBranch
+    }).catch(e => console.warn('[API] savePengampu error:', e.message));
+
     // Otomatis tambahkan juga ke daftar halaqah jika nama halaqah diisi
     if (item.halaqahNama) {
       const halaqahList = this.getAllHalaqahRaw();
       const existing = halaqahList.find(h => h.id === item.halaqahId);
       if (!existing) {
-        halaqahList.push({
-          id: item.halaqahId || ('h-' + Date.now()),
+        this.addHalaqah({
+          id: item.halaqahId || ('hq-' + Date.now()),
           nama: item.halaqahNama,
+          pengampuId: created.id,
           musyrif: item.nama,
-          cabangId: targetBranch,
-          lokasi: item.lokasi || "Masjid Cabang Lembaga",
-          targetJuzPekan: 0.5
+          cabangId: targetBranch
         });
-        localStorage.setItem(STORAGE_KEYS.HALAQAH, JSON.stringify(halaqahList));
       }
     }
 
@@ -1967,6 +2217,17 @@ export const storageService = {
     if (idx !== -1) {
       all[idx] = { ...all[idx], ...fields };
       localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(all));
+
+      apiService.savePengampu({
+        id: all[idx].id,
+        nip: all[idx].nip || '',
+        nama: all[idx].nama,
+        kontak: all[idx].kontak || all[idx].noHp || '',
+        no_hp: all[idx].noHp || all[idx].kontak || '',
+        role: all[idx].role || 'Pengampu',
+        halaqah_id: all[idx].halaqahId || 'hq-1',
+        cabang_id: all[idx].cabangId || 'cabang-pusat'
+      }).catch(e => console.warn('[API] updatePengampu error:', e.message));
 
       // Sinkronkan nama ustadz ke halaqah
       if (fields.nama || fields.halaqahNama) {
@@ -1988,6 +2249,7 @@ export const storageService = {
   deletePengampu(id) {
     const all = this.getAllPengampuRaw().filter(u => u.id !== id);
     localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(all));
+    apiService.deletePengampu(id).catch(e => console.warn('[API] deletePengampu error:', e.message));
   },
 
   resetPasswordPengampu(idOrName, newPassword = "bismillah123", email = null) {
@@ -2060,6 +2322,16 @@ export const storageService = {
       batasScan: item.batasScan || item.jamSelesai || item.selesai || '06:30',
       aktif: item.status !== 'NONAKTIF' && item.aktif !== false
     });
+    apiService.saveSesi({
+      id: created.id,
+      nama: created.nama,
+      jam_mulai: created.jamMulai || created.mulai || '05:00',
+      jam_selesai: created.jamSelesai || created.selesai || '06:30',
+      toleransi_menit: created.toleransiMenit || 15,
+      hari: created.hari || 'Setiap Hari',
+      status: created.status || 'Aktif',
+      cabang_id: created.cabangId || 'cabang-pusat'
+    }).catch(e => console.warn('[API] saveSesi error:', e.message));
     return created;
   },
 
@@ -2072,11 +2344,22 @@ export const storageService = {
       jamSelesai: fields.jamSelesai || fields.selesai,
       aktif: fields.status ? fields.status === 'AKTIF' : fields.aktif
     });
+    apiService.saveSesi({
+      id: updated?.id || id,
+      nama: updated?.nama || fields.nama,
+      jam_mulai: fields.jamMulai || fields.mulai || updated?.jamMulai || '05:00',
+      jam_selesai: fields.jamSelesai || fields.selesai || updated?.jamSelesai || '06:30',
+      toleransi_menit: fields.toleransiMenit || 15,
+      hari: fields.hari || 'Setiap Hari',
+      status: fields.status || 'Aktif',
+      cabang_id: fields.cabangId || 'cabang-pusat'
+    }).catch(e => console.warn('[API] updateSesi error:', e.message));
     return updated;
   },
 
   deleteSesi(id) {
     this.deleteSesiHalaqoh(id);
+    apiService.deleteSesi(id).catch(e => console.warn('[API] deleteSesi error:', e.message));
   },
 
   // ==========================================
@@ -2857,9 +3140,46 @@ export const storageService = {
         data.liveFeed[idx].jam = '07.20';
       }
       this.saveSigapMonitoring(data);
+      apiService.saveMonitoringPresensi(data.liveFeed[idx]).catch(e => console.warn('[API] updateStatusPresensiPengampu error:', e.message));
       return data.liveFeed[idx];
     }
     return null;
+  },
+
+  addMonitoring(item) {
+    const data = this.getSigapMonitoring();
+    const created = {
+      ...item,
+      id: item.id || ('mon-' + Date.now()),
+      tanggal: item.tanggal || new Date().toISOString().split('T')[0],
+      status: item.status || 'Tepat Waktu',
+      jam: item.jam || '07.00',
+      keterangan: item.keterangan || item.status || 'Tepat Waktu'
+    };
+    data.liveFeed = data.liveFeed || [];
+    data.liveFeed.unshift(created);
+    this.saveSigapMonitoring(data);
+    apiService.saveMonitoringPresensi(created).catch(e => console.warn('[API] addMonitoring error:', e.message));
+    return created;
+  },
+
+  updateMonitoring(id, fields) {
+    const data = this.getSigapMonitoring();
+    const idx = data.liveFeed.findIndex(item => item.id === id);
+    if (idx !== -1) {
+      data.liveFeed[idx] = { ...data.liveFeed[idx], ...fields };
+      this.saveSigapMonitoring(data);
+      apiService.saveMonitoringPresensi(data.liveFeed[idx]).catch(e => console.warn('[API] updateMonitoring error:', e.message));
+      return data.liveFeed[idx];
+    }
+    return null;
+  },
+
+  deleteMonitoring(id) {
+    const data = this.getSigapMonitoring();
+    data.liveFeed = (data.liveFeed || []).filter(item => item.id !== id);
+    this.saveSigapMonitoring(data);
+    apiService.deleteMonitoring(id).catch(e => console.warn('[API] deleteMonitoring error:', e.message));
   },
 
   resetSigapMonitoringDefault() {
@@ -3077,10 +3397,14 @@ export const storageService = {
     this._harmonizeSiswaAndSantri();
     const payload = {
       cabang: this.getCabang('ALL'),
+      superadmin: this.getSuperAdminAccounts(),
       pengampu: this.getAllPengampuRaw(),
       halaqah: this.getAllHalaqahRaw(),
       santri: this.getAllSantriRaw(),
       sesi: this.getSesi('ALL'),
+      absensi: this.getAbsensi('ALL'),
+      setoran: this.getAllSetoranRaw(),
+      izin: this.getIzin(),
       spp: this.getPembayaranSPP(),
       monitoring: (this.getSigapMonitoring() || {}).liveFeed || []
     };
@@ -3091,7 +3415,7 @@ export const storageService = {
     try {
       const res = await apiService.pullAllData();
       if (res && res.success && res.data) {
-        const { cabang, pengampu, santri, halaqah, sesi, spp } = res.data;
+        const { cabang, superadmin, pengampu, santri, halaqah, sesi, absensi, setoran, izin, spp, monitoring } = res.data;
 
         if (Array.isArray(cabang) && cabang.length > 0) {
           const mappedCabang = cabang.map(c => ({
@@ -3109,6 +3433,20 @@ export const storageService = {
             didirikan: c.didirikan || '2020'
           }));
           localStorage.setItem(STORAGE_KEYS.CABANG, JSON.stringify(mappedCabang));
+        }
+
+        if (Array.isArray(superadmin) && superadmin.length > 0) {
+          const mappedSuperadmin = superadmin.map(sa => ({
+            ...sa,
+            id: sa.id,
+            nama: sa.nama,
+            username: sa.username,
+            password: sa.password,
+            role: sa.role || 'Super Admin Cabang',
+            cabangId: sa.cabang_id || sa.cabangId || 'cabang-pusat',
+            status: sa.status || 'Aktif'
+          }));
+          localStorage.setItem(STORAGE_KEYS.SUPERADMIN_ACCOUNTS, JSON.stringify(mappedSuperadmin));
         }
 
         if (Array.isArray(pengampu) && pengampu.length > 0) {
@@ -3181,6 +3519,53 @@ export const storageService = {
           localStorage.setItem(STORAGE_KEYS.SESI, JSON.stringify(mappedSesi));
         }
 
+        if (Array.isArray(absensi) && absensi.length > 0) {
+          const mappedAbsensi = absensi.map(a => ({
+            ...a,
+            id: a.id,
+            tanggal: a.tanggal ? (typeof a.tanggal === 'string' ? a.tanggal.split('T')[0] : new Date(a.tanggal).toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
+            sesiId: a.sesi_id || a.sesiId,
+            santriId: a.santri_id || a.santriId,
+            status: a.status || 'Hadir',
+            keterangan: a.keterangan || ''
+          }));
+          localStorage.setItem(STORAGE_KEYS.ABSENSI, JSON.stringify(mappedAbsensi));
+        }
+
+        if (Array.isArray(setoran) && setoran.length > 0) {
+          const mappedSetoran = setoran.map(st => ({
+            ...st,
+            id: st.id,
+            tanggal: st.tanggal ? (typeof st.tanggal === 'string' ? st.tanggal.split('T')[0] : new Date(st.tanggal).toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
+            santriId: st.santri_id || st.santriId,
+            pengampuId: st.pengampu_id || st.pengampuId,
+            jenis: st.jenis || 'Ziyadah',
+            surat: st.surat || 'Al-Fatihah',
+            ayatMulai: st.ayat_mulai || st.ayatMulai || 1,
+            ayatSelesai: st.ayat_selesai || st.ayatSelesai || 7,
+            nilai: st.nilai || 'Mumtaz',
+            catatan: st.catatan || ''
+          }));
+          localStorage.setItem(STORAGE_KEYS.SETORAN, JSON.stringify(mappedSetoran));
+        }
+
+        if (Array.isArray(izin) && izin.length > 0) {
+          const mappedIzin = izin.map(iz => ({
+            ...iz,
+            id: iz.id,
+            pemohonId: iz.pemohon_id || iz.pemohonId,
+            tipePemohon: iz.tipe_pemohon || iz.tipePemohon || 'Pengampu',
+            jenis: iz.jenis || 'Izin',
+            tanggalMulai: iz.tanggal_mulai ? (typeof iz.tanggal_mulai === 'string' ? iz.tanggal_mulai.split('T')[0] : new Date(iz.tanggal_mulai).toISOString().split('T')[0]) : '',
+            tanggalSelesai: iz.tanggal_selesai ? (typeof iz.tanggal_selesai === 'string' ? iz.tanggal_selesai.split('T')[0] : new Date(iz.tanggal_selesai).toISOString().split('T')[0]) : '',
+            alasan: iz.alasan || '',
+            tugasPengganti: iz.tugas_pengganti || iz.tugasPengganti || '',
+            statusApproval: iz.status_approval || iz.statusApproval || 'Menunggu',
+            buktiUrl: iz.bukti_url || iz.buktiUrl || null
+          }));
+          localStorage.setItem(STORAGE_KEYS.IZIN, JSON.stringify(mappedIzin));
+        }
+
         if (Array.isArray(spp) && spp.length > 0) {
           const mappedSpp = spp.map(item => ({
             ...item,
@@ -3202,6 +3587,34 @@ export const storageService = {
             namaPetugas: item.nama_petugas || item.namaPetugas
           }));
           localStorage.setItem(STORAGE_KEYS.PEMBAYARAN_SPP, JSON.stringify(mappedSpp));
+        }
+
+        if (Array.isArray(monitoring) && monitoring.length > 0) {
+          const currentMon = this.getSigapMonitoring() || {};
+          const mappedMon = monitoring.map(m => ({
+            ...m,
+            id: m.id,
+            tanggal: m.tanggal ? (typeof m.tanggal === 'string' ? m.tanggal.split('T')[0] : new Date(m.tanggal).toISOString().split('T')[0]) : '',
+            pengampuId: m.pengampu_id || m.pengampuId,
+            nama: m.nama,
+            nip: m.nip,
+            role: m.role,
+            halaqah: m.halaqah,
+            mapel: m.mapel,
+            kelas: m.kelas,
+            sesi: m.sesi,
+            jadwal: m.jadwal,
+            jam: m.jam,
+            status: m.status,
+            selisihMenit: m.selisih_menit || m.selisihMenit || 0,
+            lokasiGps: m.lokasi_gps || m.lokasiGps,
+            metode: m.metode,
+            keterangan: m.keterangan,
+            alasanIzin: m.alasan_izin || m.alasanIzin,
+            tugasSiswa: m.tugas_siswa || m.tugasSiswa,
+            manual: !!m.manual
+          }));
+          localStorage.setItem(STORAGE_KEYS.SIGAP_MONITORING, JSON.stringify({ ...currentMon, liveFeed: mappedMon }));
         }
 
         // Harmonisasikan data lokal dengan data yang baru ditarik

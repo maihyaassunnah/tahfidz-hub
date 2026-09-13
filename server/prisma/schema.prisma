@@ -30,6 +30,9 @@ model Cabang {
   sesi            Sesi[]
   superadmins     SuperadminAccounts[]
   pembayaranSpp   PembayaranSPP[]
+  kelasList       Kelas[]
+  alumniList      Alumni[]
+  lokasiQrList    LokasiQr[]
 
   @@map("cabang")
 }
@@ -226,3 +229,60 @@ model PembayaranSPP {
 
   @@map("pembayaran_spp")
 }
+
+model Kelas {
+  id          String    @id @db.VarChar(64)
+  nama        String    @db.VarChar(100)
+  unitSekolah String?   @default("MA IHYA AS-SUNNAH") @map("unit_sekolah") @db.VarChar(100)
+  waliKelas   String?   @map("wali_kelas") @db.VarChar(150)
+  cabangId    String?   @map("cabang_id") @db.VarChar(64)
+  aktif       Boolean?  @default(true)
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cabang      Cabang?   @relation(fields: [cabangId], references: [id], onDelete: Cascade)
+
+  @@map("kelas")
+}
+
+model Alumni {
+  id         String    @id @db.VarChar(64)
+  nama       String    @db.VarChar(150)
+  nik        String?   @db.VarChar(50)
+  nisn       String?   @db.VarChar(50)
+  nism       String?   @db.VarChar(50)
+  lp         String?   @default("L") @db.VarChar(10)
+  tahunLulus String?   @default("2026") @map("tahun_lulus") @db.VarChar(16)
+  cabangId   String?   @map("cabang_id") @db.VarChar(64)
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cabang     Cabang?   @relation(fields: [cabangId], references: [id], onDelete: Cascade)
+
+  @@map("alumni")
+}
+
+model LokasiQr {
+  id          String    @id @db.VarChar(64)
+  kelas       String    @db.VarChar(100)
+  lokasi      String    @db.VarChar(255)
+  kodeManual  String?   @map("kode_manual") @db.VarChar(64)
+  cabangId    String?   @map("cabang_id") @db.VarChar(64)
+  gpsStatus   String?   @default("GPS: Locked") @map("gps_status") @db.VarChar(64)
+  locked      Boolean?  @default(true)
+  lat         Float?
+  lng         Float?
+  radiusMeter Int?      @default(50) @map("radius_meter")
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  cabang      Cabang?   @relation(fields: [cabangId], references: [id], onDelete: Cascade)
+
+  @@map("lokasi_qr")
+}
+
+model Settings {
+  key       String    @id @db.VarChar(64)
+  value     Json
+  updatedAt DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("settings")
+}
+

@@ -21,6 +21,7 @@ import {
   ClipboardCheck, 
   Clock, 
   FileText,
+  Activity,
   X,
   Save,
   Server,
@@ -87,6 +88,9 @@ export default function PrismaStudioView({ showToast }) {
       case 'izin':
         setTableData(storageService.getIzin());
         break;
+      case 'monitoring':
+        setTableData((storageService.getSigapMonitoring() || {}).liveFeed || []);
+        break;
       case 'spp':
         setTableData(storageService.getPembayaranSPP());
         break;
@@ -94,6 +98,15 @@ export default function PrismaStudioView({ showToast }) {
         setTableData([]);
     }
   };
+
+  useEffect(() => {
+    // Sinkronisasi data terbaru langsung dari database PostgreSQL saat menu dibuka
+    storageService.syncFromPostgres().then(res => {
+      if (res && res.success) {
+        loadModelData();
+      }
+    }).catch(err => console.warn('[STUDIO] Initial sync error:', err));
+  }, []);
 
   useEffect(() => {
     loadModelData();
@@ -164,10 +177,14 @@ export default function PrismaStudioView({ showToast }) {
       initForm = { nama: '', nis: '', kelas: 'X-A', halaqahId: 'hq-1', halaqahNama: 'Halaqah 1', cabangId: 'cabang-pusat', status: 'Aktif' };
     } else if (selectedModel === 'sesi') {
       initForm = { nama: '', waktuMulai: '05:00', waktuSelesai: '06:00', jamBatas: '05:30', status: 'Aktif' };
+    } else if (selectedModel === 'absensi') {
+      initForm = { tanggal: new Date().toISOString().split('T')[0], sesiId: 'sesi-shubuh', santriId: 's-1', status: 'Hadir', keterangan: '' };
     } else if (selectedModel === 'setoran') {
       initForm = { santriNama: '', surahName: 'An-Naba', ayatAwal: 1, ayatAkhir: 10, nilai: 'Mumtaz', tanggal: new Date().toISOString().split('T')[0] };
     } else if (selectedModel === 'izin') {
       initForm = { pemohonNama: '', alasan: '', status: 'Menunggu', tanggal: new Date().toISOString().split('T')[0] };
+    } else if (selectedModel === 'monitoring') {
+      initForm = { nama: '', nip: '', role: 'Pengampu', halaqah: 'Halaqah 1', kelas: 'X-A', sesi: 'Subuh', jadwal: '05:00 - 06:30', jam: '05:00', status: 'Tepat Waktu', keterangan: 'Hadir' };
     } else if (selectedModel === 'spp') {
       initForm = { invoiceNo: storageService.generateInvoiceNo(), santriNama: '', nis: '', kelas: 'X-A', bulan: 'September 2026', nominal: 350000, status: 'Lunas', metodeBayar: 'Transfer Bank BSI' };
     }
@@ -195,6 +212,7 @@ export default function PrismaStudioView({ showToast }) {
     else if (selectedModel === 'absensi') storageService.deleteAbsensiRecord(id);
     else if (selectedModel === 'setoran') storageService.deleteSetoran(id);
     else if (selectedModel === 'izin') storageService.deleteIzin(id);
+    else if (selectedModel === 'monitoring') storageService.deleteMonitoring(id);
     else if (selectedModel === 'spp') storageService.deletePembayaranSPP(id);
 
     loadModelData();
@@ -211,8 +229,10 @@ export default function PrismaStudioView({ showToast }) {
       else if (selectedModel === 'halaqah') storageService.addHalaqah(formData);
       else if (selectedModel === 'santri') storageService.addSantri(formData);
       else if (selectedModel === 'sesi') storageService.addSesi(formData);
+      else if (selectedModel === 'absensi') storageService.addAbsensiRecord(formData);
       else if (selectedModel === 'setoran') storageService.addSetoran(formData);
       else if (selectedModel === 'izin') storageService.addIzin(formData);
+      else if (selectedModel === 'monitoring') storageService.addMonitoring(formData);
       else if (selectedModel === 'spp') storageService.addPembayaranSPP(formData);
       if (showToast) showToast("Data baru berhasil ditambahkan!");
     } else {
@@ -223,6 +243,10 @@ export default function PrismaStudioView({ showToast }) {
       else if (selectedModel === 'halaqah') storageService.updateHalaqah(id, formData);
       else if (selectedModel === 'santri') storageService.updateSantri(id, formData);
       else if (selectedModel === 'sesi') storageService.updateSesi(id, formData);
+      else if (selectedModel === 'absensi') storageService.updateAbsensiRecord(id, formData);
+      else if (selectedModel === 'setoran') storageService.updateSetoran(id, formData);
+      else if (selectedModel === 'izin') storageService.updateIzin(id, formData);
+      else if (selectedModel === 'monitoring') storageService.updateMonitoring(id, formData);
       else if (selectedModel === 'spp') storageService.updatePembayaranSPP(id, formData);
       if (showToast) showToast("Perubahan data berhasil disimpan!");
     }
@@ -249,6 +273,7 @@ export default function PrismaStudioView({ showToast }) {
     { id: 'absensi', name: 'Absensi Santri', icon: ClipboardCheck, count: storageService.getAbsensi().length },
     { id: 'setoran', name: 'Pencatatan Setoran', icon: BookOpen, count: storageService.getSetoran().length },
     { id: 'izin', name: 'Permohonan Izin', icon: FileText, count: storageService.getIzin().length },
+    { id: 'monitoring', name: 'Monitoring Sigap', icon: Activity, count: ((storageService.getSigapMonitoring() || {}).liveFeed || []).length },
     { id: 'spp', name: 'Pembayaran SPP', icon: FileText, count: storageService.getPembayaranSPP().length }
   ];
 
@@ -685,7 +710,7 @@ export default function PrismaStudioView({ showToast }) {
                       type="text" 
                       className="form-input" 
                       style={{ fontSize: '0.825rem', width: '100%' }}
-                      value={formData[fieldKey] ?? ''}
+                      value={typeof formData[fieldKey] === 'object' && formData[fieldKey] !== null ? JSON.stringify(formData[fieldKey]) : (formData[fieldKey] ?? '')}
                       onChange={(e) => setFormData({ ...formData, [fieldKey]: e.target.value })}
                     />
                   </div>

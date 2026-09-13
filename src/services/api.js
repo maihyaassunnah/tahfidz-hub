@@ -24,19 +24,83 @@ class ApiService {
     }
   }
 
-  // 2. Fetch Cabang
+  // 2. Cabang
   async getCabang() {
     try {
       const res = await fetch(`${this.baseUrl}/cabang`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
-      console.warn('[API] Failed to fetch cabang from server, using local fallback:', err.message);
+      console.warn('[API] Failed to fetch cabang from server:', err.message);
       return null;
     }
   }
 
-  // 3. Fetch Santri
+  async saveCabang(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/cabang`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to save cabang to server:', err.message);
+      return null;
+    }
+  }
+
+  async deleteCabang(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/cabang/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to delete cabang:', err.message);
+      return null;
+    }
+  }
+
+  // 2b. Super Admin Accounts
+  async getSuperadmin() {
+    try {
+      const res = await fetch(`${this.baseUrl}/superadmin`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to fetch superadmin:', err.message);
+      return null;
+    }
+  }
+
+  async saveSuperadmin(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/superadmin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to save superadmin:', err.message);
+      return null;
+    }
+  }
+
+  async deleteSuperadmin(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/superadmin/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to delete superadmin:', err.message);
+      return null;
+    }
+  }
+
+  // 3. Santri
   async getSantri() {
     try {
       const res = await fetch(`${this.baseUrl}/santri`);
@@ -139,7 +203,67 @@ class ApiService {
     }
   }
 
-  // 4. Simpan / Update Presensi Realtime Pengampu (Monitoring Sigap)
+  async deleteHalaqah(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/halaqah/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to delete halaqah:', err.message);
+      return null;
+    }
+  }
+
+  // 3d. Sesi
+  async getSesi() {
+    try {
+      const res = await fetch(`${this.baseUrl}/sesi`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to fetch sesi:', err.message);
+      return null;
+    }
+  }
+
+  async saveSesi(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/sesi`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to save sesi:', err.message);
+      return null;
+    }
+  }
+
+  async deleteSesi(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/sesi/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to delete sesi:', err.message);
+      return null;
+    }
+  }
+
+  // 4. Monitoring Sigap
+  async getMonitoring() {
+    try {
+      const res = await fetch(`${this.baseUrl}/monitoring-sigap`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get monitoring:', err.message);
+      return null;
+    }
+  }
+
   async saveMonitoringPresensi(data) {
     try {
       const res = await fetch(`${this.baseUrl}/monitoring-sigap`, {
@@ -155,7 +279,45 @@ class ApiService {
     }
   }
 
-  // 5. Simpan Absensi Santri (Batch)
+  async deleteMonitoring(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/monitoring-sigap/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to delete monitoring:', err.message);
+      return null;
+    }
+  }
+
+  // 5. Absensi Santri
+  async getAbsensi(params = {}) {
+    try {
+      const qs = new URLSearchParams(params).toString();
+      const res = await fetch(`${this.baseUrl}/absensi-santri${qs ? '?' + qs : ''}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get absensi:', err.message);
+      return null;
+    }
+  }
+
+  async saveAbsensi(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/absensi-santri`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to save absensi:', err.message);
+      return null;
+    }
+  }
+
   async saveAbsensiSantriBatch(records) {
     try {
       const res = await fetch(`${this.baseUrl}/absensi-santri/batch`, {
@@ -167,6 +329,93 @@ class ApiService {
       return await res.json();
     } catch (err) {
       console.warn('[API] Failed to save absensi batch to server:', err.message);
+      return null;
+    }
+  }
+
+  async deleteAbsensi(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/absensi-santri/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to delete absensi:', err.message);
+      return null;
+    }
+  }
+
+  // 5b. Setoran Santri
+  async getSetoran() {
+    try {
+      const res = await fetch(`${this.baseUrl}/setoran-santri`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get setoran:', err.message);
+      return null;
+    }
+  }
+
+  async saveSetoran(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/setoran-santri`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to save setoran:', err.message);
+      return null;
+    }
+  }
+
+  async deleteSetoran(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/setoran-santri/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to delete setoran:', err.message);
+      return null;
+    }
+  }
+
+  // 5c. Izin
+  async getIzin() {
+    try {
+      const res = await fetch(`${this.baseUrl}/izin`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get izin:', err.message);
+      return null;
+    }
+  }
+
+  async saveIzin(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/izin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to save izin:', err.message);
+      return null;
+    }
+  }
+
+  async deleteIzin(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/izin/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to delete izin:', err.message);
       return null;
     }
   }
