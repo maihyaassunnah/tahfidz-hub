@@ -36,22 +36,55 @@ export default function LoginView({ onLoginSuccess, isDarkMode }) {
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [googleClientIdInput, setGoogleClientIdInput] = useState(storageService.getGoogleClientId());
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [googleScriptReady, setGoogleScriptReady] = useState(false);
 
   // Auto-initialize Google Identity Services if client ID is set
   useEffect(() => {
     const clientId = storageService.getGoogleClientId();
-    if (clientId && window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleResponse,
-          auto_select: false
-        });
-      } catch (err) {
-        console.warn('Google GSI init notice:', err);
+    if (!clientId) return;
+
+    const setupGoogle = () => {
+      if (window.google?.accounts?.id) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleGoogleResponse,
+            auto_select: false
+          });
+
+          setGoogleScriptReady(true);
+
+          const container = document.getElementById('google-btn-rendered');
+          if (container) {
+            container.innerHTML = '';
+            window.google.accounts.id.renderButton(container, {
+              theme: isDarkMode ? 'filled_black' : 'outline',
+              size: 'large',
+              type: 'standard',
+              text: 'continue_with',
+              shape: 'rectangular',
+              logo_alignment: 'left',
+              width: 320
+            });
+          }
+        } catch (err) {
+          console.warn('Google GSI init notice:', err);
+        }
       }
+    };
+
+    if (window.google?.accounts?.id) {
+      setupGoogle();
+    } else {
+      const timer = setInterval(() => {
+        if (window.google?.accounts?.id) {
+          clearInterval(timer);
+          setupGoogle();
+        }
+      }, 250);
+      return () => clearInterval(timer);
     }
-  }, []);
+  }, [isDarkMode]);
 
   const handleGoogleResponse = (response) => {
     try {
@@ -342,11 +375,19 @@ export default function LoginView({ onLoginSuccess, isDarkMode }) {
 
           {/* Social Login: Google Sign In */}
           <div className="login-social-grid">
+            {/* Official Google GSI Rendered Button */}
+            <div 
+              id="google-btn-rendered" 
+              style={{ display: 'flex', justifyContent: 'center', width: '100%', minHeight: googleScriptReady ? '40px' : '0' }}
+            ></div>
+
+            {/* Custom Google Button (Matching Design / Fallback) */}
             <button
               type="button"
               className="btn-google-sign-in"
               onClick={handleGoogleClick}
               title="Masuk menggunakan akun Google"
+              style={{ display: googleScriptReady ? 'none' : 'flex' }}
             >
               {/* Official Google G 4-color SVG Icon */}
               <svg className="google-icon-svg" viewBox="0 0 24 24">
@@ -377,7 +418,7 @@ export default function LoginView({ onLoginSuccess, isDarkMode }) {
               onClick={() => setShowGoogleModal(true)}
             >
               <Settings size={12} />
-              <span>Panduan Google Console & Cloudflare (tahfidz.wahyudinhafiz.my.id)</span>
+              <span>Status Google Client ID & Panduan Konsol</span>
             </button>
           </div>
 

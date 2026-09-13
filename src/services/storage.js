@@ -872,7 +872,9 @@ export const storageService = {
   },
 
   getGoogleClientId() {
-    return localStorage.getItem('simtah_google_client_id') || (import.meta.env ? import.meta.env.VITE_GOOGLE_CLIENT_ID : '') || '';
+    return localStorage.getItem('simtah_google_client_id') || 
+           (typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_GOOGLE_CLIENT_ID : '') || 
+           '960493491749-5qdhgk3e3orfbcqqb1ctdtfvt5r145qi.apps.googleusercontent.com';
   },
 
   setGoogleClientId(clientId) {
