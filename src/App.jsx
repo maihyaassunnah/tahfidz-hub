@@ -73,6 +73,14 @@ export default function App() {
 
   useEffect(() => {
     loadData();
+    // Auto-sync non-blocking dengan PostgreSQL backend saat aplikasi dimuat
+    storageService.syncFromPostgres().then(res => {
+      if (res && res.success) {
+        loadData();
+      }
+    }).catch(err => {
+      console.warn('[App] Auto-sync PostgreSQL notice:', err);
+    });
   }, []);
 
   const showToast = (message) => {

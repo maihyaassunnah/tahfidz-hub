@@ -867,6 +867,35 @@ export const storageService = {
       if (sChanged) {
         localStorage.setItem(STORAGE_KEYS.SANTRI, JSON.stringify(santriList));
       }
+
+      // Pastikan data santri juga tersinkron ke siswa SIGAP jika belum ada
+      let swChanged = false;
+      santriList.forEach(s => {
+        const found = siswaList.find(sw => 
+          sw.id === s.id || 
+          (sw.nisn && s.nis && String(sw.nisn) === String(s.nis)) ||
+          (sw.nama && s.nama && sw.nama.trim().toLowerCase() === s.nama.trim().toLowerCase())
+        );
+        if (!found) {
+          siswaList.push({
+            id: s.id,
+            nama: s.nama,
+            nisn: s.nis || '',
+            nik: '',
+            lp: 'L',
+            kelas: s.kelas || 'X A',
+            pengampu: s.pengampu || s.pengampuNama || '',
+            wali: s.wali || '',
+            kontakWali: s.noHpWali || s.kontak || '',
+            cabangId: s.cabangId || 'cabang-pusat'
+          });
+          swChanged = true;
+        }
+      });
+
+      if (swChanged) {
+        localStorage.setItem(STORAGE_KEYS.SIGAP_SISWA, JSON.stringify(siswaList));
+      }
     } catch (e) {
       console.warn('[STORAGE] _harmonizeSiswaAndSantri error:', e);
     }
@@ -3063,30 +3092,123 @@ export const storageService = {
       const res = await apiService.pullAllData();
       if (res && res.success && res.data) {
         const { cabang, pengampu, santri, halaqah, sesi, spp } = res.data;
+
         if (Array.isArray(cabang) && cabang.length > 0) {
-          localStorage.setItem(STORAGE_KEYS.CABANG, JSON.stringify(cabang));
+          const mappedCabang = cabang.map(c => ({
+            ...c,
+            id: c.id,
+            nama: c.nama,
+            kode: c.kode,
+            kota: c.kota,
+            alamat: c.alamat,
+            noHp: c.no_hp || c.noHp || '',
+            penanggungJawab: c.penanggung_jawab || c.penanggungJawab || '',
+            email: c.email || '',
+            status: c.status || 'Aktif',
+            warnaAksen: c.warna_aksen || c.warnaAksen || '#0d9488',
+            didirikan: c.didirikan || '2020'
+          }));
+          localStorage.setItem(STORAGE_KEYS.CABANG, JSON.stringify(mappedCabang));
         }
+
         if (Array.isArray(pengampu) && pengampu.length > 0) {
-          localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(pengampu));
+          const mappedPengampu = pengampu.map(p => ({
+            ...p,
+            id: p.id,
+            nip: p.nip || '',
+            nama: p.nama,
+            kontak: p.kontak || '',
+            noHp: p.no_hp || p.noHp || p.kontak || '',
+            role: p.role || 'Pengampu',
+            halaqahId: p.halaqah_id || p.halaqahId || 'hq-1',
+            cabangId: p.cabang_id || p.cabangId || 'cabang-pusat'
+          }));
+          localStorage.setItem(STORAGE_KEYS.PENGAMPU, JSON.stringify(mappedPengampu));
         }
-        if (Array.isArray(santri) && santri.length > 0) {
-          localStorage.setItem(STORAGE_KEYS.SANTRI, JSON.stringify(santri));
-        }
+
         if (Array.isArray(halaqah) && halaqah.length > 0) {
-          localStorage.setItem(STORAGE_KEYS.HALAQAH, JSON.stringify(halaqah));
+          const mappedHalaqah = halaqah.map(h => ({
+            ...h,
+            id: h.id,
+            nama: h.nama,
+            pengampuId: h.pengampu_id || h.pengampuId || '',
+            target: h.target || '',
+            keterangan: h.keterangan || '',
+            cabangId: h.cabang_id || h.cabangId || 'cabang-pusat'
+          }));
+          localStorage.setItem(STORAGE_KEYS.HALAQAH, JSON.stringify(mappedHalaqah));
         }
+
+        if (Array.isArray(santri) && santri.length > 0) {
+          const existingSantri = this.getAllSantriRaw();
+          const mappedSantri = santri.map(s => {
+            const old = existingSantri.find(o => o.id === s.id || (o.nis && String(o.nis) === String(s.nis))) || {};
+            return {
+              ...old,
+              ...s,
+              id: s.id,
+              nis: s.nis,
+              nama: s.nama,
+              kelas: s.kelas,
+              halaqahId: s.halaqah_id || s.halaqahId || old.halaqahId || 'hq-1',
+              status: s.status || 'Aktif',
+              target: s.target || old.target || '3 Juz / Tahun',
+              kontak: s.kontak || s.no_hp_wali || old.kontak || '',
+              wali: s.wali || old.wali || '',
+              noHpWali: s.no_hp_wali || s.noHpWali || old.noHpWali || s.kontak || '',
+              cabangId: s.cabang_id || s.cabangId || old.cabangId || 'cabang-pusat',
+              totalHalaman: old.totalHalaman || 0,
+              rincianHalaman: old.rincianHalaman || '0 Hlm 0 Brs',
+              juzMutqin: old.juzMutqin || [],
+              juzZiyadah: old.juzZiyadah || []
+            };
+          });
+          localStorage.setItem(STORAGE_KEYS.SANTRI, JSON.stringify(mappedSantri));
+        }
+
         if (Array.isArray(sesi) && sesi.length > 0) {
-          localStorage.setItem(STORAGE_KEYS.SESI, JSON.stringify(sesi));
+          const mappedSesi = sesi.map(s => ({
+            ...s,
+            id: s.id,
+            nama: s.nama,
+            jamMulai: s.jam_mulai || s.jamMulai || '',
+            jamSelesai: s.jam_selesai || s.jamSelesai || '',
+            toleransiMenit: s.toleransi_menit || s.toleransiMenit || 15,
+            hari: s.hari || 'Setiap Hari',
+            status: s.status || 'Aktif',
+            cabangId: s.cabang_id || s.cabangId || 'cabang-pusat'
+          }));
+          localStorage.setItem(STORAGE_KEYS.SESI, JSON.stringify(mappedSesi));
         }
+
         if (Array.isArray(spp) && spp.length > 0) {
-          localStorage.setItem(STORAGE_KEYS.PEMBAYARAN_SPP, JSON.stringify(spp));
+          const mappedSpp = spp.map(item => ({
+            ...item,
+            id: item.id,
+            invoiceNo: item.invoice_no || item.invoiceNo,
+            santriId: item.santri_id || item.santriId,
+            santriNama: item.santri_nama || item.santriNama,
+            nis: item.nis,
+            kelas: item.kelas,
+            cabangId: item.cabang_id || item.cabangId || 'cabang-pusat',
+            bulan: item.bulan,
+            tahun: item.tahun,
+            nominal: item.nominal,
+            status: item.status,
+            tanggalBayar: item.tanggal_bayar || item.tanggalBayar,
+            metodeBayar: item.metode_bayar || item.metodeBayar,
+            nomorRef: item.nomor_ref || item.nomorRef,
+            catatan: item.catatan,
+            namaPetugas: item.nama_petugas || item.namaPetugas
+          }));
+          localStorage.setItem(STORAGE_KEYS.PEMBAYARAN_SPP, JSON.stringify(mappedSpp));
         }
 
         // Harmonisasikan data lokal dengan data yang baru ditarik
         this._harmonizeGuruAndPengampu();
         this._harmonizeSiswaAndSantri();
 
-        return { success: true, message: 'Berhasil mengunduh data terbaru dari PostgreSQL Cloud!' };
+        return { success: true, count: santri ? santri.length : 0, message: 'Berhasil mengunduh data terbaru dari PostgreSQL Cloud!' };
       }
       return { success: false, message: 'Data tidak ditemukan di server.' };
     } catch (err) {
