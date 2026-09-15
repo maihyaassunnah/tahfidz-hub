@@ -444,8 +444,12 @@ app.delete('/api/absensi-santri/:id', async (req, res) => {
 // 7. MONITORING SIGAP (PRESENSI PENGAMPU REALTIME)
 app.get('/api/monitoring-sigap', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM monitoring_sigap ORDER BY created_at DESC');
-    res.json(result.rows);
+    const result = await query("SELECT *, to_char(tanggal, 'YYYY-MM-DD') as tanggal_clean FROM monitoring_sigap ORDER BY created_at DESC");
+    const rows = result.rows.map(r => ({
+      ...r,
+      tanggal: r.tanggal_clean || r.tanggal
+    }));
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1181,7 +1185,7 @@ app.get('/api/pull-all', async (req, res) => {
       query('SELECT * FROM setoran_santri ORDER BY created_at DESC LIMIT 500'),
       query('SELECT * FROM izin ORDER BY created_at DESC LIMIT 200'),
       query('SELECT * FROM pembayaran_spp ORDER BY created_at DESC LIMIT 500'),
-      query('SELECT * FROM monitoring_sigap ORDER BY created_at DESC LIMIT 200'),
+      query("SELECT *, to_char(tanggal, 'YYYY-MM-DD') as tanggal_clean FROM monitoring_sigap ORDER BY created_at DESC LIMIT 200"),
       query('SELECT * FROM kelas ORDER BY nama ASC'),
       query('SELECT * FROM alumni ORDER BY created_at DESC LIMIT 200'),
       query('SELECT * FROM lokasi_qr ORDER BY created_at ASC'),
@@ -1201,7 +1205,7 @@ app.get('/api/pull-all', async (req, res) => {
         setoran: setoran.rows,
         izin: izin.rows,
         spp: spp.rows,
-        monitoring: monitoring.rows,
+        monitoring: monitoring.rows.map(r => ({ ...r, tanggal: r.tanggal_clean || r.tanggal })),
         kelas: kelas.rows,
         alumni: alumni.rows,
         lokasi_qr: lokasiQr.rows,

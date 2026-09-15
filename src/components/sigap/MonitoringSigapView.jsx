@@ -15,10 +15,19 @@ import {
 import { storageService } from '../../services/storage';
 
 export default function MonitoringSigapView({ showToast }) {
+  const todayStr = storageService.getTodayISO ? storageService.getTodayISO() : new Date().toISOString().split('T')[0];
   const [monitoringData, setMonitoringData] = useState(storageService.getSigapMonitoring());
   const [activeSubTab, setActiveSubTab] = useState('kbm-guru'); // 'kbm-guru' or 'siswa-rekap'
-  const [dariTanggal, setDariTanggal] = useState('2026-09-10');
-  const [sampaiTanggal, setSampaiTanggal] = useState('2026-09-10');
+  const [dariTanggal, setDariTanggal] = useState(todayStr);
+  const [sampaiTanggal, setSampaiTanggal] = useState(todayStr);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setMonitoringData(storageService.getSigapMonitoring());
+    };
+    window.addEventListener('simtah_data_updated', handleUpdate);
+    return () => window.removeEventListener('simtah_data_updated', handleUpdate);
+  }, []);
 
   const handleLaporanWA = () => {
     const text = `*Laporan KBM MA Ihya As-Sunnah (${dariTanggal}):*%0A- Total KBM: ${monitoringData.kpi.totalKbm}%0A- Tepat Waktu: ${monitoringData.kpi.tepatWaktu}%0A- Izin/Sakit: ${monitoringData.kpi.izinSakit}%0A- Alpa: ${monitoringData.kpi.alpaKosong}`;

@@ -264,6 +264,10 @@ class ApiService {
     }
   }
 
+  async saveMonitoring(data) {
+    return this.saveMonitoringPresensi(data);
+  }
+
   async saveMonitoringPresensi(data) {
     try {
       const res = await fetch(`${this.baseUrl}/monitoring-sigap`, {

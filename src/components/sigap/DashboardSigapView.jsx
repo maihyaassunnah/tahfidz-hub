@@ -151,7 +151,7 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
   // 4. ALPA: JIKA SUDAH LEWAT BATAS ABSENSI NYA MAKA OTOMATIS ALPA
   // =========================================================================
   const evaluatePengampuAttendance = (p, sesi) => {
-    const todayISO = currentTime.toISOString().split('T')[0];
+    const todayISO = storageService.getTodayISO ? storageService.getTodayISO() : currentTime.toISOString().split('T')[0];
     const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
 
     const [startH, startM] = (sesi.mulai || sesi.jamMulai || '05:00').split(':').map(Number);
@@ -169,17 +169,30 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
     const cleanPName = storageService._cleanName(p.nama);
 
     // 1. Cek Kehadiran (SUDAH) di PENGAMPU_PRESENSI & liveFeed
-    const pRecord = (pengampuPresensiList || []).find(r => 
-      r.tanggal === todayISO &&
-      (storageService._cleanName(r.namaGuru) === cleanPName || r.pengampuId === p.id) &&
-      (r.sesiId === sesi.id || (r.sesiNama || '').toLowerCase().includes(sesi.id) || (r.sesiNama || '').toLowerCase().includes((sesi.nama || '').toLowerCase()))
-    );
+    const pRecord = (pengampuPresensiList || []).find(r => {
+      const rTgl = r.tanggal ? String(r.tanggal).split('T')[0] : '';
+      if (rTgl && rTgl !== todayISO) return false;
+      const rGuru = storageService._cleanName(r.namaGuru || r.nama);
+      const nameMatch = (rGuru && cleanPName && (rGuru === cleanPName || rGuru.includes(cleanPName) || cleanPName.includes(rGuru))) || (r.pengampuId && r.pengampuId === p.id);
+      if (!nameMatch) return false;
+      const rSesiId = String(r.sesiId || r.sesi_id || '').toLowerCase();
+      const rSesiNama = String(r.sesiNama || r.sesi || '').toLowerCase();
+      const sId = String(sesi.id || '').toLowerCase();
+      const sNama = String(sesi.nama || '').toLowerCase();
+      return rSesiId === sId || rSesiNama === sNama || rSesiNama.includes(sId) || rSesiNama.includes(sNama) || sNama.includes(rSesiNama);
+    });
 
-    const feedRecord = (monitoringData.liveFeed || []).find(f => 
-      (storageService._cleanName(f.nama) === cleanPName || f.pengampuId === p.id) &&
-      (f.tanggal === todayISO || !f.tanggal) &&
-      ((f.sesi || '').toLowerCase().includes(sesi.id) || (f.sesi || '').toLowerCase().includes((sesi.nama || '').toLowerCase()))
-    );
+    const feedRecord = (monitoringData.liveFeed || []).find(f => {
+      const fTgl = f.tanggal ? String(f.tanggal).split('T')[0] : '';
+      if (fTgl && fTgl !== todayISO) return false;
+      const fGuru = storageService._cleanName(f.nama || f.namaGuru);
+      const nameMatch = (fGuru && cleanPName && (fGuru === cleanPName || fGuru.includes(cleanPName) || cleanPName.includes(fGuru))) || (f.pengampuId && f.pengampuId === p.id);
+      if (!nameMatch) return false;
+      const fSesi = String(f.sesi || f.sesiNama || f.sesiId || '').toLowerCase();
+      const sId = String(sesi.id || '').toLowerCase();
+      const sNama = String(sesi.nama || '').toLowerCase();
+      return fSesi === sId || fSesi === sNama || fSesi.includes(sId) || fSesi.includes(sNama) || sNama.includes(fSesi);
+    });
 
     const matchedScan = pRecord || feedRecord;
     const isExplicitAlpa = matchedScan && (matchedScan.status === 'Alpa' || matchedScan.status === 'Alfa');

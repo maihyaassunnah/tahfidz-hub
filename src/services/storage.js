@@ -685,29 +685,57 @@ export const storageService = {
           namaPetugas: item.nama_petugas || item.namaPetugas
         }));
 
-        this._cache.monitoring = (monitoring || []).map(m => ({
-          ...m,
-          id: m.id,
-          tanggal: m.tanggal ? (typeof m.tanggal === 'string' ? m.tanggal.split('T')[0] : new Date(m.tanggal).toISOString().split('T')[0]) : '',
-          pengampuId: m.pengampu_id || m.pengampuId,
-          nama: m.nama,
-          nip: m.nip,
-          role: m.role,
-          halaqah: m.halaqah,
-          mapel: m.mapel,
-          kelas: m.kelas,
-          sesi: m.sesi,
-          jadwal: m.jadwal,
-          jam: m.jam,
-          status: m.status,
-          selisihMenit: m.selisih_menit || m.selisihMenit || 0,
-          lokasiGps: m.lokasi_gps || m.lokasiGps,
-          metode: m.metode,
-          keterangan: m.keterangan,
-          alasanIzin: m.alasan_izin || m.alasanIzin,
-          tugasSiswa: m.tugas_siswa || m.tugasSiswa,
-          manual: !!m.manual
-        }));
+        this._cache.monitoring = (monitoring || []).map(m => {
+          let tglStr = '';
+          if (m.tanggal_clean) {
+            tglStr = m.tanggal_clean;
+          } else if (m.tanggal) {
+            if (typeof m.tanggal === 'string' && m.tanggal.length === 10) {
+              tglStr = m.tanggal;
+            } else {
+              try {
+                tglStr = new Date(m.tanggal).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+              } catch {
+                tglStr = String(m.tanggal).split('T')[0];
+              }
+            }
+          }
+          const guruNama = m.namaGuru || m.nama || 'Ustadz Wahyudin Hafiz, S.Pd';
+          const pId = m.pengampu_id || m.pengampuId || 'p-1';
+          const sNama = m.sesiNama || m.sesi || "Ba'da Subuh";
+          const sId = m.sesiId || m.sesi_id || '';
+          return {
+            ...m,
+            id: m.id,
+            tanggal: tglStr,
+            pengampuId: pId,
+            pengampu_id: pId,
+            nama: guruNama,
+            namaGuru: guruNama,
+            nip: m.nip || 'NON-NIP',
+            role: m.role || 'Pengampu Halaqoh',
+            halaqah: m.halaqah || 'Halaqah Tahfidz',
+            mapel: m.mapel || `Tahfidz (${sNama})`,
+            kelas: m.kelas || 'Masjid Tahfidz',
+            sesi: sNama,
+            sesiNama: sNama,
+            sesiId: sId,
+            sesi_id: sId,
+            jadwal: m.jadwal || sNama,
+            jam: m.jam || m.jamScan || '-',
+            jamScan: m.jamScan || m.jam || '-',
+            status: m.status || 'Sudah',
+            selisihMenit: m.selisih_menit || m.selisihMenit || 0,
+            selisih_menit: m.selisih_menit || m.selisihMenit || 0,
+            lokasiGps: m.lokasi_gps || m.lokasiGps,
+            lokasi_gps: m.lokasi_gps || m.lokasiGps,
+            metode: m.metode || 'QR Scan GPS',
+            keterangan: m.keterangan || 'Tepat Waktu',
+            alasanIzin: m.alasan_izin || m.alasanIzin,
+            tugasSiswa: m.tugas_siswa || m.tugasSiswa,
+            manual: !!m.manual
+          };
+        });
 
         this._cache.kelas = (kelas || []).map(k => ({
           ...k,
@@ -1793,29 +1821,52 @@ export const storageService = {
     return this._cache.monitoring || [];
   },
 
+  // Helper mendapatkan tanggal hari ini dalam format YYYY-MM-DD (Zona Waktu Indonesia/Jakarta)
+  getTodayISO() {
+    try {
+      return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+    } catch (e) {
+      return new Date().toISOString().split('T')[0];
+    }
+  },
+
   isPengampuSudahScan(namaGuru = 'Wahyudin Hafiz, S.Pd', sesiIdOrNama = 'subuh', tanggal = null) {
     const list = this._cache.monitoring || [];
-    const todayISO = tanggal || new Date().toISOString().split('T')[0];
+    const todayISO = tanggal || this.getTodayISO();
     const cleanTarget = String(sesiIdOrNama || '').toLowerCase().trim();
     const cleanGuru = this._cleanName(namaGuru);
 
     const record = list.find(item => {
-      if (item.tanggal !== todayISO) return false;
+      // 1. Bandingkan tanggal hari ini
+      const itemTgl = item.tanggal ? (typeof item.tanggal === 'string' && item.tanggal.length === 10 ? item.tanggal : String(item.tanggal).split('T')[0]) : '';
+      if (itemTgl && itemTgl !== todayISO) return false;
+
+      // 2. Bandingkan nama guru
       if (cleanGuru) {
-        const itemGuru = this._cleanName(item.nama);
+        const itemGuru = this._cleanName(item.namaGuru || item.nama);
         if (itemGuru && itemGuru !== cleanGuru && !itemGuru.includes(cleanGuru) && !cleanGuru.includes(itemGuru)) {
           return false;
         }
       }
-      const sId = (item.sesi || '').toLowerCase();
-      return sId === cleanTarget || sId.includes(cleanTarget) || cleanTarget.includes(sId);
+
+      // 3. Bandingkan sesi (fleksibel: id, nama, atau substring)
+      if (cleanTarget === 'semua') return true;
+      const sId = String(item.sesiId || item.sesi_id || '').toLowerCase().trim();
+      const sNama = String(item.sesiNama || item.sesi || '').toLowerCase().trim();
+
+      return sId === cleanTarget || 
+             sNama === cleanTarget || 
+             (cleanTarget && sId.includes(cleanTarget)) || 
+             (cleanTarget && cleanTarget.includes(sId)) || 
+             (cleanTarget && sNama.includes(cleanTarget)) || 
+             (cleanTarget && cleanTarget.includes(sNama));
     });
 
     if (record) {
       return {
         sudah: true,
-        status: 'Sudah',
-        jamScan: record.jam || record.jamScan || '-',
+        status: record.status || 'Sudah',
+        jamScan: record.jamScan || record.jam || '-',
         lokasi: record.kelas || record.lokasi || '',
         keterangan: record.keterangan || 'Tepat Waktu'
       };
@@ -1826,20 +1877,20 @@ export const storageService = {
 
   scanPresensiPengampu(namaGuru, targetLokasi, sesiNama, sesiId = null) {
     const now = new Date();
-    const nowTime = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(':', '.');
-    const todayISO = now.toISOString().split('T')[0];
+    const nowTime = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).replace(':', '.');
+    const todayISO = this.getTodayISO();
 
     const pengampuList = this.getAllPengampuRaw();
     const cleanG = this._cleanName(namaGuru);
     const matchedP = pengampuList.find(p => p.nama === namaGuru || this._cleanName(p.nama) === cleanG) || {
       id: 'p-1',
-      nama: namaGuru || 'Ustadz Pengampu',
+      nama: namaGuru || 'Ustadz Wahyudin Hafiz, S.Pd',
       nip: 'NON-NIP',
       role: 'Pengampu Halaqoh',
       halaqahNama: 'Halaqah Tahfidz'
     };
 
-    const actualGuruNama = namaGuru || matchedP.nama || 'Ustadz Pengampu';
+    const actualGuruNama = namaGuru || matchedP.nama || 'Ustadz Wahyudin Hafiz, S.Pd';
     const jadwal = this.getJadwalHalaqoh();
     const sesi = jadwal?.sesiList?.find(s => 
       (sesiId && s.id === sesiId) || 
@@ -1878,25 +1929,37 @@ export const storageService = {
     const newFeed = {
       id: 'pres-' + Date.now(),
       nama: actualGuruNama,
+      namaGuru: actualGuruNama,
+      pengampuId: matchedP.id || 'p-1',
+      pengampu_id: matchedP.id || 'p-1',
       nip: matchedP.nip || 'NON-NIP',
       role: matchedP.role || 'Pengampu Halaqoh',
       jenis: 'Halaqah Tahfidz',
       jam: nowTime,
+      jamScan: nowTime,
       tanggal: todayISO,
       sesi: finalSesiNama,
+      sesiNama: finalSesiNama,
+      sesiId: finalSesiId,
+      sesi_id: finalSesiId,
+      jadwal: finalSesiNama,
       mapel: `Tahfidz (${finalSesiNama})`,
       kelas: lokasiKode || 'Masjid Tahfidz',
       status: status,
       selisihMenit: lateMinutes,
+      selisih_menit: lateMinutes,
       keterangan: keterangan,
       metode: 'QR Scan (GPS Locked)',
       lokasiGps: `${lokasiKode || 'Lokasi Terverifikasi'} (Akurat)`,
+      lokasi_gps: `${lokasiKode || 'Lokasi Terverifikasi'} (Akurat)`,
       manual: false
     };
 
     const monList = this._cache.monitoring || [];
     const existingIdx = monList.findIndex(
-      f => this._cleanName(f.nama) === cleanG && f.sesi === newFeed.sesi && f.tanggal === todayISO
+      f => (this._cleanName(f.namaGuru || f.nama) === cleanG || f.pengampuId === matchedP.id) &&
+           (f.sesiId === finalSesiId || f.sesi === finalSesiNama || (f.sesi || '').toLowerCase().includes((finalSesiNama || '').toLowerCase())) &&
+           f.tanggal === todayISO
     );
     if (existingIdx !== -1) {
       monList[existingIdx] = { ...monList[existingIdx], ...newFeed };
@@ -1906,7 +1969,11 @@ export const storageService = {
     this._cache.monitoring = monList;
     this.emitUpdate();
 
-    apiService.saveMonitoring(newFeed).catch(err => console.warn('[API] sync monitoring error:', err.message));
+    if (typeof apiService.saveMonitoringPresensi === 'function') {
+      apiService.saveMonitoringPresensi(newFeed).catch(err => console.warn('[API] sync monitoring error:', err.message));
+    } else if (typeof apiService.saveMonitoring === 'function') {
+      apiService.saveMonitoring(newFeed).catch(err => console.warn('[API] sync monitoring error:', err.message));
+    }
 
     return {
       success: true,

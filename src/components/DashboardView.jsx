@@ -60,7 +60,7 @@ export default function DashboardView({
   // Deteksi Hari Ini & Status Presensi Pengampu
   const dayNames = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
   const todayIndo = dayNames[new Date().getDay()];
-  const todayISO = new Date().toISOString().split('T')[0];
+  const todayISO = storageService.getTodayISO ? storageService.getTodayISO() : new Date().toISOString().split('T')[0];
 
   const dynamicSesiList = rawSesiList.map(sesi => {
     const isMasukHariIni = jadwalHalaqoh?.hariAktif?.[todayIndo]?.[sesi.id] !== false;

@@ -128,16 +128,20 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
   // Deteksi Hari & Tanggal Hari Ini
   const dayNames = ['Ahad', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
   const todayIndo = dayNames[new Date().getDay()];
-  const todayISO = new Date().toISOString().split('T')[0];
+  const todayISO = storageService.getTodayISO ? storageService.getTodayISO() : new Date().toISOString().split('T')[0];
 
   // Cari sesi yang dipilih
   const currentSesiObj = selectedSesi ? (jadwalHalaqoh.sesiList.find(s => s.nama === selectedSesi) || null) : null;
 
   // Daftar presensi pengampu hari ini
-  const todayPengampuRecords = storageService.getPengampuPresensiList().filter(p => 
-    p.tanggal === todayISO && 
-    (storageService._cleanName(p.namaGuru) === storageService._cleanName(currentPengampuNama) || p.pengampuId === currentAuth?.id)
-  );
+  const todayPengampuRecords = storageService.getPengampuPresensiList().filter(p => {
+    const pTgl = p.tanggal ? String(p.tanggal).split('T')[0] : '';
+    if (pTgl && pTgl !== todayISO) return false;
+    const cleanPGuru = storageService._cleanName(p.namaGuru || p.nama);
+    const cleanMy = storageService._cleanName(currentPengampuNama);
+    return (cleanPGuru && cleanMy && (cleanPGuru === cleanMy || cleanPGuru.includes(cleanMy) || cleanMy.includes(cleanPGuru))) || 
+           (p.pengampuId && currentAuth?.id && p.pengampuId === currentAuth.id);
+  });
 
   // Otomatis buka kamera live jika sesi dikirimkan dari Dashboard
   useEffect(() => {
