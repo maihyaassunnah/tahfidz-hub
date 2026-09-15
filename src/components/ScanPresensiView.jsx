@@ -218,45 +218,80 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
         const scanner = new Html5Qrcode("reader-live-camera");
         html5QrCodeRef.current = scanner;
 
-        // Ambil daftar kamera yang terpasang jika tersedia
+        // 1. Ambil daftar kamera perangkat secara langsung
+        let cameras = [];
         try {
-          const cameras = await Html5Qrcode.getCameras();
+          cameras = await Html5Qrcode.getCameras();
           if (cameras && cameras.length > 0) {
             setAvailableCameras(cameras);
           }
         } catch (camErr) {
-          console.warn("Could not enumerate cameras:", camErr);
+          console.warn("Could not enumerate cameras via getCameras, will fallback:", camErr);
         }
 
         const qrConfig = {
           fps: 15,
           qrbox: (viewfinderWidth, viewfinderHeight) => {
             const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-            const size = Math.max(180, Math.min(Math.floor(minEdge * 0.72), 260));
+            const size = Math.max(160, Math.min(Math.floor(minEdge * 0.75), 260));
             return { width: size, height: size };
-          },
-          aspectRatio: 1.0,
-          disableFlip: false
+          }
+          // Tidak menggunakan aspectRatio kaku agar tidak OverconstrainedError di laptop / smartphone!
         };
 
         const onScanSuccessCallback = async (decodedText) => {
-          // Segera hentikan pemindai setelah barcode terdeteksi
           await stopCameraScanner();
           handleProcessScannedCode(decodedText, sesiNamaToUse);
         };
 
-        // Prioritas 1: Gunakan Kamera Belakang (environment)
-        try {
-          await scanner.start(
-            { facingMode: { ideal: "environment" } },
-            qrConfig,
-            onScanSuccessCallback,
-            () => {} // abaikan frame kosong
-          );
-          setCameraLoading(false);
-        } catch (errEnv) {
-          console.warn("Kamera belakang tidak tersedia, mencoba kamera default:", errEnv);
-          // Prioritas 2: Fallback ke Kamera Depan / Default
+        let started = false;
+
+        // STRATEGI 1: Gunakan Device ID Kamera Terdaftar (Paling stabil & cocok untuk laptop & HP)
+        if (cameras && cameras.length > 0) {
+          // Cari kamera belakang di smartphone jika ada kata 'back', 'rear', 'environment'
+          const backCam = cameras.find(c => {
+            const lbl = (c.label || '').toLowerCase();
+            return lbl.includes('back') || lbl.includes('rear') || lbl.includes('belakang') || lbl.includes('environment');
+          });
+          const candidates = backCam
+            ? [backCam, ...cameras.filter(c => c.id !== backCam.id)]
+            : cameras;
+
+          for (const cam of candidates) {
+            try {
+              await scanner.start(
+                cam.id,
+                qrConfig,
+                onScanSuccessCallback,
+                () => {}
+              );
+              started = true;
+              setCameraLoading(false);
+              break;
+            } catch (eDevice) {
+              console.warn("Start dengan target camera ID gagal:", cam.id, eDevice);
+            }
+          }
+        }
+
+        // STRATEGI 2: Fallback ke string "environment" (Kamera Belakang Smartphone)
+        if (!started) {
+          try {
+            await scanner.start(
+              { facingMode: "environment" },
+              qrConfig,
+              onScanSuccessCallback,
+              () => {}
+            );
+            started = true;
+            setCameraLoading(false);
+          } catch (errEnv) {
+            console.warn("Kamera environment gagal, mencoba kamera user/depan:", errEnv);
+          }
+        }
+
+        // STRATEGI 3: Fallback ke string "user" (Kamera Depan / Webcam Laptop)
+        if (!started) {
           try {
             await scanner.start(
               { facingMode: "user" },
@@ -264,30 +299,35 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
               onScanSuccessCallback,
               () => {}
             );
+            started = true;
             setCameraLoading(false);
           } catch (errUser) {
-            console.error("Semua kamera gagal:", errUser);
-            setCameraLoading(false);
-            setCameraError(errUser.message || "Izin akses kamera belum diberikan.");
-            setScanPopup({
-              isOpen: true,
-              status: 'error',
-              title: 'Kamera Tidak Dapat Dibuka',
-              subtitle: 'Izin kamera belum aktif atau kamera sedang dipakai.',
-              rawCode: '',
-              details: {
-                alasan: 'Browser memerlukan izin untuk menyalakan kamera smartphone Anda.',
-                panduan: 'Buka pengaturan izin browser (klik ikon gembok di bilah URL), pilih Kamera: Izinkan (Allow), lalu coba tekan sesi kembali.'
-              }
-            });
+            console.warn("Semua opsi kamera gagal:", errUser);
           }
+        }
+
+        // JIKA SEMUA STRATEGI GAGAL -> TAMPILKAN POPUP GAGAL
+        if (!started) {
+          setCameraLoading(false);
+          setCameraError("Kamera tidak dapat diakses.");
+          setScanPopup({
+            isOpen: true,
+            status: 'error',
+            title: 'Kamera Tidak Dapat Dibuka',
+            subtitle: 'Kamera sedang dipakai aplikasi lain atau belum terhubung.',
+            rawCode: '',
+            details: {
+              alasan: 'Browser tidak dapat mengambil gambar langsung dari perangkat kamera Anda.',
+              panduan: 'Pastikan izin kamera di browser sudah disetujui (klik ikon gembok/setelan di URL). Jika di PC/Laptop tanpa webcam, gunakan opsi Konfirmasi Presensi Ruangan di bawah.'
+            }
+          });
         }
       } catch (errInit) {
         console.error("Scanner init error:", errInit);
         setCameraLoading(false);
         setCameraError("Gagal menginisialisasi kamera.");
       }
-    }, 220);
+    }, 200);
   };
 
   // Ganti kamera depan / belakang jika tersedia
@@ -304,8 +344,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
       }
       const qrConfig = {
         fps: 15,
-        qrbox: (w, h) => ({ width: Math.min(w * 0.72, 250), height: Math.min(w * 0.72, 250) }),
-        aspectRatio: 1.0
+        qrbox: (w, h) => ({ width: Math.min(w * 0.75, 250), height: Math.min(w * 0.75, 250) })
       };
       await html5QrCodeRef.current.start(
         nextCam.id,
@@ -1218,8 +1257,65 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
                       <strong>Alasan Gagal:</strong> {scanPopup.details?.alasan}
                     </div>
 
-                    <div style={{ fontSize: '0.76rem', color: '#991b1b', lineHeight: 1.4, background: '#fff5f5', padding: '8px 10px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.76rem', color: '#991b1b', lineHeight: 1.4, background: '#fff5f5', padding: '8px 10px', borderRadius: '8px', marginBottom: '14px' }}>
                       💡 <strong>Panduan:</strong> {scanPopup.details?.panduan}
+                    </div>
+
+                    {/* Opsi Bantu: Konfirmasi Ruangan jika perangkat tidak memiliki webcam aktif */}
+                    <div style={{
+                      marginBottom: '14px',
+                      padding: '12px 14px',
+                      background: '#f8fafc',
+                      borderRadius: '12px',
+                      border: '1px solid #e2e8f0',
+                      textAlign: 'left'
+                    }}>
+                      <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#334155', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <Building2 size={13} color="#059669" />
+                        <span>Alternatif: Konfirmasi Ruangan Tanpa Kamera</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <CustomSelect
+                          value={selectedLokasiId}
+                          onChange={(e) => setSelectedLokasiId(e.target.value)}
+                          style={{ flex: 1 }}
+                          triggerStyle={{ minHeight: '34px', fontSize: '11.5px', borderRadius: '8px', fontWeight: 700 }}
+                        >
+                          {lokasiList.map(l => (
+                            <option key={l.id} value={l.id}>
+                              {l.kelas} ({l.kodeManual}) — {l.lokasi || ''}
+                            </option>
+                          ))}
+                        </CustomSelect>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const target = lokasiList.find(l => l.id === selectedLokasiId) || lokasiList[0];
+                            setScanPopup(prev => ({ ...prev, isOpen: false }));
+                            await stopCameraScanner();
+                            if (target) {
+                              handleProcessScannedCode(target.kodeManual, selectedSesi);
+                            }
+                          }}
+                          style={{
+                            background: '#059669',
+                            border: 'none',
+                            color: '#ffffff',
+                            padding: '6px 14px',
+                            borderRadius: '8px',
+                            fontSize: '11.5px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          <Zap size={13} />
+                          <span>Presensi</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
