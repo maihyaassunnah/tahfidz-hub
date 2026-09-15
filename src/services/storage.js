@@ -416,7 +416,32 @@ const INITIAL_JADWAL_HALAQOH = {
 };
 
 // GAMBAR 3 (LANJUTAN): QR & LOKASI KELAS (DIMUAT DARI DATABASE)
-const INITIAL_SIGAP_LOKASI_QR = [];
+const INITIAL_SIGAP_LOKASI_QR = [
+  {
+    id: 'l-1789434655796',
+    kelas: 'Masjid Tahfidz',
+    lokasi: 'kantor',
+    kodeManual: 'KANTOR',
+    cabangId: 'cabang-pusat',
+    gpsStatus: 'GPS: Standar',
+    locked: false,
+    lat: -7.327415,
+    lng: 108.215542,
+    radiusMeter: 100
+  },
+  {
+    id: 'l-xa',
+    kelas: 'X A',
+    lokasi: 'Ruang Kelas X A Putra',
+    kodeManual: 'MAIAS-XA',
+    cabangId: 'cabang-pusat',
+    gpsStatus: 'GPS: Standar',
+    locked: false,
+    lat: -7.327415,
+    lng: 108.215542,
+    radiusMeter: 100
+  }
+];
 
 // GAMBAR 5 (LANJUTAN): PERSETUJUAN IZIN GURU
 const INITIAL_SIGAP_IZIN_GURU = [];
@@ -3386,7 +3411,7 @@ export const storageService = {
       monitoring: [],
       kelas: [],
       alumni: [],
-      lokasi_qr: [],
+      lokasi_qr: [...INITIAL_SIGAP_LOKASI_QR],
       settings: INITIAL_SETTINGS,
       raporTemplate: DEFAULT_RAPOR_TEMPLATE,
       nilaiRapor: [],
