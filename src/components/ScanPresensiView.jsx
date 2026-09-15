@@ -18,12 +18,14 @@ import {
   Building2,
   HelpCircle,
   Zap,
-  Info
+  Info,
+  Smartphone
 } from 'lucide-react';
 import { storageService } from '../services/storage';
 import { Html5Qrcode } from 'html5-qrcode';
 import confetti from 'canvas-confetti';
 import QRCode from 'qrcode';
+import CustomSelect from './common/CustomSelect';
 
 // Komponen Realistis QR Code Asli Berstandar ISO/IEC 18004 (Scannable oleh semua kamera)
 function RealQRCodeImage({ value, size = 88 }) {
@@ -113,6 +115,27 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
   })();
 
   const [selectedSesi, setSelectedSesi] = useState(defaultSesi);
+  const selectedSesiRef = useRef(defaultSesi);
+  useEffect(() => {
+    selectedSesiRef.current = selectedSesi;
+  }, [selectedSesi]);
+
+  // Deteksi Perangkat Mobile Smartphone / Tablet
+  const isMobileDevice = typeof window !== 'undefined' && (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+    (navigator.maxTouchPoints > 0 && window.innerWidth <= 768)
+  );
+
+  // Preferensi Mode Pemindai Kamera ('device': Kamera Asli HP, 'live': Kamera Langsung Web)
+  const [cameraMode, setCameraMode] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('simtah_scan_camera_mode');
+      if (saved === 'live' || saved === 'device') return saved;
+    } catch (e) {}
+    // Default: di smartphone gunakan kamera bawaan HP agar langsung terbuka tanpa hambatan
+    return isMobileDevice ? 'device' : 'live';
+  });
+
   const [selectedLokasiId, setSelectedLokasiId] = useState(lokasiList[0]?.id || 'l-xa');
   const [pengampuScanned, setPengampuScanned] = useState(null);
   const [isScanningPengampu, setIsScanningPengampu] = useState(false);
@@ -150,8 +173,11 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
   );
 
   // Eksekusi Simpan Presensi Pengampu
-  const executePresensiPengampu = (targetLokasi, gpsDetail) => {
-    if (!selectedSesi || !currentSesiObj) {
+  const executePresensiPengampu = (targetLokasi, gpsDetail, customSesi) => {
+    const sesiNamaToUse = customSesi || selectedSesiRef.current || selectedSesi;
+    const sesiObjToUse = jadwalHalaqoh.sesiList.find(s => s.nama === sesiNamaToUse) || currentSesiObj;
+
+    if (!sesiNamaToUse || !sesiObjToUse) {
       showToast && showToast('Pilih salah satu sesi halaqah terlebih dahulu!');
       return;
     }
@@ -159,8 +185,8 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
     const res = storageService.scanPresensiPengampu(
       currentPengampuNama, 
       targetLokasi, 
-      selectedSesi, 
-      currentSesiObj?.id
+      sesiNamaToUse, 
+      sesiObjToUse?.id
     );
     setIsScanningPengampu(false);
     setGpsWarning(null);
@@ -171,7 +197,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
       kodeQR: targetLokasi.kodeManual,
       jamScan: res.jamScan,
       status: res.status,
-      sesi: selectedSesi,
+      sesi: sesiNamaToUse,
       keterangan: res.keterangan || 'Tepat Waktu',
       gpsDetail
     });
@@ -180,14 +206,17 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
       confetti({ particleCount: 55, spread: 65, origin: { y: 0.6 } });
     } catch (e) {}
 
-    showToast && showToast(`✓ Presensi Kehadiran ${selectedSesi} Berhasil (Pukul ${res.jamScan} WIB)!`);
+    showToast && showToast(`✓ Presensi Kehadiran ${sesiNamaToUse} Berhasil (Pukul ${res.jamScan} WIB)!`);
     setRefreshTrigger(prev => prev + 1);
     onReload && onReload();
   };
 
   // Proses Validasi Kode QR yang discan
-  const handleProcessScannedCode = (scannedCode) => {
-    if (!selectedSesi || !currentSesiObj) {
+  const handleProcessScannedCode = (scannedCode, customSesi) => {
+    const sesiNamaToUse = customSesi || selectedSesiRef.current || selectedSesi;
+    const sesiObjToUse = jadwalHalaqoh.sesiList.find(s => s.nama === sesiNamaToUse) || currentSesiObj;
+
+    if (!sesiNamaToUse || !sesiObjToUse) {
       showToast && showToast('Silakan pilih sesi halaqah terlebih dahulu!');
       return;
     }
@@ -218,7 +247,8 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
               maxRadius,
               userLat,
               userLng,
-              userAcc
+              userAcc,
+              sesiNama: sesiNamaToUse
             });
             showToast && showToast(`Perhatian: Posisi GPS berjarak ${distance}m dari titik ruangan!`);
           } else {
@@ -227,7 +257,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
               distance,
               maxRadius,
               accuracy: userAcc
-            });
+            }, sesiNamaToUse);
           }
         },
         (err) => {
@@ -237,7 +267,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
             distance: 0,
             maxRadius: matchedLokasi.radiusMeter || 50,
             accuracy: null
-          });
+          }, sesiNamaToUse);
         },
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
       );
@@ -247,16 +277,34 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
         distance: 0,
         maxRadius: 50,
         accuracy: null
-      });
+      }, sesiNamaToUse);
     }
   };
 
-  // Mulai Kamera QR Scanner Asli
-  const startCameraScanner = async () => {
-    if (!selectedSesi || !currentSesiObj) {
+  // Pemicu Buka Kamera Bawaan HP / Perangkat Langsung
+  const openDeviceCamera = (targetSesiNama) => {
+    const sesiNamaToUse = targetSesiNama || selectedSesiRef.current || selectedSesi;
+    if (sesiNamaToUse) {
+      setSelectedSesi(sesiNamaToUse);
+      selectedSesiRef.current = sesiNamaToUse;
+    }
+    setDeviceScanError(null);
+    if (deviceCameraInputRef.current) {
+      deviceCameraInputRef.current.value = '';
+      deviceCameraInputRef.current.click();
+    }
+  };
+
+  // Mulai Kamera QR Scanner Asli (Live)
+  const startCameraScanner = async (targetSesiNama) => {
+    const sesiNamaToUse = targetSesiNama || selectedSesiRef.current || selectedSesi;
+    const sesiObjToUse = jadwalHalaqoh.sesiList.find(s => s.nama === sesiNamaToUse);
+    if (!sesiNamaToUse || !sesiObjToUse) {
       showToast && showToast('Silakan pilih sesi halaqah terlebih dahulu!');
       return;
     }
+    setSelectedSesi(sesiNamaToUse);
+    selectedSesiRef.current = sesiNamaToUse;
     setShowLiveCamera(true);
     setCameraError(null);
 
@@ -273,14 +321,14 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
           },
           (decodedText) => {
             stopCameraScanner();
-            handleProcessScannedCode(decodedText);
+            handleProcessScannedCode(decodedText, sesiNamaToUse);
           },
           (errorMessage) => {
             // Abaikan frame scan kosong
           }
         ).catch((err) => {
           console.warn("Camera start error:", err);
-          setCameraError("Tidak dapat mengakses kamera perangkat. Pastikan izin kamera telah diberikan di browser.");
+          setCameraError("Tidak dapat mengakses kamera live. Pastikan izin kamera telah diberikan di browser, atau gunakan Kamera HP Bawaan.");
         });
       } catch (e) {
         console.error("Scanner init error:", e);
@@ -306,12 +354,31 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
     setCameraError(null);
   };
 
+  // Tangani saat sesi presensi ditekan -> Langsung buka kamera perangkat
+  const handleSessionClick = (sesi) => {
+    const sesiNama = sesi.nama;
+    setSelectedSesi(sesiNama);
+    selectedSesiRef.current = sesiNama;
+    setGpsWarning(null);
+    setDeviceScanError(null);
+
+    // Langsung buka kamera perangkat sesuai preferensi aktif
+    if (cameraMode === 'device') {
+      openDeviceCamera(sesiNama);
+    } else {
+      startCameraScanner(sesiNama);
+    }
+  };
+
   // Tangani hasil potret langsung dari Kamera Asli Device (Kamera Bawaan Smartphone)
   const handleDeviceCameraCapture = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!selectedSesi || !currentSesiObj) {
+    const sesiNamaToUse = selectedSesiRef.current || selectedSesi;
+    const sesiObjToUse = jadwalHalaqoh.sesiList.find(s => s.nama === sesiNamaToUse) || currentSesiObj;
+
+    if (!sesiNamaToUse || !sesiObjToUse) {
       showToast && showToast('Silakan pilih sesi halaqah terlebih dahulu!');
       if (e.target) e.target.value = '';
       return;
@@ -360,15 +427,15 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
       }
 
       if (decodedText) {
-        handleProcessScannedCode(decodedText);
+        handleProcessScannedCode(decodedText, sesiNamaToUse);
       } else {
-        const errMsg = "QR Code tidak terdeteksi dari foto kamera device. Pastikan posisi kamera tegak lurus dan stiker QR Code terlihat jelas dan fokus.";
+        const errMsg = "QR Code tidak terdeteksi dari foto kamera perangkat. Pastikan posisi kamera tegak lurus dan stiker QR Code terlihat jelas dan fokus.";
         setDeviceScanError(errMsg);
         showToast && showToast(errMsg);
       }
     } catch (err) {
-      console.error("Gagal memproses foto kamera device:", err);
-      const errMsg = "Gagal memproses foto kamera device. Silakan coba potret kembali.";
+      console.error("Gagal memproses foto kamera perangkat:", err);
+      const errMsg = "Gagal memproses foto kamera perangkat. Silakan coba potret kembali.";
       setDeviceScanError(errMsg);
       showToast && showToast(errMsg);
     } finally {
@@ -392,6 +459,17 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
   return (
     <div className="page-content-wrapper" style={{ animation: 'fadeIn 0.25s ease-out', paddingBottom: '120px' }}>
       
+      {/* Input Hidden untuk Memicu Kamera Asli Device (Kamera Bawaan HP) - Selalu ter-mount agar siap dipicu langsung saat klik sesi */}
+      <input
+        ref={deviceCameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleDeviceCameraCapture}
+      />
+      <div id="hidden-device-qr-reader" style={{ display: 'none' }}></div>
+
       {/* ─── STYLE RESPONSIVE KHUSUS MOBILE SCAN PRESENSI ─── */}
       <style>{`
         .scan-session-grid {
@@ -427,230 +505,105 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
         }
       `}</style>
 
-      {/* 1. HEADER HALAMAN: PRESENSI GURU PENGAMPU */}
-      <div className="card scan-card-pad" style={{ marginBottom: '20px', padding: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+      {/* 1. JADWAL SESI HARI INI (SATU BARIS PERSIS SEPERTI DASHBOARD/HOME) */}
+      <div className="sesi-card-container" style={{ marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span style={{ 
-                background: '#ecfdf5', 
-                color: '#047857', 
-                border: '1px solid #a7f3d0', 
-                padding: '3px 10px', 
-                borderRadius: '16px', 
-                fontSize: '11px', 
-                fontWeight: 800,
-                letterSpacing: '0.04em'
-              }}>
-                PRESENSI KEHADIRAN PENGAMPU
-              </span>
-              <span style={{ fontSize: '12px', color: '#64748b' }}>
-                • {todayIndo}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </span>
-            </div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 4px 0', color: '#0f172a' }}>
-              Scan Barcode / QR Ruangan Halaqah
-            </h2>
+            <div className="sesi-header-title">Jadwal Sesi Hari Ini</div>
+            <div className="sesi-header-sub">Tekan sesi untuk <strong>langsung membuka kamera</strong> presensi QR</div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            {/* Profil Ustadz */}
-            <div style={{ 
-              background: '#f8fafc', 
-              border: '1px solid #e2e8f0', 
-              padding: '8px 14px', 
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}>
-              <div style={{ 
-                width: '34px', 
-                height: '34px', 
-                borderRadius: '50%', 
-                background: '#047857', 
-                color: '#fff', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                fontWeight: 800,
-                fontSize: '13px'
-              }}>
-                {(currentPengampuNama || 'P').charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>{currentPengampuNama}</div>
-                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{currentHalaqahNama} {currentPengampuNip && currentPengampuNip !== 'NON-NIP' ? `• NIP: ${currentPengampuNip}` : ''}</div>
-              </div>
-            </div>
-
-            {/* Tombol Pintas ke Presensi Santri */}
-            {setActiveTab && (
-              <button 
-                className="btn btn-outline btn-sm"
-                onClick={() => setActiveTab('presensi-santri')}
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '6px', 
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  borderColor: '#cbd5e1'
-                }}
-                title="Buka menu absensi kehadiran santri halaqah"
-              >
-                <Users size={15} />
-                <span>Absensi Santri →</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Notice Info Box */}
-        <div style={{ 
-          marginTop: '16px', 
-          background: '#f0fdf4', 
-          border: '1px solid #bbf7d0', 
-          borderRadius: '10px', 
-          padding: '10px 14px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '10px',
-          fontSize: '0.82rem',
-          color: '#166534'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Info size={16} color="#16a34a" />
-            <span>
-              <strong>Pemberitahuan:</strong> Pemindai di halaman ini khusus untuk <strong>Presensi Kehadiran Pengampu</strong>. Presensi kehadiran santri bimbingan dicatat melalui menu <strong>Presensi Santri</strong>.
-            </span>
-          </div>
-          {setActiveTab && (
-            <button 
-              onClick={() => setActiveTab('presensi-santri')}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#047857',
-                fontWeight: 800,
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                fontSize: '0.82rem'
+          {/* Pengalih Cepat Mode Kamera Perangkat */}
+          <div style={{
+            display: 'inline-flex',
+            background: '#f1f5f9',
+            borderRadius: '20px',
+            padding: '3px',
+            border: '1px solid #e2e8f0'
+          }}>
+            <button
+              type="button"
+              onClick={() => {
+                setCameraMode('device');
+                try { sessionStorage.setItem('simtah_scan_camera_mode', 'device'); } catch (e) {}
+                showToast && showToast('Mode aktif: Kamera Bawaan HP (Membuka Kamera Perangkat Saat Sesi Ditekan)');
               }}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '16px',
+                border: 'none',
+                fontSize: '11px',
+                fontWeight: cameraMode === 'device' ? 800 : 600,
+                background: cameraMode === 'device' ? '#059669' : 'transparent',
+                color: cameraMode === 'device' ? '#ffffff' : '#64748b',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'all 0.15s ease'
+              }}
+              title="Saat sesi ditekan, langsung membuka aplikasi kamera perangkat HP"
             >
-              Buka Presensi Santri
+              <Smartphone size={13} />
+              <span>Kamera HP</span>
             </button>
-          )}
+            <button
+              type="button"
+              onClick={() => {
+                setCameraMode('live');
+                try { sessionStorage.setItem('simtah_scan_camera_mode', 'live'); } catch (e) {}
+                showToast && showToast('Mode aktif: Pemindai Langsung (Live Auto-Scan Di Layar)');
+              }}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '16px',
+                border: 'none',
+                fontSize: '11px',
+                fontWeight: cameraMode === 'live' ? 800 : 600,
+                background: cameraMode === 'live' ? '#059669' : 'transparent',
+                color: cameraMode === 'live' ? '#ffffff' : '#64748b',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'all 0.15s ease'
+              }}
+              title="Saat sesi ditekan, langsung membuka pemindai kamera live di layar"
+            >
+              <Camera size={13} />
+              <span>Live Scan</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* 2. JADWAL SESI HARI INI (DIATUR DI SUPER ADMIN) DENGAN STATUS SUDAH / BELUM */}
-      <div className="card scan-card-pad" style={{ marginBottom: '24px', padding: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
-          <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
-            Jadwal Sesi Halaqah Hari Ini (Pengaturan Super Admin)
-          </h3>
-        </div>
-
-        {/* Chips Sesi Interaktif */}
-        <div className="scan-session-grid">
+        <div className="sesi-chips-row">
           {jadwalHalaqoh.sesiList.map(sesi => {
-            const isMasukHariIni = jadwalHalaqoh?.hariAktif?.[todayIndo]?.[sesi.id] !== false;
-            const isLibur = !isMasukHariIni || sesi.aktif === false;
             const presensi = storageService.isPengampuSudahScan(currentPengampuNama, sesi.id, todayISO);
             const isSudah = presensi.sudah;
+            const isMasukHariIni = jadwalHalaqoh?.hariAktif?.[todayIndo]?.[sesi.id] !== false;
+            const isLibur = !isSudah && (!isMasukHariIni || sesi.aktif === false);
             const isSelected = selectedSesi === sesi.nama;
 
             return (
               <div 
-                key={sesi.id}
-                className="scan-sesi-card"
-                onClick={() => {
-                  if (!isLibur) {
-                    setSelectedSesi(prev => prev === sesi.nama ? null : sesi.nama);
-                    setGpsWarning(null);
-                  }
+                key={sesi.id} 
+                className={`sesi-chip ${isLibur ? 'libur-pink' : isSudah ? 'active-green' : 'belum-amber'} ${isSelected ? 'is-selected' : ''}`}
+                onClick={() => handleSessionClick(sesi)}
+                style={{ 
+                  cursor: 'pointer',
+                  border: isSelected ? '2px solid #059669' : undefined,
+                  boxShadow: isSelected ? '0 0 0 3px rgba(5, 150, 105, 0.2)' : undefined
                 }}
-                style={{
-                  padding: '14px 16px',
-                  borderRadius: '12px',
-                  background: isSelected 
-                    ? (isSudah ? '#f0fdf4' : '#fffbeb') 
-                    : (isLibur ? '#f8fafc' : '#ffffff'),
-                  border: isSelected 
-                    ? `2px solid ${isSudah ? '#059669' : '#d97706'}` 
-                    : `1.5px solid ${isSudah ? '#a7f3d0' : isLibur ? '#f1f5f9' : '#fed7aa'}`,
-                  cursor: isLibur ? 'default' : 'pointer',
-                  boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.06)' : 'none',
-                  transition: 'all 0.18s ease',
-                  position: 'relative'
-                }}
+                title={isSudah ? `Sudah scan: ${presensi.jamScan} WIB (${presensi.keterangan || 'Tepat Waktu'}). Tekan untuk buka kamera scan ulang.` : isLibur ? 'Jadwal Libur. Tekan untuk buka kamera presensi.' : 'Tekan untuk langsung membuka kamera presensi QR!'}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  {/* Badge Sudah / Belum / LIBUR */}
-                  <span style={{
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    padding: '3px 10px',
-                    borderRadius: '12px',
-                    background: isLibur ? '#f1f5f9' : isSudah ? '#ecfdf5' : '#fef3c7',
-                    color: isLibur ? '#64748b' : isSudah ? '#047857' : '#92400e',
-                    border: `1px solid ${isLibur ? '#e2e8f0' : isSudah ? '#a7f3d0' : '#fde68a'}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}>
-                    {isLibur ? (
-                      'LIBUR'
-                    ) : isSudah ? (
-                      <>
-                        <Check size={12} strokeWidth={3} />
-                        <span>Sudah</span>
-                      </>
-                    ) : (
-                      <>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#d97706' }}></span>
-                        <span>Belum</span>
-                      </>
-                    )}
-                  </span>
-
-                  {isSelected ? (
-                    <span style={{ 
-                      fontSize: '10px', 
-                      background: '#047857', 
-                      color: '#fff', 
-                      padding: '2px 8px', 
-                      borderRadius: '10px', 
-                      fontWeight: 800,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}>
-                      <span>AKTIF DIPILIH</span>
-                      <span style={{ fontSize: '9px', opacity: 0.85 }}>✕</span>
-                    </span>
-                  ) : !isLibur && (
-                    <span style={{ fontSize: '10.5px', color: '#94a3b8', fontWeight: 600 }}>
-                      Klik untuk Scan →
-                    </span>
-                  )}
-                </div>
-
-                <div style={{ fontWeight: 800, fontSize: '0.98rem', color: isLibur ? '#94a3b8' : '#0f172a' }}>
-                  {sesi.nama}
-                </div>
-
-                <div style={{ fontSize: '0.78rem', color: isLibur ? '#94a3b8' : '#64748b', marginTop: '3px' }}>
-                  {isSudah ? (
-                    <span style={{ color: '#047857', fontWeight: 700 }}>
-                      ✓ Scan: {presensi.jamScan} WIB ({presensi.keterangan || 'Tepat Waktu'})
-                    </span>
-                  ) : (
-                    <span>Jam: {sesi.mulai} - {sesi.selesai} WIB</span>
-                  )}
+                <span className={`sesi-badge-status ${isLibur ? 'pink' : isSudah ? 'green' : 'amber'}`}>
+                  {isLibur ? 'LIBUR' : isSudah ? '✓ Sudah' : '○ Belum'}
+                </span>
+                <div className="sesi-name">{sesi.nama}</div>
+                <div className="sesi-sub-info">
+                  {isSudah 
+                    ? `${presensi.jamScan} WIB` 
+                    : `${sesi.mulai} - ${sesi.selesai}`}
                 </div>
               </div>
             );
@@ -658,47 +611,14 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
         </div>
       </div>
 
-      {/* 3. PEMINDAI KAMERA BARCODE PENGAMPU (MUNCUL JIKA SESI DIKLIK, DISEMBUNYIKAN JIKA BELUM) */}
-      {!selectedSesi ? (
-        <div 
-          className="card" 
-          style={{ 
-            padding: '28px 20px', 
-            textAlign: 'center', 
-            background: '#f8fafc', 
-            border: '1.5px dashed #cbd5e1', 
-            borderRadius: '16px', 
-            maxWidth: '720px', 
-            margin: '0 auto 24px auto' 
-          }}
-        >
-          <div style={{ 
-            width: '52px', 
-            height: '52px', 
-            borderRadius: '50%', 
-            background: '#ecfdf5', 
-            color: '#047857', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            margin: '0 auto 12px auto' 
-          }}>
-            <Camera size={26} />
-          </div>
-          <h4 style={{ margin: '0 0 6px 0', fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
-            Pemindai Kamera Sedang Disembunyikan
-          </h4>
-          <p style={{ margin: 0, fontSize: '0.86rem', color: '#64748b', maxWidth: '460px', margin: '0 auto' }}>
-            Silakan <strong>klik salah satu kartu Sesi Halaqah</strong> di atas untuk memunculkan pemindai kamera barcode presensi Anda.
-          </p>
-        </div>
-      ) : (
+      {/* 2. PEMINDAI KAMERA BARCODE PENGAMPU (HANYA MUNCUL KETIKA SESI DIKLIK) */}
+      {selectedSesi && (
         <div 
           className="card scan-card-pad" 
           style={{ 
             maxWidth: '720px', 
-            margin: '0 auto 24px auto', 
-            padding: '24px',
+            margin: '0 auto 20px auto', 
+            padding: '20px',
             boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
             borderRadius: '16px',
             animation: 'fadeIn 0.25s ease-out'
@@ -802,71 +722,85 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
             </span>
           </div>
 
-          {/* Input Hidden untuk Memicu Kamera Asli Device (Kamera Bawaan HP) */}
-          <input
-            ref={deviceCameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            style={{ display: 'none' }}
-            onChange={handleDeviceCameraCapture}
-          />
-          <div id="hidden-device-qr-reader" style={{ display: 'none' }}></div>
+          {/* Tombol Utama Pemindai Kamera */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '10px',
+            marginBottom: '10px'
+          }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => openDeviceCamera(selectedSesi)}
+              disabled={isProcessingDevicePhoto || isScanningPengampu}
+              style={{
+                width: '100%',
+                padding: '14px 18px',
+                fontSize: '0.96rem',
+                fontWeight: 800,
+                background: isProcessingDevicePhoto ? '#059669' : '#047857',
+                borderColor: '#047857',
+                borderRadius: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                boxShadow: '0 4px 16px rgba(4, 120, 87, 0.28)',
+                cursor: isProcessingDevicePhoto ? 'wait' : 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {isProcessingDevicePhoto ? (
+                <>
+                  <div style={{
+                    width: '18px',
+                    height: '18px',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    borderTopColor: '#ffffff',
+                    borderRadius: '50%',
+                    animation: 'spin 0.8s linear infinite'
+                  }}></div>
+                  <span>Memproses Foto HP...</span>
+                </>
+              ) : (
+                <>
+                  <Smartphone size={22} />
+                  <span>Buka Kamera Device (HP)</span>
+                </>
+              )}
+            </button>
 
-          {/* Tombol Utama: Scan Menggunakan Kamera Device (Kamera Bawaan HP) */}
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => {
-              if (!selectedSesi || !currentSesiObj) {
-                showToast && showToast('Silakan pilih sesi halaqah terlebih dahulu!');
-                return;
-              }
-              if (deviceCameraInputRef.current) {
-                deviceCameraInputRef.current.click();
-              }
-            }}
-            disabled={isProcessingDevicePhoto || isScanningPengampu}
-            style={{
-              width: '100%',
-              padding: '16px 20px',
-              fontSize: '1.02rem',
-              fontWeight: 800,
-              background: isProcessingDevicePhoto ? '#059669' : '#047857',
-              borderColor: '#047857',
-              borderRadius: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              boxShadow: '0 4px 16px rgba(4, 120, 87, 0.28)',
-              marginBottom: '8px',
-              cursor: isProcessingDevicePhoto ? 'wait' : 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {isProcessingDevicePhoto ? (
-              <>
-                <div style={{
-                  width: '20px',
-                  height: '20px',
-                  border: '2.5px solid rgba(255,255,255,0.3)',
-                  borderTopColor: '#ffffff',
-                  borderRadius: '50%',
-                  animation: 'spin 0.8s linear infinite'
-                }}></div>
-                <span>Memproses Scan Kamera Device...</span>
-              </>
-            ) : (
-              <>
-                <Camera size={24} />
-                <span>Buka Kamera Device (Kamera HP)</span>
-              </>
-            )}
-          </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => startCameraScanner(selectedSesi)}
+              disabled={isProcessingDevicePhoto || isScanningPengampu}
+              style={{
+                width: '100%',
+                padding: '14px 18px',
+                fontSize: '0.96rem',
+                fontWeight: 800,
+                background: '#ecfdf5',
+                color: '#065f46',
+                border: '1.5px solid #a7f3d0',
+                borderRadius: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                boxShadow: '0 2px 8px rgba(5, 150, 105, 0.1)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Camera size={22} color="#059669" />
+              <span>Buka Kamera Langsung (Live)</span>
+            </button>
+          </div>
 
-          <p style={{ margin: '0 0 14px 0', fontSize: '0.8rem', color: '#64748b', textAlign: 'center' }}>
-            📱 Membuka langsung aplikasi kamera asli HP untuk memotret & memindai stiker QR ruangan halaqah.
+          <p style={{ margin: '0 0 14px 0', fontSize: '0.78rem', color: '#64748b', textAlign: 'center' }}>
+            📱 Tekan tombol di atas untuk membuka aplikasi kamera perangkat atau pemindai langsung QR halaqah.
           </p>
 
           {/* Alert jika gagal membaca foto */}
@@ -888,28 +822,6 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
             </div>
           )}
 
-          {/* Opsi Tambahan untuk Komputer / Laptop: Live Camera Scanner */}
-          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-            <button
-              type="button"
-              onClick={startCameraScanner}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#047857',
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                textDecoration: 'underline',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px'
-              }}
-            >
-              <span>Atau gunakan Pemindai Langsung (Webcam Laptop)</span>
-            </button>
-          </div>
-
           {/* Pilihan Ruangan & Tombol Scan Cepat (Simulasi Tanpa Kamera) */}
           <div style={{
             background: '#f8fafc',
@@ -924,21 +836,21 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
             </div>
 
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <select
-                className="form-select"
+              <CustomSelect
                 value={selectedLokasiId}
                 onChange={(e) => {
                   setSelectedLokasiId(e.target.value);
                   setGpsWarning(null);
                 }}
-                style={{ flex: 1, fontSize: '12px', fontWeight: 700 }}
+                style={{ flex: 1, minWidth: '220px' }}
+                triggerStyle={{ minHeight: '38px', borderRadius: '12px', fontSize: '12px', fontWeight: 700 }}
               >
                 {lokasiList.map(l => (
                   <option key={l.id} value={l.id}>
                     {l.kelas} ({l.kodeManual}) — {l.lokasi || ''}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
 
               <button
                 className="btn btn-secondary"
@@ -1039,104 +951,144 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
         </div>
       )}
 
-      {/* 4. REKAP RIWAYAT PRESENSI PENGAMPU HARI INI */}
-      <div className="card" style={{ padding: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+      {/* 3. REKAP STATUS PRESENSI REAL HARI INI (SEDERHANA & RESPONSIF) */}
+      <div className="card scan-card-pad" style={{ padding: '16px 18px', borderRadius: '16px', marginTop: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
           <div>
-            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
-              Rekap Presensi Pengampu Hari Ini ({todayIndo}, {todayISO})
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>
+              Status Presensi Pengampu Hari Ini
             </h3>
-            <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>
-              Daftar sesi yang sudah dikonfirmasi kehadirannya oleh Ustadz Wahyudin Hafiz
+            <p style={{ margin: '2px 0 0 0', fontSize: '0.74rem', color: '#64748b' }}>
+              {todayIndo}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
 
           <span style={{ 
             background: '#ecfdf5', 
             color: '#047857', 
-            padding: '4px 10px', 
+            padding: '3px 10px', 
             borderRadius: '12px', 
-            fontSize: '11.5px', 
+            fontSize: '0.74rem', 
             fontWeight: 800 
           }}>
-            {todayPengampuRecords.length} Sesi Terkonfirmasi Hadir
+            {todayPengampuRecords.length} Sesi Hadir
           </span>
         </div>
 
-        <div className="table-responsive">
-          <table className="table" style={{ width: '100%', fontSize: '0.85rem' }}>
-            <thead>
-              <tr style={{ background: '#f8fafc' }}>
-                <th style={{ padding: '10px 14px', textAlign: 'left' }}>Sesi Halaqah</th>
-                <th style={{ padding: '10px 14px', textAlign: 'left' }}>Waktu Sesi</th>
-                <th style={{ padding: '10px 14px', textAlign: 'left' }}>Status Kehadiran</th>
-                <th style={{ padding: '10px 14px', textAlign: 'left' }}>Waktu Scan Pengampu</th>
-                <th style={{ padding: '10px 14px', textAlign: 'left' }}>Lokasi / Barcode Ruangan</th>
-                <th style={{ padding: '10px 14px', textAlign: 'left' }}>Keterangan</th>
-              </tr>
-            </thead>
-            <tbody>
-              {jadwalHalaqoh.sesiList.map(sesi => {
-                const isMasukHariIni = jadwalHalaqoh?.hariAktif?.[todayIndo]?.[sesi.id] !== false;
-                const isLibur = !isMasukHariIni || sesi.aktif === false;
-                const presensi = storageService.isPengampuSudahScan(currentPengampuNama, sesi.id, todayISO);
+        {/* List Presensi Sederhana & Responsif (Gambar 4) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {jadwalHalaqoh.sesiList.map(sesi => {
+            const presensi = storageService.isPengampuSudahScan(currentPengampuNama, sesi.id, todayISO);
+            const isSudah = presensi.sudah;
+            const isMasukHariIni = jadwalHalaqoh?.hariAktif?.[todayIndo]?.[sesi.id] !== false;
+            const isLibur = !isSudah && (!isMasukHariIni || sesi.aktif === false);
 
-                return (
-                  <tr key={sesi.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '12px 14px', fontWeight: 800, color: '#0f172a' }}>
+            // Tentukan status real (contoh: Hadir Tepat Waktu, Telat 10 Menit, Belum Absen, Libur)
+            let badgeBg = '#fef3c7';
+            let badgeColor = '#92400e';
+            let badgeBorder = '#fde68a';
+            let badgeText = 'Belum Absen';
+            let subText = `Jadwal: ${sesi.mulai} - ${sesi.selesai} WIB`;
+            let iconType = 'belum';
+
+            if (isLibur) {
+              badgeBg = '#f1f5f9';
+              badgeColor = '#64748b';
+              badgeBorder = '#e2e8f0';
+              badgeText = 'Libur';
+              subText = `${sesi.mulai} - ${sesi.selesai} • Jadwal Libur`;
+              iconType = 'libur';
+            } else if (isSudah) {
+              const ket = presensi.keterangan || 'Tepat Waktu';
+              const isLate = ket.toLowerCase().includes('telat');
+              if (isLate) {
+                badgeBg = '#fff7ed';
+                badgeColor = '#c2410c';
+                badgeBorder = '#fed7aa';
+                badgeText = ket; // Contoh: "Telat 10 Menit"
+                iconType = 'telat';
+              } else {
+                badgeBg = '#ecfdf5';
+                badgeColor = '#047857';
+                badgeBorder = '#a7f3d0';
+                badgeText = 'Hadir Tepat Waktu';
+                iconType = 'hadir';
+              }
+              subText = `Scan: ${presensi.jamScan} WIB • ${presensi.lokasi || 'Lokal Ikhwan (X A)'}`;
+            }
+
+            return (
+              <div 
+                key={sesi.id}
+                className="scan-presensi-row"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  background: isSudah ? (iconType === 'telat' ? '#fffdfa' : '#f0fdf4') : isLibur ? '#f8fafc' : '#ffffff',
+                  border: `1px solid ${isSudah ? (iconType === 'telat' ? '#fed7aa' : '#bbf7d0') : '#e2e8f0'}`,
+                  gap: '10px'
+                }}
+              >
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>
                       {sesi.nama}
-                    </td>
-                    <td style={{ padding: '12px 14px', color: '#475569' }}>
-                      {sesi.mulai} - {sesi.selesai} WIB
-                    </td>
-                    <td style={{ padding: '12px 14px' }}>
-                      <span style={{
-                        padding: '3px 10px',
-                        borderRadius: '12px',
-                        fontSize: '11px',
-                        fontWeight: 800,
-                        background: isLibur ? '#f1f5f9' : presensi.sudah ? '#ecfdf5' : '#fef3c7',
-                        color: isLibur ? '#64748b' : presensi.sudah ? '#047857' : '#92400e',
-                        border: `1px solid ${isLibur ? '#e2e8f0' : presensi.sudah ? '#a7f3d0' : '#fde68a'}`
-                      }}>
-                        {isLibur ? 'LIBUR' : presensi.sudah ? '✓ Sudah' : '○ Belum'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 14px', fontWeight: 700, color: presensi.sudah ? '#047857' : '#94a3b8' }}>
-                      {presensi.sudah ? `${presensi.jamScan} WIB` : '-'}
-                    </td>
-                    <td style={{ padding: '12px 14px', color: '#334155' }}>
-                      {presensi.sudah ? (
-                        <span>{presensi.lokasi || 'Ruang Kelas Halaqah'}</span>
-                      ) : (
-                        <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Belum memindai barcode</span>
-                      )}
-                    </td>
-                    <td style={{ padding: '12px 14px' }}>
-                      {presensi.sudah ? (
-                        <span style={{ color: '#059669', fontWeight: 700 }}>
-                          {presensi.keterangan || 'Tepat Waktu'}
-                        </span>
-                      ) : isLibur ? (
-                        <span style={{ color: '#94a3b8' }}>Jadwal Libur</span>
-                      ) : (
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => {
-                            setSelectedSesi(sesi.nama);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          style={{ padding: '3px 8px', fontSize: '11px' }}
-                        >
-                          Scan Sesi Ini
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </span>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                      ({sesi.mulai} - {sesi.selesai})
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: isSudah ? (iconType === 'telat' ? '#c2410c' : '#047857') : '#64748b', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {subText}
+                  </div>
+                </div>
+
+                <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    background: badgeBg,
+                    color: badgeColor,
+                    border: `1px solid ${badgeBorder}`,
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {iconType === 'hadir' && <Check size={11} strokeWidth={3} />}
+                    {iconType === 'telat' && <Clock size={11} />}
+                    <span>{badgeText}</span>
+                  </span>
+
+                  {!isSudah && (
+                    <button
+                      type="button"
+                      onClick={() => handleSessionClick(sesi)}
+                      style={{
+                        display: 'block',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#059669',
+                        fontSize: '0.70rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        marginTop: '2px',
+                        padding: 0,
+                        marginLeft: 'auto'
+                      }}
+                    >
+                      Scan Sesi Ini →
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -1196,13 +1148,38 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
                 {cameraError && (
                   <div style={{ padding: '20px', color: '#f87171', fontSize: '0.85rem' }}>
                     <AlertCircle size={32} style={{ margin: '0 auto 8px auto', display: 'block' }} />
-                    {cameraError}
+                    <p style={{ margin: '0 0 12px 0' }}>{cameraError}</p>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => {
+                        stopCameraScanner();
+                        openDeviceCamera(selectedSesi);
+                      }}
+                      style={{ background: '#059669', borderColor: '#059669', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <Smartphone size={15} />
+                      <span>Buka Kamera Bawaan HP Sekarang</span>
+                    </button>
                   </div>
                 )}
               </div>
 
-              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <button 
+                  type="button"
+                  className="btn btn-primary btn-sm" 
+                  onClick={() => {
+                    stopCameraScanner();
+                    openDeviceCamera(selectedSesi);
+                  }}
+                  style={{ borderRadius: '8px', background: '#059669', borderColor: '#059669', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Smartphone size={15} />
+                  <span>Gunakan Kamera Bawaan HP</span>
+                </button>
+                <button 
+                  type="button"
                   className="btn btn-secondary btn-sm" 
                   onClick={stopCameraScanner}
                   style={{ borderRadius: '8px' }}

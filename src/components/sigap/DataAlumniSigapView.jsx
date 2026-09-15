@@ -13,6 +13,7 @@ import {
   Save
 } from 'lucide-react';
 import { storageService } from '../../services/storage';
+import CustomSelect from '../common/CustomSelect';
 
 export default function DataAlumniSigapView({ showToast }) {
   const [alumniList, setAlumniList] = useState(storageService.getSigapAlumni());
@@ -119,21 +120,23 @@ export default function DataAlumniSigapView({ showToast }) {
           </div>
         </div>
 
-        {/* Tombol Aksi Kanan: Download Excel + Tambah Alumni */}
-        <div className="sigap-page-actions">
+        {/* Tombol Aksi Kanan: Download Excel + Tambah Alumni (Mobile: Icon Saja, 1 Baris, Efek Hover) */}
+        <div className="sigap-page-actions sigap-mobile-action-bar">
           <button 
             className="sigap-btn-teal"
             onClick={() => setShowAddModal(true)}
+            title="Tambah Alumni Baru"
           >
-            <Plus size={15} />
+            <Plus size={17} />
             <span>+ Tambah Alumni</span>
           </button>
 
           <button 
             className="sigap-btn-green"
             onClick={handleDownloadExcel}
+            title="Download Excel Alumni"
           >
-            <Download size={15} />
+            <Download size={17} />
             <span>Download Excel</span>
           </button>
         </div>
@@ -153,18 +156,18 @@ export default function DataAlumniSigapView({ showToast }) {
         </div>
 
         <div className="sigap-filter-controls">
-          <div className="sigap-select-box">
-            <Filter size={15} className="sigap-filter-icon" />
-            <select 
+          <div style={{ minWidth: '160px' }}>
+            <CustomSelect 
               value={selectedTahun} 
               onChange={(e) => setSelectedTahun(e.target.value)}
-              className="sigap-select"
+              triggerStyle={{ minHeight: '38px', borderRadius: '12px' }}
+              icon={<Filter size={15} />}
             >
               <option value="Semua Tahun">Semua Tahun</option>
               <option value="2026">2026</option>
               <option value="2025">2025</option>
               <option value="2024">2024</option>
-            </select>
+            </CustomSelect>
           </div>
 
           <button 
@@ -280,14 +283,14 @@ export default function DataAlumniSigapView({ showToast }) {
 
                   <div className="form-group">
                     <label className="form-label">Jenis Kelamin</label>
-                    <select 
-                      className="form-input"
+                    <CustomSelect 
+                      triggerStyle={{ minHeight: '40px', borderRadius: '12px' }}
                       value={formData.lp}
                       onChange={(e) => setFormData({ ...formData, lp: e.target.value })}
                     >
                       <option value="P">P (Perempuan)</option>
                       <option value="L">L (Laki-laki)</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                 </div>
 
@@ -306,15 +309,15 @@ export default function DataAlumniSigapView({ showToast }) {
 
                   <div className="form-group">
                     <label className="form-label">Tahun Lulus *</label>
-                    <select 
-                      className="form-input"
+                    <CustomSelect 
+                      triggerStyle={{ minHeight: '40px', borderRadius: '12px' }}
                       value={formData.tahunLulus}
                       onChange={(e) => setFormData({ ...formData, tahunLulus: e.target.value })}
                     >
                       <option value="2026">2026</option>
                       <option value="2025">2025</option>
                       <option value="2024">2024</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                 </div>
               </div>

@@ -19,6 +19,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { storageService } from '../services/storage';
+import CustomSelect from './common/CustomSelect';
 
 export default function PermohonanIzinView({ 
   santriList, 
@@ -169,136 +170,108 @@ _Diajukan melalui Aplikasi Tahfidz HUB_`;
   return (
     <div className="page-content-wrapper" style={{ animation: 'fadeIn 0.25s ease-out' }}>
       
-      {/* 1. HEADER HALAMAN */}
-      <div className="card" style={{ marginBottom: '20px', padding: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span style={{
-                background: '#ecfdf5',
-                color: '#047857',
-                border: '1px solid #a7f3d0',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                fontSize: '11px',
-                fontWeight: 800,
-                letterSpacing: '0.04em'
-              }}>
-                PERMOHONAN IZIN PENGAMPU
-              </span>
-              <span style={{ fontSize: '12px', color: '#64748b' }}>
-                • Ditujukan kepada Super Admin & Mudir PPIAS
-              </span>
-            </div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: '0 0 4px 0' }}>
-              Pengajuan Izin Guru Pengampu
-            </h1>
-            <p style={{ color: '#64748b', fontSize: '0.88rem', margin: 0 }}>
-              Formulir pengajuan izin ketidakhadiran halaqah resmi kepada Super Admin dengan fitur share surat format WhatsApp.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            {/* Profil Pengampu */}
+      {/* 1. HEADER PENGAMPU & TOMBOL AJUKAN IZIN SEJAJAR */}
+      <div className="card" style={{ marginBottom: '16px', padding: '12px 18px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          {/* Profil Pengampu (Kiri) */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
             <div style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              padding: '8px 14px',
-              borderRadius: '12px',
+              width: '38px',
+              height: '38px',
+              borderRadius: '50%',
+              background: '#047857',
+              color: '#ffffff',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px'
+              justifyContent: 'center',
+              fontWeight: 800,
+              fontSize: '14px',
+              flexShrink: 0
             }}>
-              <div style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '50%',
-                background: '#047857',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 800,
-                fontSize: '13px'
-              }}>
-                W
-              </div>
-              <div>
-                <div style={{ fontWeight: 800, fontSize: '0.86rem', color: '#0f172a' }}>Wahyudin Hafiz, S.Pd</div>
-                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Pengampu Halaqah X A (Ikhwan)</div>
-              </div>
+              {currentPengampuNama.charAt(0) || 'W'}
             </div>
-
-            {/* Tombol Ajukan Izin */}
-            <button 
-              className="btn btn-primary" 
-              onClick={() => setShowFormModal(true)}
-              style={{
-                background: '#047857',
-                borderColor: '#047857',
-                padding: '9px 18px',
-                fontWeight: 800,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 12px rgba(4, 120, 87, 0.2)'
-              }}
-            >
-              <PlusCircle size={18} />
-              <span>+ Ajukan Izin Baru</span>
-            </button>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.90rem', color: '#0f172a' }}>{currentPengampuNama}</div>
+              <div style={{ fontSize: '0.72rem', color: '#64748b' }}>{currentHalaqahNama}</div>
+            </div>
           </div>
+
+          {/* Tombol Ajukan Izin (Kanan) */}
+          <button 
+            className="btn btn-primary" 
+            onClick={() => setShowFormModal(true)}
+            style={{
+              background: '#047857',
+              borderColor: '#047857',
+              padding: '8px 16px',
+              fontWeight: 800,
+              fontSize: '0.84rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              borderRadius: '10px',
+              boxShadow: '0 4px 12px rgba(4, 120, 87, 0.2)',
+              cursor: 'pointer'
+            }}
+          >
+            <PlusCircle size={16} />
+            <span>+ Ajukan Izin Baru</span>
+          </button>
         </div>
       </div>
 
-      {/* 2. RECAP STATUS IZIN PENGAMPU */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '22px' }}>
-        <div className="card" style={{ padding: '14px 18px', borderLeft: '4px solid #047857' }}>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>
+      {/* 2. RECAP STATUS IZIN PENGAMPU (2 BARIS GRID KECIL) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px', marginBottom: '18px' }}>
+        <div className="card" style={{ padding: '10px 14px', borderLeft: '3.5px solid #047857', margin: 0 }}>
+          <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
             TOTAL PERMOHONAN
           </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0f172a', marginTop: '2px' }}>
-            {totalIzin} <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>Surat Izin</span>
+          <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', marginTop: '1px' }}>
+            {totalIzin} <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b' }}>Surat Izin</span>
           </div>
         </div>
 
-        <div className="card" style={{ padding: '14px 18px', borderLeft: '4px solid #f59e0b', background: '#fffdf5' }}>
+        <div className="card" style={{ padding: '10px 14px', borderLeft: '3.5px solid #f59e0b', background: '#fffdf5', margin: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: '0.75rem', color: '#b45309', fontWeight: 800, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.68rem', color: '#b45309', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
               MENUNGGU PERSETUJUAN
             </div>
-            <Clock size={16} color="#d97706" />
+            <Clock size={14} color="#d97706" />
           </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#b45309', marginTop: '2px' }}>
+          <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#b45309', marginTop: '1px' }}>
             {countPending}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#92400e' }}>Perlu tinjauan Super Admin</div>
+          <div style={{ fontSize: '0.66rem', color: '#92400e' }}>Perlu tinjauan Super Admin</div>
         </div>
 
-        <div className="card" style={{ padding: '14px 18px', borderLeft: '4px solid #10b981', background: '#f0fdf4' }}>
+        <div className="card" style={{ padding: '10px 14px', borderLeft: '3.5px solid #10b981', background: '#f0fdf4', margin: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: '0.75rem', color: '#047857', fontWeight: 800, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.68rem', color: '#047857', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
               DISETUJUI SUPER ADMIN
             </div>
-            <CheckCircle2 size={16} color="#059669" />
+            <CheckCircle2 size={14} color="#059669" />
           </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#047857', marginTop: '2px' }}>
+          <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#047857', marginTop: '1px' }}>
             {countApproved}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#166534' }}>Resmi tercatat di monitoring</div>
+          <div style={{ fontSize: '0.66rem', color: '#166534' }}>Resmi tercatat di monitoring</div>
         </div>
 
-        <div className="card" style={{ padding: '14px 18px', borderLeft: '4px solid #f43f5e', background: '#fff1f2' }}>
+        <div className="card" style={{ padding: '10px 14px', borderLeft: '3.5px solid #f43f5e', background: '#fff1f2', margin: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: '0.75rem', color: '#be123c', fontWeight: 800, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.68rem', color: '#be123c', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.02em' }}>
               DITOLAK
             </div>
-            <XCircle size={16} color="#e11d48" />
+            <XCircle size={14} color="#e11d48" />
           </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#be123c', marginTop: '2px' }}>
+          <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#be123c', marginTop: '1px' }}>
             {countRejected}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#9f1239' }}>Tidak mendapat dispensasi</div>
+          <div style={{ fontSize: '0.66rem', color: '#9f1239' }}>Tidak mendapat dispensasi</div>
         </div>
       </div>
 
@@ -391,13 +364,10 @@ _Diajukan melalui Aplikasi Tahfidz HUB_`;
 
       {/* 4. TABEL RIWAYAT PERMOHONAN IZIN PENGAMPU KE SUPER ADMIN */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
-            Daftar Permohonan Izin yang Diajukan Pengampu
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>
+            Daftar Riwayat Izin
           </h3>
-          <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-            Persetujuan dikelola oleh Super Admin pada menu Persetujuan Izin Guru
-          </span>
         </div>
 
         <div className="table-responsive">
@@ -624,19 +594,18 @@ _Diajukan melalui Aplikasi Tahfidz HUB_`;
                   <label className="form-label" style={{ fontWeight: 700 }}>
                     Jenis Izin *
                   </label>
-                  <select 
-                    className="form-select"
+                  <CustomSelect 
                     value={formData.jenisIzin}
                     onChange={(e) => setFormData({ ...formData, jenisIzin: e.target.value })}
                     required
-                    style={{ fontWeight: 700 }}
-                  >
-                    <option value="Sakit">Sakit (Surat Dokter / Perawatan)</option>
-                    <option value="Keperluan Keluarga">Keperluan Keluarga Mendesak</option>
-                    <option value="Tugas Dinas / Lembaga">Tugas Dinas / Lembaga Pondok</option>
-                    <option value="Ibadah / Umroh">Ibadah / Umroh</option>
-                    <option value="Udzur Syar'i Lainnya">Udzur Syar'i Lainnya</option>
-                  </select>
+                    options={[
+                      { value: 'Sakit', label: 'Sakit (Surat Dokter / Perawatan)' },
+                      { value: 'Keperluan Keluarga', label: 'Keperluan Keluarga Mendesak' },
+                      { value: 'Tugas Dinas / Lembaga', label: 'Tugas Dinas / Lembaga Pondok' },
+                      { value: 'Ibadah / Umroh', label: 'Ibadah / Umroh' },
+                      { value: "Udzur Syar'i Lainnya", label: "Udzur Syar'i Lainnya" }
+                    ]}
+                  />
                 </div>
 
                 {/* Rentang Tanggal Izin */}
@@ -671,18 +640,17 @@ _Diajukan melalui Aplikasi Tahfidz HUB_`;
                   <label className="form-label" style={{ fontWeight: 700 }}>
                     Sesi Halaqah yang Ditinggalkan *
                   </label>
-                  <select 
-                    className="form-select"
+                  <CustomSelect 
                     value={formData.sesi}
                     onChange={(e) => setFormData({ ...formData, sesi: e.target.value })}
-                    style={{ fontWeight: 700 }}
-                  >
-                    <option value="Semua Sesi Hari Ini">Semua Sesi Hari Ini (Full Day)</option>
-                    <option value="Ba'da Subuh (05:00 - 06:30)">Ba'da Subuh (05:00 - 06:30)</option>
-                    <option value="Pagi / Dhuha (08:30 - 10:00)">Pagi / Dhuha (08:30 - 10:00)</option>
-                    <option value="Ba'da Ashar (16:00 - 17:30)">Ba'da Ashar (16:00 - 17:30)</option>
-                    <option value="Ba'da Maghrib (18:45 - 20:30)">Ba'da Maghrib (18:45 - 20:30)</option>
-                  </select>
+                    options={[
+                      { value: 'Semua Sesi Hari Ini', label: 'Semua Sesi Hari Ini (Full Day)' },
+                      { value: "Ba'da Subuh (05:00 - 06:30)", label: "Ba'da Subuh (05:00 - 06:30)" },
+                      { value: 'Pagi / Dhuha (08:30 - 10:00)', label: 'Pagi / Dhuha (08:30 - 10:00)' },
+                      { value: "Ba'da Ashar (16:00 - 17:30)", label: "Ba'da Ashar (16:00 - 17:30)" },
+                      { value: "Ba'da Maghrib (18:45 - 20:30)", label: "Ba'da Maghrib (18:45 - 20:30)" }
+                    ]}
+                  />
                 </div>
 
                 {/* Alasan / Keterangan */}

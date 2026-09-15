@@ -60,21 +60,6 @@ export async function getMadinahMushafPage(pageNumber) {
     return memoryPageCache.get(pNum);
   }
 
-  // 2. Cek LocalStorage Cache
-  const storageKey = `mushaf_madinah_page_v2_${pNum}`;
-  try {
-    const cached = localStorage.getItem(storageKey);
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (parsed && parsed.lines && parsed.lines.length === 15) {
-        memoryPageCache.set(pNum, parsed);
-        return parsed;
-      }
-    }
-  } catch (e) {
-    // ignore
-  }
-
   // 3. Ambil dari API Resmi Quran.com (Uthmani Script + Line Number per kata)
   try {
     const url = `https://api.quran.com/api/v4/verses/by_page/${pNum}?words=true&word_fields=text_uthmani,line_number,page_number`;
@@ -136,13 +121,8 @@ export async function getMadinahMushafPage(pageNumber) {
         lines: lines
       };
 
-      // Simpan ke Cache
+      // Simpan ke Memory Cache
       memoryPageCache.set(pNum, pageResult);
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(pageResult));
-      } catch (e) {
-        // quota exceeded fallback
-      }
 
       return pageResult;
     }

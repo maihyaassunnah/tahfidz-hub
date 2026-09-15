@@ -135,8 +135,22 @@ app.get('/api/pengampu', async (req, res) => {
 });
 
 app.post('/api/pengampu', async (req, res) => {
-  const { id, nip, nama, kontak, no_hp, role, halaqah_id, cabang_id } = req.body;
+  const { id, nip, nama, kontak, no_hp, noHp, role, jabatan, halaqah_id, halaqahId, cabang_id, cabangId } = req.body;
   try {
+    const targetNoHp = no_hp || noHp || kontak || '';
+    const targetKontak = kontak || no_hp || noHp || '';
+    const targetRole = role || jabatan || 'Pengampu';
+    const targetCabangId = cabang_id || cabangId || 'cabang-pusat';
+    const targetHalaqahId = halaqah_id || halaqahId || null;
+
+    if (targetHalaqahId) {
+      await query(`
+        INSERT INTO halaqah (id, nama, cabang_id)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (id) DO NOTHING
+      `, [targetHalaqahId, 'Halaqah Pengampu', targetCabangId]);
+    }
+
     const sql = `
       INSERT INTO pengampu (id, nip, nama, kontak, no_hp, role, halaqah_id, cabang_id)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -150,7 +164,7 @@ app.post('/api/pengampu', async (req, res) => {
         cabang_id = EXCLUDED.cabang_id
       RETURNING *;
     `;
-    const result = await query(sql, [id, nip, nama, kontak, no_hp, role || 'Pengampu', halaqah_id, cabang_id || 'cabang-pusat']);
+    const result = await query(sql, [id, nip || '', nama, targetKontak, targetNoHp, targetRole, targetHalaqahId, targetCabangId]);
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -217,14 +231,23 @@ app.get('/api/santri', async (req, res) => {
 });
 
 app.post('/api/santri', async (req, res) => {
-  const { id, nis, nama, kelas, halaqah_id, status, target, kontak, wali, no_hp_wali, cabang_id } = req.body;
+  const { 
+    id, nis, nisn, nama, kelas, halaqah_id, halaqahId, status, target, 
+    kontak, kontakWali, wali, no_hp_wali, noHpWali, cabang_id, cabangId 
+  } = req.body;
   try {
-    if (halaqah_id) {
+    const targetNis = nis || nisn || '';
+    const targetCabangId = cabang_id || cabangId || 'cabang-pusat';
+    const targetHalaqahId = halaqah_id || halaqahId || null;
+    const targetKontak = kontak || kontakWali || '';
+    const targetNoHpWali = no_hp_wali || noHpWali || kontakWali || kontak || '';
+
+    if (targetHalaqahId) {
       await query(`
         INSERT INTO halaqah (id, nama, cabang_id)
         VALUES ($1, $2, $3)
         ON CONFLICT (id) DO NOTHING
-      `, [halaqah_id, 'Halaqah Santri', cabang_id || 'cabang-pusat']);
+      `, [targetHalaqahId, 'Halaqah Santri', targetCabangId]);
     }
     const sql = `
       INSERT INTO santri (id, nis, nama, kelas, halaqah_id, status, target, kontak, wali, no_hp_wali, cabang_id)
@@ -236,7 +259,10 @@ app.post('/api/santri', async (req, res) => {
         cabang_id = EXCLUDED.cabang_id
       RETURNING *;
     `;
-    const result = await query(sql, [id, nis, nama, kelas, halaqah_id, status || 'Aktif', target, kontak, wali, no_hp_wali, cabang_id || 'cabang-pusat']);
+    const result = await query(sql, [
+      id, targetNis, nama, kelas, targetHalaqahId, status || 'Aktif', 
+      target || '3 Juz / Tahun', targetKontak, wali || '', targetNoHpWali, targetCabangId
+    ]);
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -245,9 +271,45 @@ app.post('/api/santri', async (req, res) => {
 
 app.delete('/api/santri/:id', async (req, res) => {
   try {
-    await query('DELETE FROM santri WHERE id = $1', [req.params.id]);
-    res.json({ success: true });
+    const rawId = req.params.id;
+    const altId1 = rawId.startsWith('ss-') ? rawId.replace('ss-', 's-') : (rawId.startsWith('s-') ? rawId.replace('s-', 'ss-') : rawId);
+    const altId2 = rawId.replace(/^s{1,2}-/, '');
+
+    // Cari ID santri yang sesuai terlebih dahulu
+    const findRes = await query(`
+      SELECT id FROM santri 
+      WHERE id = $1 
+         OR id = $2 
+         OR id = $3 
+         OR nis = $1 
+         OR nis = $3
+    `, [rawId, altId1, altId2]);
+
+    const targetIds = findRes.rows.map(r => r.id);
+    if (!targetIds.includes(rawId)) targetIds.push(rawId);
+    if (!targetIds.includes(altId1)) targetIds.push(altId1);
+
+    // Hapus data terkait terlebih dahulu untuk memastikan tidak ada foreign key violation
+    for (const tid of targetIds) {
+      await query('DELETE FROM absensi_santri WHERE santri_id = $1', [tid]).catch(() => {});
+      await query('DELETE FROM setoran_santri WHERE santri_id = $1', [tid]).catch(() => {});
+      await query('DELETE FROM pembayaran_spp WHERE santri_id = $1', [tid]).catch(() => {});
+      await query('DELETE FROM nilai_rapor WHERE santri_id = $1', [tid]).catch(() => {});
+    }
+
+    // Hapus santri
+    await query(`
+      DELETE FROM santri 
+      WHERE id = $1 
+         OR id = $2 
+         OR id = $3 
+         OR nis = $1 
+         OR nis = $3
+    `, [rawId, altId1, altId2]);
+
+    res.json({ success: true, deletedIds: targetIds });
   } catch (err) {
+    console.error('[API Error] DELETE /api/santri/:id:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -390,12 +452,36 @@ app.get('/api/monitoring-sigap', async (req, res) => {
 });
 
 app.post('/api/monitoring-sigap', async (req, res) => {
-  const {
-    id, tanggal, pengampu_id, nama, nip, role, halaqah, mapel, kelas, sesi, jadwal,
-    jam, status, selisih_menit, lokasi_gps, metode, keterangan, alasan_izin, tugas_siswa, manual
-  } = req.body;
+  const body = req.body;
+  const id = body.id || ('pres-' + Date.now());
+  const tanggal = body.tanggal || new Date().toISOString().split('T')[0];
+  let pengampu_id = body.pengampu_id || body.pengampuId || null;
+  const nama = body.nama || 'Pengampu';
+  const nip = body.nip || 'NON-NIP';
+  const role = body.role || 'Pengampu Halaqoh';
+  const halaqah = body.halaqah || '-';
+  const mapel = body.mapel || 'Tahfidz';
+  const kelas = body.kelas || 'Masjid Pusat PPIAS';
+  const sesi = body.sesi || "Ba'da Subuh";
+  const jadwal = body.jadwal || '-';
+  const jam = body.jam || '-';
+  const status = body.status || 'Belum';
+  const selisih_menit = parseInt(body.selisih_menit ?? body.selisihMenit ?? 0);
+  const lokasi_gps = body.lokasi_gps || body.lokasiGps || null;
+  const metode = body.metode || 'Scan QR GPS';
+  const keterangan = body.keterangan || status;
+  const alasan_izin = body.alasan_izin || body.alasanIzin || null;
+  const tugas_siswa = body.tugas_siswa || body.tugasSiswa || null;
+  const manual = !!body.manual;
 
   try {
+    if (pengampu_id) {
+      const checkP = await query('SELECT id FROM pengampu WHERE id = $1', [pengampu_id]);
+      if (checkP.rows.length === 0) {
+        pengampu_id = null;
+      }
+    }
+
     const sql = `
       INSERT INTO monitoring_sigap (
         id, tanggal, pengampu_id, nama, nip, role, halaqah, mapel, kelas, sesi, jadwal,
@@ -403,9 +489,21 @@ app.post('/api/monitoring-sigap', async (req, res) => {
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
       ON CONFLICT (id) DO UPDATE SET
+        tanggal = EXCLUDED.tanggal,
+        pengampu_id = EXCLUDED.pengampu_id,
+        nama = EXCLUDED.nama,
+        nip = EXCLUDED.nip,
+        role = EXCLUDED.role,
+        halaqah = EXCLUDED.halaqah,
+        mapel = EXCLUDED.mapel,
+        kelas = EXCLUDED.kelas,
+        sesi = EXCLUDED.sesi,
+        jadwal = EXCLUDED.jadwal,
         status = EXCLUDED.status,
         jam = EXCLUDED.jam,
         selisih_menit = EXCLUDED.selisih_menit,
+        lokasi_gps = EXCLUDED.lokasi_gps,
+        metode = EXCLUDED.metode,
         keterangan = EXCLUDED.keterangan,
         alasan_izin = EXCLUDED.alasan_izin,
         tugas_siswa = EXCLUDED.tugas_siswa,
@@ -413,9 +511,9 @@ app.post('/api/monitoring-sigap', async (req, res) => {
       RETURNING *;
     `;
     const result = await query(sql, [
-      id, tanggal || new Date().toISOString().split('T')[0], pengampu_id, nama, nip, role,
-      halaqah, mapel, kelas, sesi, jadwal, jam || '-', status, selisih_menit || 0,
-      lokasi_gps, metode || 'Scan QR GPS', keterangan, alasan_izin, tugas_siswa, !!manual
+      id, tanggal, pengampu_id, nama, nip, role,
+      halaqah, mapel, kelas, sesi, jadwal, jam, status, selisih_menit,
+      lokasi_gps, metode, keterangan, alasan_izin, tugas_siswa, manual
     ]);
     res.json(result.rows[0]);
   } catch (err) {
@@ -443,8 +541,42 @@ app.get('/api/setoran-santri', async (req, res) => {
 });
 
 app.post('/api/setoran-santri', async (req, res) => {
-  const { id, tanggal, santri_id, santriId, pengampu_id, pengampuId, jenis, surat, ayat_mulai, ayatMulai, ayat_selesai, ayatSelesai, nilai, catatan } = req.body;
+  const { 
+    id, tanggal, santri_id, santriId, pengampu_id, pengampuId, 
+    jenis, surat, surahName, ayat_mulai, ayatMulai, ayatAwal,
+    ayat_selesai, ayatSelesai, ayatAkhir, nilai, predikat, catatan, catatanTajwid, santriNama 
+  } = req.body;
+
+  const targetSantriId = santri_id || santriId || 's-1';
+  let targetPengampuId = pengampu_id || pengampuId || null;
+
   try {
+    // 1. Pastikan santri ada di database agar tidak melanggar foreign key constraint
+    const checkSantri = await query('SELECT id FROM santri WHERE id = $1', [targetSantriId]);
+    if (checkSantri.rows.length === 0) {
+      const defaultName = santriNama || (targetSantriId === 's-azmi' ? 'Muhammad Azmi Soleh' : ('Santri ' + targetSantriId));
+      await query(
+        `INSERT INTO santri (id, nama, nis, kelas, status, cabang_id)
+         VALUES ($1, $2, $3, $4, 'Aktif', 'cabang-pusat')
+         ON CONFLICT (id) DO NOTHING`,
+        [targetSantriId, defaultName, '2026' + Math.floor(100 + Math.random()*899), 'X Tahfidz 1']
+      );
+    }
+
+    // 2. Pastikan pengampu valid jika dikirim
+    if (targetPengampuId) {
+      const checkPengampu = await query('SELECT id FROM pengampu WHERE id = $1', [targetPengampuId]);
+      if (checkPengampu.rows.length === 0) {
+        targetPengampuId = null;
+      }
+    }
+
+    const targetSurat = surat || surahName || 'Al-Baqarah';
+    const targetAyatMulai = parseInt(ayat_mulai ?? ayatMulai ?? ayatAwal ?? 1);
+    const targetAyatSelesai = parseInt(ayat_selesai ?? ayatSelesai ?? ayatAkhir ?? targetAyatMulai);
+    const targetNilai = nilai || predikat || 'Jayyid';
+    const targetCatatan = catatan || catatanTajwid || '';
+
     const sql = `
       INSERT INTO setoran_santri (id, tanggal, santri_id, pengampu_id, jenis, surat, ayat_mulai, ayat_selesai, nilai, catatan)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -461,18 +593,49 @@ app.post('/api/setoran-santri', async (req, res) => {
       RETURNING *;
     `;
     const result = await query(sql, [
-      id || ('set-' + Date.now()), tanggal || new Date().toISOString().split('T')[0],
-      santri_id || santriId, pengampu_id || pengampuId || null, jenis || 'Ziyadah',
-      surat || 'Al-Fatihah', ayat_mulai || ayatMulai || 1, ayat_selesai || ayatSelesai || 7,
-      nilai || 'Mumtaz', catatan || ''
+      id || ('set-' + Date.now()), 
+      tanggal || new Date().toISOString().split('T')[0],
+      targetSantriId, 
+      targetPengampuId, 
+      jenis || 'SABAQ',
+      targetSurat, 
+      targetAyatMulai, 
+      targetAyatSelesai,
+      targetNilai, 
+      targetCatatan
     ]);
     res.json(result.rows[0]);
+  } catch (err) {
+    console.error('[API] Save setoran error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Alias untuk /api/setoran
+app.get('/api/setoran', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM setoran_santri ORDER BY tanggal DESC, created_at DESC');
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+app.post('/api/setoran', (req, res, next) => {
+  req.url = '/api/setoran-santri';
+  app.handle(req, res, next);
+});
+
 app.delete('/api/setoran-santri/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM setoran_santri WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/setoran/:id', async (req, res) => {
   try {
     await query('DELETE FROM setoran_santri WHERE id = $1', [req.params.id]);
     res.json({ success: true });
@@ -526,6 +689,276 @@ app.post('/api/izin', async (req, res) => {
 app.delete('/api/izin/:id', async (req, res) => {
   try {
     await query('DELETE FROM izin WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 7d. RAPOR TEMPLATE ENDPOINTS
+app.get('/api/rapor-template', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM rapor_template ORDER BY updated_at DESC LIMIT 1');
+    if (result.rows.length > 0) {
+      res.json(result.rows[0]);
+    } else {
+      res.json(null);
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/rapor-template', async (req, res) => {
+  const {
+    id = 'default-template',
+    namaYayasan, nama_yayasan,
+    namaMadrasah, nama_madrasah,
+    alamatMadrasah, alamat_madrasah,
+    website,
+    email,
+    judulRapor, judul_rapor,
+    semester,
+    namaMudir, nama_mudir,
+    nipMudir, nip_mudir,
+    tempatTanggal, tempat_tanggal,
+    aspekPenilaian, aspek_penilaian
+  } = req.body;
+
+  try {
+    const sql = `
+      INSERT INTO rapor_template (
+        id, nama_yayasan, nama_madrasah, alamat_madrasah, website, email,
+        judul_rapor, semester, nama_mudir, nip_mudir, tempat_tanggal, aspek_penilaian, updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+      ON CONFLICT (id) DO UPDATE SET
+        nama_yayasan = EXCLUDED.nama_yayasan,
+        nama_madrasah = EXCLUDED.nama_madrasah,
+        alamat_madrasah = EXCLUDED.alamat_madrasah,
+        website = EXCLUDED.website,
+        email = EXCLUDED.email,
+        judul_rapor = EXCLUDED.judul_rapor,
+        semester = EXCLUDED.semester,
+        nama_mudir = EXCLUDED.nama_mudir,
+        nip_mudir = EXCLUDED.nip_mudir,
+        tempat_tanggal = EXCLUDED.tempat_tanggal,
+        aspek_penilaian = EXCLUDED.aspek_penilaian,
+        updated_at = NOW()
+      RETURNING *;
+    `;
+    const result = await query(sql, [
+      id,
+      namaYayasan || nama_yayasan || 'YAYASAN IHYA AS SUNNAH TASIKMALAYA',
+      namaMadrasah || nama_madrasah || 'MADRASAH ALIYAH IHYA AS SUNNAH',
+      alamatMadrasah || alamat_madrasah || 'Kompleks Islamic Center PPIAS, Jl. Paseh No. 12, Tasikmalaya, Jawa Barat',
+      website || 'www.ma-ihyaassunnah.sch.id',
+      email || 'tahfidz@ma-ihyaassunnah.sch.id',
+      judulRapor || judul_rapor || "LEMBAR EVALUASI & RAPOR TAHFIDZ AL-QUR'AN",
+      semester || 'Ganjil 2026/2027',
+      namaMudir || nama_mudir || 'Ustadz Dr. Abu Haidar, M.Pd.I',
+      nipMudir || nip_mudir || '197501012000031001',
+      tempatTanggal || tempat_tanggal || 'Tasikmalaya, 20 Desember 2026',
+      aspekPenilaian || aspek_penilaian ? (typeof (aspekPenilaian || aspek_penilaian) === 'object' ? JSON.stringify(aspekPenilaian || aspek_penilaian) : (aspekPenilaian || aspek_penilaian)) : null
+    ]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 7e. NILAI RAPOR ENDPOINTS
+app.get('/api/nilai-rapor', async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT nr.*, s.nama as santri_nama, s.nis as santri_nis, s.kelas as santri_kelas
+      FROM nilai_rapor nr
+      LEFT JOIN santri s ON s.id = nr.santri_id
+      ORDER BY nr.updated_at DESC
+    `);
+    const mapped = result.rows.map(r => ({
+      ...r,
+      santriId: r.santri_id,
+      pengampuId: r.pengampu_id,
+      tahunAjaran: r.tahun_ajaran,
+      rataRata: r.rata_rata,
+      catatanMusyrif: r.catatan_musyrif,
+      kelancaranKet: r.eval_kelancaran,
+      tajwidKet: r.eval_tajwid,
+      fashohahKet: r.eval_fashohah,
+      adabKet: r.eval_adab
+    }));
+    res.json(mapped);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/nilai-rapor/santri/:santriId', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM nilai_rapor WHERE santri_id = $1 ORDER BY updated_at DESC', [req.params.santriId]);
+    const mapped = result.rows.map(r => ({
+      ...r,
+      santriId: r.santri_id,
+      pengampuId: r.pengampu_id,
+      tahunAjaran: r.tahun_ajaran,
+      rataRata: r.rata_rata,
+      catatanMusyrif: r.catatan_musyrif,
+      kelancaranKet: r.eval_kelancaran,
+      tajwidKet: r.eval_tajwid,
+      fashohahKet: r.eval_fashohah,
+      adabKet: r.eval_adab
+    }));
+    res.json(mapped);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/nilai-rapor', async (req, res) => {
+  const {
+    id,
+    santriId, santri_id,
+    pengampuId, pengampu_id,
+    semester,
+    tahunAjaran, tahun_ajaran,
+    kelancaran,
+    tajwid,
+    fashohah,
+    adab,
+    evalKelancaran, eval_kelancaran,
+    evalTajwid, eval_tajwid,
+    evalFashohah, eval_fashohah,
+    evalAdab, eval_adab,
+    rataRata, rata_rata,
+    predikat,
+    catatanMusyrif, catatan_musyrif,
+    tempatRapor, tempat_rapor,
+    tanggalRapor, tanggal_rapor,
+    aspekDetail, aspek_detail
+  } = req.body;
+
+  let targetSantriId = santriId || santri_id;
+  if (!targetSantriId) {
+    return res.status(400).json({ error: 'santri_id is required' });
+  }
+
+  // Normalize santri ID: s1 -> s-1 if needed
+  if (targetSantriId === 's1') targetSantriId = 's-1';
+  else if (targetSantriId === 's2') targetSantriId = 's-2';
+  else if (targetSantriId === 's3') targetSantriId = 's-3';
+  else if (targetSantriId === 's4') targetSantriId = 's-4';
+  else if (targetSantriId === 's5') targetSantriId = 's-5';
+
+  // Ensure santri exists in DB to satisfy foreign key constraint
+  try {
+    const santriCheck = await query('SELECT id FROM santri WHERE id = $1', [targetSantriId]);
+    if (santriCheck.rows.length === 0) {
+      await query(`
+        INSERT INTO santri (id, nama, nis, kelas, target_juz, status, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, 10, 'Aktif', NOW(), NOW())
+        ON CONFLICT (id) DO NOTHING
+      `, [
+        targetSantriId,
+        req.body.santriNama || req.body.nama || `Santri ${targetSantriId}`,
+        req.body.nis || '2026' + targetSantriId.replace(/\D/g, ''),
+        req.body.kelas || 'X-A'
+      ]);
+    }
+  } catch (errSantri) {
+    console.warn('[API] Auto-stub santri warning:', errSantri.message);
+  }
+
+  // Validate pengampu_id to prevent FK violation
+  let validPengampuId = pengampuId || pengampu_id || null;
+  if (validPengampuId) {
+    try {
+      const pengampuCheck = await query('SELECT id FROM pengampu WHERE id = $1', [validPengampuId]);
+      if (pengampuCheck.rows.length === 0) {
+        validPengampuId = null;
+      }
+    } catch (e) {
+      validPengampuId = null;
+    }
+  }
+
+  const targetSemester = semester || 'Ganjil 2026/2027';
+  const targetId = id || `nr-${targetSantriId}-${targetSemester.replace(/[^a-zA-Z0-9]/g, '')}`;
+  const valKel = Number(kelancaran) || 90;
+  const valTaj = Number(tajwid) || 90;
+  const valFas = Number(fashohah) || 90;
+  const valAdb = Number(adab) || 90;
+  const avg = Number(rataRata || rata_rata) || parseFloat(((valKel + valTaj + valFas + valAdb) / 4).toFixed(2));
+  const valTempat = tempatRapor || tempat_rapor || 'Tasikmalaya';
+  const valTanggal = tanggalRapor || tanggal_rapor || new Date().toISOString().split('T')[0];
+
+  let pred = predikat;
+  if (!pred) {
+    if (avg >= 90) pred = 'Mumtaz (Istimewa)';
+    else if (avg >= 80) pred = 'Jayyid Jiddan (Sangat Baik)';
+    else if (avg >= 70) pred = 'Jayyid (Baik)';
+    else if (avg >= 60) pred = 'Maqbul (Cukup)';
+    else pred = 'Kurang';
+  }
+
+  try {
+    const sql = `
+      INSERT INTO nilai_rapor (
+        id, santri_id, pengampu_id, semester, tahun_ajaran,
+        kelancaran, tajwid, fashohah, adab,
+        eval_kelancaran, eval_tajwid, eval_fashohah, eval_adab,
+        rata_rata, predikat, catatan_musyrif, tempat_rapor, tanggal_rapor, aspek_detail, updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW())
+      ON CONFLICT (id) DO UPDATE SET
+        santri_id = EXCLUDED.santri_id,
+        pengampu_id = EXCLUDED.pengampu_id,
+        semester = EXCLUDED.semester,
+        tahun_ajaran = EXCLUDED.tahun_ajaran,
+        kelancaran = EXCLUDED.kelancaran,
+        tajwid = EXCLUDED.tajwid,
+        fashohah = EXCLUDED.fashohah,
+        adab = EXCLUDED.adab,
+        eval_kelancaran = EXCLUDED.eval_kelancaran,
+        eval_tajwid = EXCLUDED.eval_tajwid,
+        eval_fashohah = EXCLUDED.eval_fashohah,
+        eval_adab = EXCLUDED.eval_adab,
+        rata_rata = EXCLUDED.rata_rata,
+        predikat = EXCLUDED.predikat,
+        catatan_musyrif = EXCLUDED.catatan_musyrif,
+        tempat_rapor = EXCLUDED.tempat_rapor,
+        tanggal_rapor = EXCLUDED.tanggal_rapor,
+        aspek_detail = EXCLUDED.aspek_detail,
+        updated_at = NOW()
+      RETURNING *;
+    `;
+    const result = await query(sql, [
+      targetId,
+      targetSantriId,
+      validPengampuId,
+      targetSemester,
+      tahunAjaran || tahun_ajaran || '2026/2027',
+      valKel, valTaj, valFas, valAdb,
+      evalKelancaran || eval_kelancaran || req.body.kelancaranKet || req.body.kelancaran_ket || 'Hafalan lancar, tartil, dan mutqin',
+      evalTajwid || eval_tajwid || req.body.tajwidKet || req.body.tajwid_ket || "Ghunnah, ikhfa', dan mad diterapkan dengan baik",
+      evalFashohah || eval_fashohah || req.body.fashohahKet || req.body.fashohah_ket || 'Pengucapan huruf jelas dan fasih sesuai kaidah',
+      evalAdab || eval_adab || req.body.adabKet || req.body.adab_ket || 'Menghormati mushaf, ustadz, dan teman halaqah',
+      avg,
+      pred,
+      catatanMusyrif || catatan_musyrif || '',
+      valTempat,
+      valTanggal,
+      aspekDetail || aspek_detail ? (typeof (aspekDetail || aspek_detail) === 'object' ? JSON.stringify(aspekDetail || aspek_detail) : (aspekDetail || aspek_detail)) : null
+    ]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/nilai-rapor/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM nilai_rapor WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -681,8 +1114,51 @@ app.post('/api/sync-all', async (req, res) => {
       }
     }
 
+    if (Array.isArray(kelas)) {
+      for (const k of kelas) {
+        await client.query(`
+          INSERT INTO kelas (id, nama, unit_sekolah, wali_kelas, cabang_id, aktif)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          ON CONFLICT (id) DO UPDATE SET
+            nama = EXCLUDED.nama, unit_sekolah = EXCLUDED.unit_sekolah, wali_kelas = EXCLUDED.wali_kelas, aktif = EXCLUDED.aktif;
+        `, [k.id, k.nama, k.unitSekolah || k.unit_sekolah || 'MA IHYA AS-SUNNAH', k.waliKelas || k.wali_kelas || '', k.cabangId || k.cabang_id || 'cabang-pusat', k.aktif !== false]);
+      }
+    }
+
+    if (Array.isArray(alumni)) {
+      for (const al of alumni) {
+        await client.query(`
+          INSERT INTO alumni (id, nama, nik, nisn, nism, lp, tahun_lulus, cabang_id)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          ON CONFLICT (id) DO UPDATE SET
+            nama = EXCLUDED.nama, nik = EXCLUDED.nik, nisn = EXCLUDED.nisn, nism = EXCLUDED.nism, lp = EXCLUDED.lp, tahun_lulus = EXCLUDED.tahun_lulus;
+        `, [al.id, al.nama, al.nik || '', al.nisn || '', al.nism || '', al.lp || 'L', al.tahunLulus || al.tahun_lulus || '2026', al.cabangId || al.cabang_id || 'cabang-pusat']);
+      }
+    }
+
+    if (Array.isArray(lokasi_qr)) {
+      for (const l of lokasi_qr) {
+        await client.query(`
+          INSERT INTO lokasi_qr (id, kelas, lokasi, kode_manual, cabang_id, gps_status, locked, lat, lng, radius_meter)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          ON CONFLICT (id) DO UPDATE SET
+            kelas = EXCLUDED.kelas, lokasi = EXCLUDED.lokasi, kode_manual = EXCLUDED.kode_manual, lat = EXCLUDED.lat, lng = EXCLUDED.lng, radius_meter = EXCLUDED.radius_meter;
+        `, [l.id, l.kelas, l.lokasi, l.kodeManual || l.kode_manual || '', l.cabangId || l.cabang_id || 'cabang-pusat', l.gpsStatus || l.gps_status || 'GPS: Locked', l.locked !== false, l.lat || null, l.lng || null, l.radiusMeter || l.radius_meter || 50]);
+      }
+    }
+
+    if (Array.isArray(settings)) {
+      for (const s of settings) {
+        await client.query(`
+          INSERT INTO settings (key, value)
+          VALUES ($1, $2)
+          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
+        `, [s.key, typeof s.value === 'object' ? JSON.stringify(s.value) : s.value]);
+      }
+    }
+
     await client.query('COMMIT');
-    res.json({ success: true, message: 'Seluruh data 11 model berhasil disinkronkan ke PostgreSQL' });
+    res.json({ success: true, message: 'Seluruh data 15 model berhasil disinkronkan ke PostgreSQL' });
   } catch (err) {
     await client.query('ROLLBACK');
     res.status(500).json({ error: err.message });
@@ -694,7 +1170,7 @@ app.post('/api/sync-all', async (req, res) => {
 // 9. PULL-ALL: MENGAMBIL SELURUH DATA DARI POSTGRESQL UNTUK SYNC KE PERANGKAT/BROWSER
 app.get('/api/pull-all', async (req, res) => {
   try {
-    const [cabang, superadmin, pengampu, santri, halaqah, sesi, absensi, setoran, izin, spp, monitoring] = await Promise.all([
+    const [cabang, superadmin, pengampu, santri, halaqah, sesi, absensi, setoran, izin, spp, monitoring, kelas, alumni, lokasiQr, settings] = await Promise.all([
       query('SELECT * FROM cabang ORDER BY created_at ASC'),
       query('SELECT * FROM superadmin_accounts ORDER BY created_at ASC'),
       query('SELECT * FROM pengampu ORDER BY nama ASC'),
@@ -705,7 +1181,11 @@ app.get('/api/pull-all', async (req, res) => {
       query('SELECT * FROM setoran_santri ORDER BY created_at DESC LIMIT 500'),
       query('SELECT * FROM izin ORDER BY created_at DESC LIMIT 200'),
       query('SELECT * FROM pembayaran_spp ORDER BY created_at DESC LIMIT 500'),
-      query('SELECT * FROM monitoring_sigap ORDER BY created_at DESC LIMIT 200')
+      query('SELECT * FROM monitoring_sigap ORDER BY created_at DESC LIMIT 200'),
+      query('SELECT * FROM kelas ORDER BY nama ASC'),
+      query('SELECT * FROM alumni ORDER BY created_at DESC LIMIT 200'),
+      query('SELECT * FROM lokasi_qr ORDER BY created_at ASC'),
+      query('SELECT * FROM settings')
     ]);
 
     res.json({
@@ -721,7 +1201,11 @@ app.get('/api/pull-all', async (req, res) => {
         setoran: setoran.rows,
         izin: izin.rows,
         spp: spp.rows,
-        monitoring: monitoring.rows
+        monitoring: monitoring.rows,
+        kelas: kelas.rows,
+        alumni: alumni.rows,
+        lokasi_qr: lokasiQr.rows,
+        settings: settings.rows
       }
     });
   } catch (err) {
@@ -808,6 +1292,173 @@ app.delete('/api/spp/:id', async (req, res) => {
   try {
     await query('DELETE FROM pembayaran_spp WHERE id = $1', [id]);
     res.json({ success: true, message: 'Transaksi SPP berhasil dihapus' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 11. KELAS CRUD ENDPOINTS
+app.get('/api/kelas', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM kelas ORDER BY nama ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/kelas', async (req, res) => {
+  const { id, nama, unit_sekolah, unitSekolah, wali_kelas, waliKelas, cabang_id, cabangId, aktif } = req.body;
+  try {
+    const recordId = id || `k-${Date.now()}`;
+    const result = await query(`
+      INSERT INTO kelas (id, nama, unit_sekolah, wali_kelas, cabang_id, aktif)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (id) DO UPDATE SET
+        nama = EXCLUDED.nama, unit_sekolah = EXCLUDED.unit_sekolah, wali_kelas = EXCLUDED.wali_kelas, aktif = EXCLUDED.aktif
+      RETURNING *;
+    `, [recordId, nama, unit_sekolah || unitSekolah || 'MA IHYA AS-SUNNAH', wali_kelas || waliKelas || '', cabang_id || cabangId || 'cabang-pusat', aktif !== false]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/kelas/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM kelas WHERE id = $1', [req.params.id]);
+    res.json({ success: true, message: 'Kelas berhasil dihapus' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 12. ALUMNI CRUD ENDPOINTS
+app.get('/api/alumni', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM alumni ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/alumni', async (req, res) => {
+  const { id, nama, nik, nisn, nism, lp, tahun_lulus, tahunLulus, cabang_id, cabangId } = req.body;
+  try {
+    const recordId = id || `alm-${Date.now()}`;
+    const result = await query(`
+      INSERT INTO alumni (id, nama, nik, nisn, nism, lp, tahun_lulus, cabang_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      ON CONFLICT (id) DO UPDATE SET
+        nama = EXCLUDED.nama, nik = EXCLUDED.nik, nisn = EXCLUDED.nisn, nism = EXCLUDED.nism, lp = EXCLUDED.lp, tahun_lulus = EXCLUDED.tahun_lulus
+      RETURNING *;
+    `, [recordId, nama, nik || '', nisn || '', nism || '', lp || 'L', tahun_lulus || tahunLulus || '2026', cabang_id || cabangId || 'cabang-pusat']);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/alumni/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM alumni WHERE id = $1', [req.params.id]);
+    res.json({ success: true, message: 'Alumni berhasil dihapus' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 13. LOKASI QR CRUD ENDPOINTS
+app.get('/api/lokasi-qr', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM lokasi_qr ORDER BY created_at ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/lokasi-qr', async (req, res) => {
+  const { id, kelas, lokasi, kode_manual, kodeManual, cabang_id, cabangId, gps_status, gpsStatus, locked, lat, lng, radius_meter, radiusMeter } = req.body;
+  try {
+    const recordId = id || `l-${Date.now()}`;
+    const result = await query(`
+      INSERT INTO lokasi_qr (id, kelas, lokasi, kode_manual, cabang_id, gps_status, locked, lat, lng, radius_meter)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      ON CONFLICT (id) DO UPDATE SET
+        kelas = EXCLUDED.kelas, lokasi = EXCLUDED.lokasi, kode_manual = EXCLUDED.kode_manual, lat = EXCLUDED.lat, lng = EXCLUDED.lng, radius_meter = EXCLUDED.radius_meter
+      RETURNING *;
+    `, [recordId, kelas, lokasi, kode_manual || kodeManual || '', cabang_id || cabangId || 'cabang-pusat', gps_status || gpsStatus || 'GPS: Locked', locked !== false, lat || null, lng || null, radius_meter || radiusMeter || 50]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/lokasi-qr/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM lokasi_qr WHERE id = $1', [req.params.id]);
+    res.json({ success: true, message: 'Lokasi QR berhasil dihapus' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 14. SETTINGS CRUD ENDPOINTS
+app.get('/api/settings', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM settings');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/settings', async (req, res) => {
+  const { key, value } = req.body;
+  try {
+    const result = await query(`
+      INSERT INTO settings (key, value)
+      VALUES ($1, $2)
+      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+      RETURNING *;
+    `, [key, typeof value === 'object' ? JSON.stringify(value) : value]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 15. ALIAS ROUTES FOR CROSS-COMPATIBILITY
+app.get('/api/superadmin-accounts', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM superadmin_accounts ORDER BY created_at ASC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get('/api/absensi', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM absensi_santri ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get('/api/setoran', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM setoran_santri ORDER BY tanggal DESC, created_at DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get('/api/pembayaran-spp', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM pembayaran_spp ORDER BY created_at DESC');
+    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

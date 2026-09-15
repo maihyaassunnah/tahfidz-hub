@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { storageService } from '../../services/storage';
 import QRCode from 'qrcode';
+import CustomSelect from '../common/CustomSelect';
 
 // Komponen Realistis QR Code Asli Berstandar ISO/IEC 18004 (Scannable oleh semua kamera)
 function RealQRCodeImage({ value, size = 76 }) {
@@ -548,15 +549,14 @@ export default function LokasiQRSigapView({ showToast }) {
                   <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155' }}>
                     Pilih Kelas *
                   </label>
-                  <select 
-                    className="form-input"
+                  <CustomSelect 
+                    triggerStyle={{ minHeight: '42px', borderRadius: '12px' }}
                     value={formData.kelas}
                     onChange={(e) => setFormData({ 
                       ...formData, 
                       kelas: e.target.value,
                       kodeManual: `MAIAS-${e.target.value.replace(/\s+/g, '')}`
                     })}
-                    style={{ fontWeight: 700, fontSize: '0.9rem' }}
                   >
                     <option value="X A">X A</option>
                     <option value="X B">X B</option>
@@ -566,7 +566,7 @@ export default function LokasiQRSigapView({ showToast }) {
                     <option value="XII B">XII B</option>
                     <option value="Masjid Tahfidz">Masjid Tahfidz Ikhwan</option>
                     <option value="Aula Tahfidz">Aula Tahfidz Akhwat</option>
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 {/* 2. NAMA / TITIK RUANGAN */}
@@ -834,18 +834,17 @@ export default function LokasiQRSigapView({ showToast }) {
                         <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '3px' }}>
                           Radius Presensi
                         </label>
-                        <select 
-                          className="form-input"
+                        <CustomSelect 
+                          triggerStyle={{ minHeight: '34px', borderRadius: '10px', fontSize: '0.8rem', padding: '0 8px' }}
                           value={formData.radiusMeter}
                           onChange={(e) => setFormData({ ...formData, radiusMeter: parseInt(e.target.value) || 50 })}
-                          style={{ fontSize: '0.8rem', padding: '6px 8px', fontWeight: 700 }}
                         >
                           <option value="25">25 m (Ketat)</option>
                           <option value="50">50 m (Standar)</option>
                           <option value="100">100 m (Kompleks)</option>
                           <option value="200">200 m (Pesantren)</option>
                           <option value="500">500 m (Area Luas)</option>
-                        </select>
+                        </CustomSelect>
                       </div>
                     </div>
                   </div>

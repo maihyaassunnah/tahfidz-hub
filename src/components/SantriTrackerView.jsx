@@ -17,9 +17,11 @@ import {
   TrendingUp,
   Star,
   Users,
-  GraduationCap
+  GraduationCap,
+  Trash2
 } from 'lucide-react';
 import { QURAN_SURAH, getSurahsByJuz } from '../data/quranData';
+import { storageService } from '../services/storage';
 import confetti from 'canvas-confetti';
 
 const ARABIC_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
@@ -33,30 +35,30 @@ const JUZ_SURAH_LABEL = [
   "Al-Fatihah - Al-Baqarah", // 1
   "Al-Baqarah (142)",         // 2
   "Al-Baqarah (253) - Ali 'Imran", // 3
-  "Ali 'Imran (93) - An-Nisa'",    // 4
-  "An-Nisa' (24)",            // 5
-  "An-Nisa' (148) - Al-Ma'idah",   // 6
-  "Al-Ma'idah (82) - Al-An'am",    // 7
-  "Al-An'am (111) - Al-A'raf",     // 8
-  "Al-A'raf (88) - Al-Anfal",      // 9
-  "Al-Anfal (41) - At-Taubah",     // 10
-  "Yunus - Hud",                   // 11
-  "Hud (6) - Yusuf",               // 12
-  "Yusuf (53) - Ibrahim",          // 13
-  "Al-Hijr - An-Nahl",             // 14
-  "Al-Isra' - Al-Kahf",            // 15
-  "Al-Kahf (75) - Ta-Ha",          // 16
-  "Al-Anbiya' - Al-Hajj",          // 17
-  "Al-Mu'minun - Al-Furqan",       // 18
-  "Al-Furqan (21) - An-Naml",      // 19
-  "An-Naml (56) - Al-'Ankabut",    // 20
-  "Al-'Ankabut (46) - Al-Ahzab",   // 21
-  "Al-Ahzab (31) - Ya-Sin",        // 22
-  "Ya-Sin (28) - Az-Zumar",        // 23
-  "Az-Zumar (32) - Fushshilat",    // 24
-  "Fushshilat (47) - Al-Jatsiyah", // 25
-  "Al-Ahqaf - Az-Zariyat",         // 26
-  "Az-Zariyat (31) - Al-Hadid",    // 27
+  "Ali 'Imran (92) - An-Nisa'", // 4
+  "An-Nisa' (24)",             // 5
+  "An-Nisa' (148) - Al-Ma'idah", // 6
+  "Al-Ma'idah (82) - Al-An'am", // 7
+  "Al-An'am (111) - Al-A'raf",  // 8
+  "Al-A'raf (88) - Al-Anfal",  // 9
+  "Al-Anfal (41) - At-Taubah", // 10
+  "Yunus - Hud",               // 11
+  "Hud (6) - Yusuf",           // 12
+  "Yusuf (53) - Ibrahim",      // 13
+  "Al-Hijr - An-Nahl",         // 14
+  "Al-Isra' - Al-Kahf",        // 15
+  "Al-Kahf (75) - Ta Ha",      // 16
+  "Al-Anbiya' - Al-Hajj",      // 17
+  "Al-Mu'minun - Al-Furqan",   // 18
+  "Al-Furqan (21) - An-Naml",  // 19
+  "An-Naml (56) - Al-'Ankabut",// 20
+  "Al-'Ankabut (46) - Al-Ahzab",// 21
+  "Al-Ahzab (31) - Ya Sin",    // 22
+  "Ya Sin (28) - Az-Zumar",    // 23
+  "Az-Zumar (32) - Fussilat",  // 24
+  "Fussilat (47) - Al-Jathiyah", // 25
+  "Al-Ahqaf - Adz-Dzariyat",   // 26
+  "Adz-Dzariyat (31) - Al-Hadid", // 27
   "Al-Mujadilah - At-Tahrim",      // 28
   "Al-Mulk - Al-Mursalat",         // 29
   "An-Naba' - An-Nas"              // 30
@@ -70,6 +72,7 @@ export default function SantriTrackerView({
   selectedSantriId, 
   onSelectSantri,
   onUpdateSantri,
+  onDeleteSantri,
   onOpenQuickSetor,
   showToast,
   currentRole = 'pengampu'
@@ -79,11 +82,33 @@ export default function SantriTrackerView({
 
   const defaultSantriId = (selectedSantriId && effectiveSantriList.some(s => s.id === selectedSantriId))
     ? selectedSantriId
-    : (effectiveSantriList[0]?.id || "s-akbar");
+    : (effectiveSantriList[0]?.id || null);
 
   const [activeSantriId, setActiveSantriId] = useState(defaultSantriId);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedJuzModal, setSelectedJuzModal] = useState(null);
+
+  const handleDeleteCurrentSantri = (targetSantri) => {
+    if (!targetSantri || !targetSantri.id) return;
+    const confirmMsg = `Yakin ingin menghapus data santri "${targetSantri.nama || 'ini'}"?\n\nPERINGATAN: Semua riwayat setoran hafalan, mutaba'ah, dan presensi santri ini juga akan dihapus permanen dari sistem.`;
+    if (window.confirm(confirmMsg)) {
+      if (onDeleteSantri) {
+        onDeleteSantri(targetSantri.id);
+      } else {
+        storageService.deleteSantri(targetSantri.id);
+      }
+      const remaining = effectiveSantriList.filter(s => s.id !== targetSantri.id);
+      if (remaining.length > 0) {
+        setActiveSantriId(remaining[0].id);
+        if (onSelectSantri) onSelectSantri(remaining[0].id);
+      } else {
+        setActiveSantriId(null);
+      }
+      if (showToast) {
+        showToast(`Data santri ${targetSantri.nama || ''} berhasil dihapus.`);
+      }
+    }
+  };
 
   useEffect(() => {
     if (selectedSantriId && effectiveSantriList.some(s => s.id === selectedSantriId)) {
@@ -224,26 +249,44 @@ export default function SantriTrackerView({
           </p>
         </div>
 
-        <button 
-          type="button"
-          onClick={onOpenQuickSetor}
-          style={{
-            ...btnBase,
-            background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
-            color: '#ffffff',
+        {currentRole === 'orangtua' ? (
+          <div style={{
+            background: '#ecfdf5',
+            border: '1px solid #a7f3d0',
+            color: '#065f46',
+            padding: '8px 16px',
             borderRadius: '12px',
-            padding: '10px 20px',
-            fontWeight: 800,
-            fontSize: '0.86rem',
+            fontSize: '0.80rem',
+            fontWeight: 700,
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 4px 12px rgba(22,163,74,0.3)'
-          }}
-        >
-          <PlusCircle size={18} />
-          <span>+ Catat Setoran Santri Ini</span>
-        </button>
+            gap: '6px'
+          }}>
+            <Sparkles size={16} color="#059669" />
+            <span>Mode Pantau Perkembangan Ananda (Read-Only)</span>
+          </div>
+        ) : (
+          <button 
+            type="button"
+            onClick={onOpenQuickSetor}
+            style={{
+              ...btnBase,
+              background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
+              color: '#ffffff',
+              borderRadius: '12px',
+              padding: '10px 20px',
+              fontWeight: 800,
+              fontSize: '0.86rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 12px rgba(22,163,74,0.3)'
+            }}
+          >
+            <PlusCircle size={18} />
+            <span>+ Catat Setoran Santri Ini</span>
+          </button>
+        )}
       </div>
 
       {/* ══════════ MAIN 2-COLUMN LAYOUT ══════════ */}
@@ -374,22 +417,56 @@ export default function SantriTrackerView({
                     </div>
                   </div>
 
-                  {/* Badge Mutqin */}
-                  <div style={{
-                    padding: '3px 9px',
-                    borderRadius: '20px',
-                    background: isActive ? '#15803d' : '#f8fafc',
-                    border: `1px solid ${isActive ? '#15803d' : '#e2e8f0'}`,
-                    color: isActive ? '#ffffff' : '#15803d',
-                    fontSize: '0.72rem',
-                    fontWeight: 800,
-                    whiteSpace: 'nowrap',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}>
-                    <Star size={11} fill={isActive ? '#fde047' : '#ca8a04'} color="none" />
-                    <span>{mutqinCount} Juz</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {/* Badge Mutqin */}
+                    <div style={{
+                      padding: '3px 9px',
+                      borderRadius: '20px',
+                      background: isActive ? '#15803d' : '#f8fafc',
+                      border: `1px solid ${isActive ? '#15803d' : '#e2e8f0'}`,
+                      color: isActive ? '#ffffff' : '#15803d',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      <Star size={11} fill={isActive ? '#fde047' : '#ca8a04'} color="none" />
+                      <span>{mutqinCount} Juz</span>
+                    </div>
+
+                    {/* Tombol Hapus Santri */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCurrentSantri(s);
+                      }}
+                      title={`Hapus data santri ${s.nama}`}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: '5px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        color: '#94a3b8',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#e11d48';
+                        e.currentTarget.style.background = '#ffe4e6';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = '#94a3b8';
+                        e.currentTarget.style.background = 'none';
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
               );
@@ -397,7 +474,9 @@ export default function SantriTrackerView({
 
             {filteredSantri.length === 0 && (
               <div style={{ textAlign: 'center', padding: '30px 10px', color: '#94a3b8', fontSize: '0.82rem' }}>
-                Tidak ditemukan santri dengan nama "{searchTerm}"
+                {effectiveSantriList.length === 0 
+                  ? 'Belum ada santri terdaftar.' 
+                  : `Tidak ditemukan santri dengan nama "${searchTerm}"`}
               </div>
             )}
           </div>
@@ -405,8 +484,38 @@ export default function SantriTrackerView({
 
         {/* ─── KOLOM KANAN: DASHBOARD & DETAIL SANTRI TERPILIH ─── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-
-          {/* 🌟 1. HERO PROFILE CARD SANTRI 🌟 */}
+          {(!currentSantri || !currentSantri.id) ? (
+            <div style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '18px',
+              padding: '60px 24px',
+              textAlign: 'center',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+            }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: '#f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                color: '#94a3b8'
+              }}>
+                <Users size={32} />
+              </div>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', marginBottom: '8px' }}>
+                Belum Ada Santri Terpilih
+              </h3>
+              <p style={{ color: '#64748b', fontSize: '0.86rem', maxWidth: '440px', margin: '0 auto', lineHeight: 1.5 }}>
+                Silakan pilih nama santri di panel sebelah kiri untuk melihat peta capaian 30 juz dan riwayat mutaba'ah setoran santri.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* 🌟 1. HERO PROFILE CARD SANTRI 🌟 */}
           <div style={{
             background: '#ffffff',
             border: '1px solid #e2e8f0',
@@ -562,27 +671,81 @@ export default function SantriTrackerView({
                 </div>
               </div>
 
-              {/* Tombol Cepat Setor */}
-              <button
-                type="button"
-                onClick={onOpenQuickSetor}
-                style={{
-                  ...btnBase,
+              {/* Tombol Action Santri */}
+              {currentRole !== 'orangtua' ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={onOpenQuickSetor}
+                    style={{
+                      ...btnBase,
+                      background: '#f0fdf4',
+                      border: '1.5px solid #86efac',
+                      color: '#15803d',
+                      borderRadius: '10px',
+                      padding: '8px 16px',
+                      fontWeight: 800,
+                      fontSize: '0.80rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <PlusCircle size={15} />
+                    <span>Input Setoran Santri</span>
+                  </button>
+
+                  {currentSantri && currentSantri.id && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCurrentSantri(currentSantri)}
+                      title={`Hapus data santri ${currentSantri.nama || ''}`}
+                      style={{
+                        ...btnBase,
+                        background: '#fff1f2',
+                        border: '1.5px solid #fecdd3',
+                        color: '#e11d48',
+                        borderRadius: '10px',
+                        padding: '8px 14px',
+                        fontWeight: 700,
+                        fontSize: '0.80rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#ffe4e6';
+                        e.currentTarget.style.borderColor = '#fda4af';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#fff1f2';
+                        e.currentTarget.style.borderColor = '#fecdd3';
+                      }}
+                    >
+                      <Trash2 size={15} />
+                      <span>Hapus Santri</span>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div style={{
                   background: '#f0fdf4',
-                  border: '1.5px solid #86efac',
-                  color: '#15803d',
+                  border: '1px solid #bbf7d0',
+                  color: '#166534',
+                  padding: '6px 14px',
                   borderRadius: '10px',
-                  padding: '8px 16px',
-                  fontWeight: 800,
-                  fontSize: '0.80rem',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px'
-                }}
-              >
-                <PlusCircle size={15} />
-                <span>Input Setoran Santri</span>
-              </button>
+                }}>
+                  <Sparkles size={14} color="#16a34a" />
+                  <span>Pantauan Wali Santri</span>
+                </div>
+              )}
             </div>
 
             {/* ─── 4 STAT METRIC CARDS ─── */}
@@ -1058,6 +1221,8 @@ export default function SantriTrackerView({
               </table>
             </div>
           </div>
+            </>
+          )}
 
         </div>
       </div>
@@ -1156,81 +1321,163 @@ export default function SantriTrackerView({
                 </div>
               </div>
 
-              {/* Status Action Buttons */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569' }}>
-                  Ubah Status Capaian Santri:
-                </label>
-
-                {/* Tombol Mutqin */}
-                <button 
-                  type="button" 
-                  onClick={() => handleSetJuzStatus(selectedJuzModal, 'mutqin')}
-                  style={{
-                    ...btnBase,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
-                    color: '#ffffff',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 10px rgba(22,163,74,0.25)'
-                  }}
-                >
-                  <Star size={20} fill="#fde047" color="none" />
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontWeight: 800, fontSize: '0.88rem' }}>Tandai Sebagai Mutqin (Lulus Tasmi')</div>
-                    <div style={{ fontSize: '0.72rem', opacity: 0.9 }}>Hafalan lancar, tajwid mantap, sudah diuji musyrif</div>
+              {/* Status Action Buttons / Read-Only View */}
+              {currentRole === 'orangtua' ? (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '0.80rem', fontWeight: 700, color: '#64748b', marginBottom: '8px' }}>
+                    Status Capaian Juz {selectedJuzModal} Ananda Saat Ini:
                   </div>
-                </button>
+                  {getJuzStatus(selectedJuzModal) === 'mutqin' && (
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+                      color: '#ffffff',
+                      padding: '8px 18px',
+                      borderRadius: '10px',
+                      fontWeight: 800,
+                      fontSize: '0.90rem'
+                    }}>
+                      <Star size={18} fill="#fde047" color="none" />
+                      <span>MUTQIN (Lulus Tasmi')</span>
+                    </span>
+                  )}
+                  {getJuzStatus(selectedJuzModal) === 'ziyadah' && (
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                      color: '#ffffff',
+                      padding: '8px 18px',
+                      borderRadius: '10px',
+                      fontWeight: 800,
+                      fontSize: '0.90rem'
+                    }}>
+                      <BookOpen size={18} />
+                      <span>ZIYADAH (Dalam Pemantapan Muroja'ah)</span>
+                    </span>
+                  )}
+                  {getJuzStatus(selectedJuzModal) === 'proses' && (
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: '#fefce8',
+                      border: '1px solid #fde047',
+                      color: '#854d0e',
+                      padding: '8px 18px',
+                      borderRadius: '10px',
+                      fontWeight: 800,
+                      fontSize: '0.90rem'
+                    }}>
+                      <Clock size={18} />
+                      <span>PROSES SETORAN AYAT</span>
+                    </span>
+                  )}
+                  {getJuzStatus(selectedJuzModal) === 'belum' && (
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
+                      color: '#475569',
+                      padding: '8px 18px',
+                      borderRadius: '10px',
+                      fontWeight: 800,
+                      fontSize: '0.90rem'
+                    }}>
+                      <span>BELUM TERHAFAL</span>
+                    </span>
+                  )}
+                  <p style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '12px', marginBottom: 0 }}>
+                    * Status capaian juz hanya dapat diubah oleh Ustadz Pengampu setelah pengujian tasmi' / evaluasi halaqah.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569' }}>
+                    Ubah Status Capaian Santri:
+                  </label>
 
-                {/* Tombol Ziyadah */}
-                <button 
-                  type="button" 
-                  onClick={() => handleSetJuzStatus(selectedJuzModal, 'ziyadah')}
-                  style={{
-                    ...btnBase,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    background: '#f0fdf4',
-                    border: '1.5px solid #86efac',
-                    color: '#15803d',
-                    borderRadius: '12px'
-                  }}
-                >
-                  <BookOpen size={20} color="#15803d" />
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontWeight: 800, fontSize: '0.88rem' }}>Tandai Selesai Ziyadah</div>
-                    <div style={{ fontSize: '0.72rem', color: '#166534' }}>Ayat selesai disetor, dalam proses pemantapan muroja'ah</div>
-                  </div>
-                </button>
+                  {/* Tombol Mutqin */}
+                  <button 
+                    type="button" 
+                    onClick={() => handleSetJuzStatus(selectedJuzModal, 'mutqin')}
+                    style={{
+                      ...btnBase,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
+                      color: '#ffffff',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 10px rgba(22,163,74,0.25)'
+                    }}
+                  >
+                    <Star size={20} fill="#fde047" color="none" />
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.88rem' }}>Tandai Sebagai Mutqin (Lulus Tasmi')</div>
+                      <div style={{ fontSize: '0.72rem', opacity: 0.9 }}>Hafalan lancar, tajwid mantap, sudah diuji musyrif</div>
+                    </div>
+                  </button>
 
-                {/* Tombol Reset */}
-                <button 
-                  type="button" 
-                  onClick={() => handleSetJuzStatus(selectedJuzModal, 'belum')}
-                  style={{
-                    ...btnBase,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    background: '#f8fafc',
-                    border: '1px solid #cbd5e1',
-                    color: '#475569',
-                    borderRadius: '12px'
-                  }}
-                >
-                  <RotateCcw size={18} color="#64748b" />
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontWeight: 800, fontSize: '0.88rem' }}>Reset ke Belum Disetor</div>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Hapus tanda mutqin / ziyadah untuk juz ini</div>
-                  </div>
-                </button>
-              </div>
+                  {/* Tombol Ziyadah */}
+                  <button 
+                    type="button" 
+                    onClick={() => handleSetJuzStatus(selectedJuzModal, 'ziyadah')}
+                    style={{
+                      ...btnBase,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      background: '#f0fdf4',
+                      border: '1.5px solid #86efac',
+                      color: '#15803d',
+                      borderRadius: '12px'
+                    }}
+                  >
+                    <BookOpen size={20} color="#15803d" />
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.88rem' }}>Tandai Selesai Ziyadah</div>
+                      <div style={{ fontSize: '0.72rem', color: '#166534' }}>Ayat selesai disetor, dalam proses pemantapan muroja'ah</div>
+                    </div>
+                  </button>
+
+                  {/* Tombol Reset */}
+                  <button 
+                    type="button" 
+                    onClick={() => handleSetJuzStatus(selectedJuzModal, 'belum')}
+                    style={{
+                      ...btnBase,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      background: '#f8fafc',
+                      border: '1px solid #cbd5e1',
+                      color: '#475569',
+                      borderRadius: '12px'
+                    }}
+                  >
+                    <RotateCcw size={18} color="#64748b" />
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.88rem' }}>Reset ke Belum Disetor</div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Hapus tanda mutqin / ziyadah untuk juz ini</div>
+                    </div>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}

@@ -22,6 +22,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { storageService } from '../../services/storage';
+import CustomSelect from '../common/CustomSelect';
 
 export default function DataGuruSigapView({ showToast }) {
   const [guruList, setGuruList] = useState(storageService.getSigapGuru());
@@ -161,14 +162,15 @@ export default function DataGuruSigapView({ showToast }) {
           </div>
         </div>
 
-        {/* 4 Tombol Aksi Kanan */}
-        <div className="sigap-page-actions">
+        {/* 4 Tombol Aksi Kanan (Mobile: Icon Saja, 1 Baris, Efek Hover) */}
+        <div className="sigap-page-actions sigap-mobile-action-bar">
           {/* Template (Dark Slate) */}
           <button 
             className="sigap-btn-slate"
             onClick={() => showToast && showToast("Template Guru & Pegawai diunduh!")}
+            title="Download Template Excel"
           >
-            <FileText size={15} />
+            <FileText size={17} />
             <span>Template</span>
           </button>
 
@@ -176,8 +178,9 @@ export default function DataGuruSigapView({ showToast }) {
           <button 
             className="sigap-btn-green"
             onClick={() => showToast && showToast("Buka jendela import data guru Excel")}
+            title="Import Excel"
           >
-            <Upload size={15} />
+            <Upload size={17} />
             <span>Import</span>
           </button>
 
@@ -185,8 +188,9 @@ export default function DataGuruSigapView({ showToast }) {
           <button 
             className="sigap-btn-blue"
             onClick={handleDownload}
+            title="Download Data Guru"
           >
-            <Download size={15} />
+            <Download size={17} />
             <span>Download Data</span>
           </button>
 
@@ -210,8 +214,9 @@ export default function DataGuruSigapView({ showToast }) {
               setShowPassword(false);
               setShowAddModal(true);
             }}
+            title="Tambah Guru Baru"
           >
-            <Plus size={15} />
+            <Plus size={17} />
             <span>+ Tambah</span>
           </button>
         </div>
@@ -380,14 +385,14 @@ export default function DataGuruSigapView({ showToast }) {
 
                   <div className="form-group">
                     <label className="form-label">Jenis Kelamin</label>
-                    <select 
-                      className="form-input"
+                    <CustomSelect 
+                      triggerStyle={{ minHeight: '40px', borderRadius: '12px' }}
                       value={formData.lp}
                       onChange={(e) => setFormData({ ...formData, lp: e.target.value })}
                     >
                       <option value="L">L (Laki-laki)</option>
                       <option value="P">P (Perempuan)</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                 </div>
 

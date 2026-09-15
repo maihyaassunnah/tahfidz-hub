@@ -311,6 +311,10 @@ body.dark-mode .simtah-main {
   color: #0f172a;
 }
 
+.header-mobile-brand {
+  display: none;
+}
+
 body.dark-mode .page-title {
   color: #f8fafc;
 }
@@ -633,18 +637,27 @@ body.dark-mode .sesi-header-title {
 
 .sesi-chips-row {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 12px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 2px 6px 2px;
+}
+.sesi-chips-row::-webkit-scrollbar {
+  display: none;
 }
 
 .sesi-chip {
-  padding: 12px 18px;
+  padding: 10px 14px;
   border-radius: 12px;
-  min-width: 145px;
+  flex: 1 1 0;
+  min-width: 120px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 4px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
 }
 
 .sesi-chip.active-green {
@@ -881,6 +894,9 @@ body.dark-mode .podium-sort-select {
   justify-content: center;
   min-height: 80px;
   transition: all 0.2s ease;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 @media (max-width: 600px) {
@@ -4228,7 +4244,74 @@ body.dark-mode .badge-status-alpa {
   color: #f87171;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  /* =========================================================
+     HILANGKAN ELEMEN DI MOBILE (GAMBAR 3, 4, 5)
+     ========================================================= */
+  .sigap-mobile-hide {
+    display: none !important;
+  }
+
+  /* =========================================================
+     GAMBAR 1: ACTION BUTTONS HANYA ICON & SEBARIS DENGAN EFEK HOVER
+     ========================================================= */
+  .sigap-mobile-action-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 2px 2px 6px 2px !important;
+  }
+
+  .sigap-mobile-action-bar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .sigap-mobile-action-bar button {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+    cursor: pointer !important;
+    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  }
+
+  /* Hilangkan tulisan teks, hanya icon saja */
+  .sigap-mobile-action-bar button span {
+    display: none !important;
+  }
+
+  /* Efek Hover Dinamis */
+  .sigap-mobile-action-bar button:hover,
+  .sigap-mobile-action-bar button:focus-visible {
+    transform: translateY(-3px) scale(1.15) !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24) !important;
+    filter: brightness(1.18) !important;
+    z-index: 2 !important;
+  }
+
+  .sigap-mobile-action-bar button:active {
+    transform: scale(0.92) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .sigap-presensi-header {
+    padding: 10px 12px !important;
+    justify-content: flex-end !important;
+  }
+
   .sigap-monitor-grid {
     grid-template-columns: 1fr;
     padding: 10px 12px;
@@ -4311,7 +4394,7 @@ body.dark-mode .badge-status-alpa {
 
   .sigap-monitor-mobile-name {
     font-size: 0.85rem;
-    font-weight: 800;
+    font-weight: 500;
     color: #0f172a;
     white-space: nowrap;
     overflow: hidden;
@@ -4326,7 +4409,7 @@ body.dark-mode .badge-status-alpa {
   .sigap-monitor-mobile-sesi {
     font-size: 0.72rem;
     color: #0f766e;
-    font-weight: 700;
+    font-weight: 500;
     line-height: 1.1;
   }
 
@@ -4342,7 +4425,7 @@ body.dark-mode .badge-status-alpa {
 
   .sigap-mobile-pill {
     font-size: 0.72rem !important;
-    font-weight: 800 !important;
+    font-weight: 500 !important;
     padding: 4px 8px !important;
     border-radius: 8px !important;
     white-space: nowrap !important;
@@ -4660,6 +4743,12 @@ body.dark-mode {
 }
 
 @media (max-width: 850px) {
+  /* 0. Prevent Horizontal Overflow Wildly */
+  html, body, #root, .simtah-app, .simtah-main {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
   /* Sembunyikan sidebar desktop */
   .simtah-sidebar,
   .sigap-sidebar {
@@ -4670,13 +4759,391 @@ body.dark-mode {
   .simtah-main {
     margin-left: 0 !important;
     width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
     padding-bottom: 110px !important;
   }
 
+  .page-content-wrapper {
+    padding: 0 12px 110px 12px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 1. HEADER MOBILE & TABLET (PERMINTAAN USER 1)
+     - Sembunyikan elemen desktop: title breadcrumb, branch pill, profile pill, emblem
+     - Teks 'Tahfidz Hub' tepat di TENGAH
+     - Tombol Mode Gelap/Terang di sisi KANAN */
+  .header-desktop-title,
+  .header-desktop-only {
+    display: none !important;
+  }
+
   .simtah-header {
-    padding: 12px 16px !important;
-    flex-wrap: wrap;
-    gap: 10px;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    padding: 10px 14px !important;
+    min-height: 52px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background: transparent !important;
+  }
+
+  .header-mobile-brand {
+    display: block !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.01em !important;
+    color: #0f172a !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    pointer-events: auto !important;
+  }
+
+  body.dark-mode .header-mobile-brand {
+    color: #f8fafc !important;
+  }
+
+  .header-right-actions {
+    display: flex !important;
+    align-items: center !important;
+    margin-left: auto !important;
+    gap: 8px !important;
+  }
+
+  .header-darkmode-toggle {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #334155 !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+
+  body.dark-mode .header-darkmode-toggle {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+  }
+
+  /* 2. GREEN BANNER & KPI CARDS (FONTS & PROPORTIONS) */
+  .halaqah-green-banner {
+    padding: 16px 16px !important;
+    border-radius: 14px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .banner-sub {
+    font-size: 0.65rem !important;
+    letter-spacing: 0.06em !important;
+    margin-bottom: 2px !important;
+  }
+
+  .banner-title {
+    font-size: 1.35rem !important;
+    font-weight: 800 !important;
+    margin-bottom: 6px !important;
+    line-height: 1.2 !important;
+  }
+
+  .banner-location {
+    font-size: 0.76rem !important;
+    gap: 5px !important;
+  }
+
+  .banner-location svg {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .banner-watermark-quran {
+    right: 8px !important;
+    opacity: 0.12 !important;
+    transform: translateY(-50%) scale(0.6) !important;
+  }
+
+  .kpi-row-screenshot {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .kpi-card-white {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .kpi-circle-icon {
+    width: 36px !important;
+    height: 36px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .kpi-circle-icon svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .kpi-number {
+    font-size: 1.45rem !important;
+    line-height: 1.1 !important;
+    margin-bottom: 1px !important;
+  }
+
+  .kpi-label {
+    font-size: 0.72rem !important;
+  }
+
+  .kpi-arrow {
+    display: none !important;
+  }
+
+  /* 3. JADWAL SESI HARI INI: LEBIH KECIL & SATU BARIS SAJA (PERMINTAAN USER 2) */
+  .sesi-card-container {
+    padding: 12px 12px !important;
+    border-radius: 14px !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .sesi-header-title {
+    font-size: 0.88rem !important;
+    margin-bottom: 1px !important;
+  }
+
+  .sesi-header-sub {
+    font-size: 0.65rem !important;
+    margin-bottom: 6px !important;
+  }
+
+  .sesi-chips-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 2px 0 4px 0 !important;
+    margin-top: 6px !important;
+  }
+
+  .sesi-chips-row::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .sesi-chip {
+    flex: 1 1 0 !important;
+    min-width: 68px !important;
+    max-width: 100% !important;
+    padding: 6px 3px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 2px !important;
+    box-sizing: border-box !important;
+    box-shadow: none !important;
+  }
+
+  .sesi-badge-status {
+    font-size: 0.50rem !important;
+    font-weight: 800 !important;
+    padding: 1px 4px !important;
+    border-radius: 3px !important;
+    line-height: 1.15 !important;
+    letter-spacing: 0 !important;
+  }
+
+  .sesi-name {
+    font-size: 0.66rem !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .sesi-sub-info {
+    font-size: 0.52rem !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    text-align: center !important;
+    color: #64748b !important;
+  }
+
+  /* 4. PERINGKAT SETORAN HALAQAH: TIDAK OFFSIDE, SIMPLE & RESPONSIVE (PERMINTAAN USER 3) */
+  .podium-card-container {
+    padding: 12px 10px !important;
+    border-radius: 14px !important;
+    margin-bottom: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .podium-header-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .podium-title-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .trophy-badge {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  .trophy-badge svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .podium-main-title {
+    font-size: 0.88rem !important;
+    font-weight: 800 !important;
+  }
+
+  .podium-sub-title {
+    font-size: 0.65rem !important;
+  }
+
+  .podium-filters {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .time-filter-pill-group {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    padding: 2px !important;
+    border-radius: 6px !important;
+    justify-content: space-between !important;
+  }
+
+  .time-filter-btn {
+    flex: 1 1 auto !important;
+    padding: 3px 4px !important;
+    font-size: 0.60rem !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    border-radius: 4px !important;
+  }
+
+  .podium-sort-select {
+    flex-shrink: 0 !important;
+    padding: 3px 4px !important;
+    font-size: 0.60rem !important;
+    border-radius: 6px !important;
+    max-width: 95px !important;
+  }
+
+  .podium-grid-3 {
+    display: grid !important;
+    grid-template-columns: 1fr 1.04fr 1fr !important;
+    gap: 5px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .podium-box {
+    min-width: 0 !important; /* CRITICAL: Mencegah overflow/offside pada grid mobile */
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    padding: 12px 2px 6px 2px !important;
+    min-height: 66px !important;
+    border-radius: 10px !important;
+  }
+
+  .badge-rank-circle {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 0.58rem !important;
+    top: -8px !important;
+  }
+
+  .badge-terbanyak-crown {
+    font-size: 0.48rem !important;
+    padding: 1px 4px !important;
+    top: -8px !important;
+    max-width: 90% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    gap: 2px !important;
+  }
+
+  .badge-terbanyak-crown svg {
+    width: 9px !important;
+    height: 9px !important;
+  }
+
+  .podium-student-name {
+    font-size: 0.66rem !important;
+    margin-top: 3px !important;
+    margin-bottom: 2px !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .podium-score-hlm {
+    font-size: 0.92rem !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+  }
+
+  .podium-score-hlm span {
+    font-size: 0.58rem !important;
+  }
+
+  .podium-sub-brs {
+    font-size: 0.52rem !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    color: #64748b !important;
   }
 
   .role-badge-group {
@@ -4699,6 +5166,36 @@ body.dark-mode {
     max-width: 480px;
     z-index: 1000;
     pointer-events: none;
+  }
+}
+
+/* TABLET SPECIFIC OPTIMIZATIONS (601px - 850px) */
+@media (min-width: 601px) and (max-width: 850px) {
+  .banner-title {
+    font-size: 1.55rem !important;
+  }
+  .kpi-number {
+    font-size: 1.70rem !important;
+  }
+  .sesi-name {
+    font-size: 0.74rem !important;
+  }
+  .sesi-sub-info {
+    font-size: 0.58rem !important;
+  }
+  .podium-student-name {
+    font-size: 0.72rem !important;
+  }
+  .podium-score-hlm {
+    font-size: 1.02rem !important;
+  }
+  .podium-filters {
+    width: auto !important;
+  }
+  .podium-header-row {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
   }
 }
 
@@ -5449,24 +5946,30 @@ body.dark-mode .att-recap-card.alpa {
 
 .setoran-grid-container {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr);
+  gap: 22px;
   align-items: start;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 1024px) {
   .setoran-grid-container {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 18px;
   }
 }
 
 .setoran-card-main {
   background: #ffffff;
   border: 1px solid var(--border-color);
-  border-radius: 24px;
-  padding: 24px 28px;
+  border-radius: 22px;
+  padding: 22px 24px;
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 body.dark-mode .setoran-card-main {
@@ -5479,7 +5982,7 @@ body.dark-mode .setoran-card-main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -5487,12 +5990,12 @@ body.dark-mode .setoran-card-main {
 .setoran-card-title-box {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .setoran-icon-square {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 10px;
   border: 1.5px solid #22c55e;
   display: flex;
@@ -5500,6 +6003,7 @@ body.dark-mode .setoran-card-main {
   justify-content: center;
   color: #16a34a;
   background: #ffffff;
+  flex-shrink: 0;
 }
 
 body.dark-mode .setoran-icon-square {
@@ -5511,14 +6015,16 @@ body.dark-mode .setoran-icon-square {
 .setoran-date-pill {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 8px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
   color: #334155;
+  flex-wrap: nowrap;
 }
 
 body.dark-mode .setoran-date-pill {
@@ -5529,51 +6035,69 @@ body.dark-mode .setoran-date-pill {
 
 .setoran-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.05em;
   color: #64748b;
   text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 body.dark-mode .setoran-label {
   color: #94a3b8;
 }
 
+.setoran-sublabel {
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: #64748b;
+  display: block;
+  margin-bottom: 4px;
+}
+
+body.dark-mode .setoran-sublabel {
+  color: #94a3b8;
+}
+
 /* Santri Select dropdown */
 .setoran-santri-select {
   width: 100%;
-  height: 52px;
-  border-radius: 16px;
-  border: 1.5px solid #1e293b;
-  padding: 0 16px;
-  font-size: 1.05rem;
+  height: 48px;
+  border-radius: 14px;
+  border: 1.5px solid #cbd5e1;
+  padding: 0 14px;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #0f172a;
   background-color: #ffffff;
   outline: none;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.setoran-santri-select:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
 }
 
 body.dark-mode .setoran-santri-select {
   background-color: #0f172a;
   color: #f8fafc;
-  border-color: #64748b;
+  border-color: #475569;
 }
 
 /* Segmented Jenis Setoran buttons */
 .setoran-jenis-segmented {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 10px;
 }
 
 .setoran-jenis-btn {
-  padding: 12px 16px;
-  border-radius: 14px;
-  font-size: 0.95rem;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.88rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -5582,6 +6106,7 @@ body.dark-mode .setoran-santri-select {
   color: #334155;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
+  box-sizing: border-box;
 }
 
 .setoran-jenis-btn:hover {
@@ -5593,21 +6118,21 @@ body.dark-mode .setoran-santri-select {
   background: #6d28d9;
   border-color: #6d28d9;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.32);
+  box-shadow: 0 4px 14px rgba(109, 40, 217, 0.30);
 }
 
 .setoran-jenis-btn.active-sabqi {
   background: #2563eb;
   border-color: #2563eb;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.30);
 }
 
 .setoran-jenis-btn.active-manzil {
   background: #059669;
   border-color: #059669;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.32);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.30);
 }
 
 body.dark-mode .setoran-jenis-btn {
@@ -5620,13 +6145,14 @@ body.dark-mode .setoran-jenis-btn {
 .setoran-ganda-card {
   border: 1px solid #bbf7d0;
   background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
-  border-radius: 18px;
-  padding: 14px 18px;
+  border-radius: 16px;
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 18px;
-  margin-bottom: 18px;
+  margin-top: 14px;
+  margin-bottom: 16px;
+  box-sizing: border-box;
 }
 
 body.dark-mode .setoran-ganda-card {
@@ -5638,8 +6164,10 @@ body.dark-mode .setoran-ganda-card {
 .setoran-inner-card {
   background: #faf5ff;
   border: 1px solid #e9d5ff;
-  border-radius: 20px;
-  padding: 22px 24px;
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 body.dark-mode .setoran-inner-card {
@@ -5647,24 +6175,65 @@ body.dark-mode .setoran-inner-card {
   border-color: #6b21a844;
 }
 
+/* Responsive Quran Selection Grids */
+.setoran-selection-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .setoran-selection-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .setoran-selection-grid .grid-span-all {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+
 /* Posisi Mushaf Banner */
 .posisi-mushaf-banner {
   background: #ecfdf5;
   border: 1.5px solid #86efac;
-  border-radius: 16px;
-  padding: 12px 18px;
+  border-radius: 14px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 18px;
-  margin-bottom: 20px;
+  margin-top: 14px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
+  box-sizing: border-box;
 }
 
 body.dark-mode .posisi-mushaf-banner {
   background: #064e3b33;
   border-color: #059669;
+}
+
+/* Evaluation Grids (Counters + Status) */
+.setoran-eval-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 10px;
+  margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .setoran-eval-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .setoran-eval-grid .grid-status-span {
+    grid-column: 1 / -1;
+  }
 }
 
 /* Counter Stepper */
@@ -5675,8 +6244,9 @@ body.dark-mode .posisi-mushaf-banner {
   border: 1px solid #e2e8f0;
   background: #ffffff;
   border-radius: 12px;
-  padding: 4px;
-  height: 42px;
+  padding: 3px;
+  height: 40px;
+  box-sizing: border-box;
 }
 
 body.dark-mode .setoran-stepper {
@@ -5685,8 +6255,8 @@ body.dark-mode .setoran-stepper {
 }
 
 .setoran-stepper-btn {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   border: none;
   background: #f1f5f9;
@@ -5694,10 +6264,11 @@ body.dark-mode .setoran-stepper {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .setoran-stepper-btn:hover {
@@ -5710,18 +6281,36 @@ body.dark-mode .setoran-stepper-btn {
   color: #cbd5e1;
 }
 
+/* Notes & Predikat Row */
+.setoran-notes-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .setoran-notes-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
 /* Predikat Pills */
 .predikat-pills-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .predikat-pill-btn {
-  padding: 8px 12px;
+  flex: 1 1 calc(33.333% - 6px);
+  min-width: 75px;
+  padding: 7px 10px;
   border-radius: 10px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.03em;
   cursor: pointer;
@@ -5730,6 +6319,15 @@ body.dark-mode .setoran-stepper-btn {
   color: #475569;
   transition: all 0.15s ease;
   text-align: center;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .predikat-pill-btn {
+    flex: 1 1 calc(50% - 6px);
+    padding: 6px 8px;
+    font-size: 0.70rem;
+  }
 }
 
 .predikat-pill-btn:hover {
@@ -5741,13 +6339,37 @@ body.dark-mode .setoran-stepper-btn {
   background: #0ea5e9;
   border-color: #0ea5e9;
   color: #ffffff;
-  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.35);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.35);
 }
 
 body.dark-mode .predikat-pill-btn {
   background: #0f172a;
   border-color: #334155;
   color: #cbd5e1;
+}
+
+@media (max-width: 768px) {
+  .setoran-card-main {
+    padding: 16px 14px;
+    border-radius: 18px;
+  }
+  .setoran-inner-card {
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+  .setoran-page-title {
+    font-size: 1.35rem;
+  }
+  .setoran-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .setoran-date-pill {
+    width: 100%;
+    justify-content: space-between;
+    font-size: 0.76rem;
+  }
 }
 
 /* Timeline in Right Card */
@@ -5840,3 +6462,287 @@ body.dark-mode .setoran-timeline-card {
 .btn-simpan-setoran:active {
   transform: translateY(0);
 }
+
+/* SCAN PRESENSI - ACTIVE CHIP & REKAP LIST */
+.sesi-chip.is-selected {
+  border: 2px solid #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.22) !important;
+}
+
+body.dark-mode .sesi-chip.is-selected {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35) !important;
+}
+
+.scan-presensi-row {
+  transition: all 0.15s ease;
+}
+
+body.dark-mode .scan-presensi-row {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* ==========================================================
+   DROPDOWN & SELECT STYLES (MATCHING USER SCREENSHOT)
+   - Rounded emerald green pill border (#10b981)
+   - Dynamic chevron icon
+   - Soft floating menu card (border-radius: 16px)
+   - Mint active highlight (#ecfdf5), emerald text (#047857), & Check icon
+   ========================================================== */
+
+@keyframes customDropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.custom-select-container {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+}
+
+.custom-select-trigger {
+  font-family: inherit;
+  user-select: none;
+}
+
+.custom-select-trigger:hover {
+  border-color: #059669 !important;
+}
+
+.custom-select-trigger:focus-visible {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22) !important;
+}
+
+/* Custom scrollbar for dropdown list */
+.custom-select-list::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-select-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-select-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.custom-select-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark Mode for CustomSelect */
+body.dark-mode .custom-select-trigger {
+  background: #1e293b !important;
+  border-color: #10b981 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .custom-select-trigger span {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .custom-select-menu {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.dark-mode .custom-select-item {
+  color: #cbd5e1 !important;
+}
+
+body.dark-mode .custom-select-item:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .custom-select-item.is-selected {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #34d399 !important;
+}
+
+/* ==========================================================
+   UNIVERSAL STYLING FOR ALL NATIVE HTML SELECT ELEMENTS
+   Applies to .form-select, .sigap-select, .spp-select, and all native <select>
+   ========================================================== */
+select,
+.form-select,
+.sigap-select,
+.spp-select,
+.setoran-santri-select {
+  border: 1.5px solid #10b981 !important;
+  border-radius: 14px !important;
+  background-color: #ffffff !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 16px !important;
+  padding: 8px 38px 8px 14px !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  min-height: 42px !important;
+  cursor: pointer !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.05) !important;
+  transition: all 0.15s ease !important;
+  outline: none !important;
+}
+
+select:hover,
+.form-select:hover,
+.sigap-select:hover,
+.spp-select:hover,
+.setoran-santri-select:hover {
+  border-color: #059669 !important;
+}
+
+select:focus,
+.form-select:focus,
+.sigap-select:focus,
+.spp-select:focus,
+.setoran-santri-select:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Native Option Styling (supported properties) */
+select option,
+.form-select option,
+.sigap-select option,
+.spp-select option {
+  padding: 10px 14px;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+select option:checked,
+.form-select option:checked,
+.sigap-select option:checked,
+.spp-select option:checked {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  font-weight: 700 !important;
+}
+
+/* Dark Mode for Native Selects */
+body.dark-mode select,
+body.dark-mode .form-select,
+body.dark-mode .sigap-select,
+body.dark-mode .spp-select,
+body.dark-mode .setoran-santri-select {
+  background-color: #1e293b !important;
+  border-color: #10b981 !important;
+  color: #f8fafc !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+
+body.dark-mode select option,
+body.dark-mode .form-select option,
+body.dark-mode .sigap-select option,
+body.dark-mode .spp-select option {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+/* =========================================================
+   RAPOR VIEW & PRINT RESPONSIVENESS (MOBILE & DESKTOP)
+   ========================================================= */
+.rapor-paper {
+  background: var(--white);
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 36px 44px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--slate-300);
+  box-shadow: var(--shadow-lg);
+  color: #0f172a;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.rapor-toolbar-card {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+}
+
+.rapor-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 8px;
+}
+
+.rapor-table-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.rapor-table-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.rapor-table-scroll::-webkit-scrollbar-thumb {
+  background: #10b981;
+  border-radius: 4px;
+}
+
+.rapor-signatures-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  text-align: center;
+  font-size: 0.85rem;
+  gap: 20px;
+}
+
+@media screen and (max-width: 640px) {
+  .rapor-paper {
+    padding: 18px 12px !important;
+    border-radius: 12px !important;
+  }
+  .rapor-toolbar-card {
+    padding: 12px 10px !important;
+  }
+  .rapor-signatures-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px 10px !important;
+  }
+  .rapor-sig-koordinator {
+    grid-column: span 2 !important;
+    margin-top: 6px !important;
+  }
+}
+
+@media print {
+  .rapor-paper {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .rapor-table-scroll {
+    overflow-x: visible !important;
+  }
+  .rapor-table {
+    min-width: 100% !important;
+  }
+  .rapor-signatures-grid {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 20px !important;
+  }
+  .rapor-sig-koordinator {
+    grid-column: span 1 !important;
+    margin-top: 0 !important;
+  }
+}
+
+

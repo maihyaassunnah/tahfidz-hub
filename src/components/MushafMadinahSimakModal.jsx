@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Maximize2, Minimize2, Check, Flag, X, ArrowLeft, ArrowRight } from 'lucide-react';
 import { getMadinahMushafPage } from '../services/quranService';
 import { QURAN_SURAH } from '../data/quranData';
+import { calculateMushaf15Lines } from '../utils/mushafCalculator';
 
 const ARABIC_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
 
@@ -98,6 +99,7 @@ export default function MushafMadinahSimakModal({
   const [selectedVerseKey, setSelectedVerseKey] = useState(null);
   const [selectedVerseInfo, setSelectedVerseInfo] = useState(null);
   const [lastSetorVerse, setLastSetorVerse] = useState(parseInt(ayatAkhir) || parseInt(ayatMulai) || 1);
+  const [lastSetorSurahId, setLastSetorSurahId] = useState(surah?.id || 1);
   const [fontSize, setFontSize] = useState(26);
   const [markedVerseKeys, setMarkedVerseKeys] = useState(new Set());
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -110,9 +112,10 @@ export default function MushafMadinahSimakModal({
       setSelectedVerseKey(null);
       setSelectedVerseInfo(null);
       setLastSetorVerse(parseInt(ayatAkhir) || parseInt(ayatMulai) || 1);
+      setLastSetorSurahId(surah?.id || 1);
       setMarkedVerseKeys(new Set());
     }
-  }, [isOpen, initialPage, ayatAkhir, ayatMulai]);
+  }, [isOpen, initialPage, ayatAkhir, ayatMulai, surah]);
 
   // Reset verse info saat berganti halaman
   useEffect(() => {
@@ -151,13 +154,43 @@ export default function MushafMadinahSimakModal({
 
   const startAyatNum = parseInt(ayatMulai) || 1;
   const effectiveEndAyatNum = parseInt(lastSetorVerse) || parseInt(ayatAkhir) || startAyatNum;
-  const currentSurahOnPage = pageData?.surahs?.[0] || surah || QURAN_SURAH[0];
-  const juzNumber = pageData?.juz || Math.ceil(currentPage / 20);
-  const surahName = surah?.name || currentSurahOnPage?.name || "Al-Qur'an";
+  const startSurahId = parseInt(surah?.id || 1);
+  const effectiveEndSurahId = parseInt(lastSetorSurahId || startSurahId);
+  const startSurahObj = QURAN_SURAH.find(s => s.id === startSurahId) || surah || QURAN_SURAH[0];
+  const endSurahObj = QURAN_SURAH.find(s => s.id === effectiveEndSurahId) || startSurahObj;
 
-  // Apakah ayat berada dalam rentang setoran santri
-  const isVerseInTarget = (verseNum) => {
-    return verseNum >= startAyatNum && verseNum <= effectiveEndAyatNum;
+  const currentSurahOnPage = pageData?.surahs?.[0] || (QURAN_SURAH.find(s => s.id === effectiveEndSurahId)) || surah || QURAN_SURAH[0];
+  const juzNumber = pageData?.juz || Math.ceil(currentPage / 20);
+
+  // Cek apakah ayat berada dalam rentang setoran santri (mendukung beda halaman & beda surat)
+  const isVerseInTarget = (segSurahId, segVerseNum) => {
+    const sId = parseInt(segSurahId || startSurahId);
+    const vNum = parseInt(segVerseNum);
+
+    if (startSurahId === effectiveEndSurahId) {
+      if (sId !== startSurahId) return false;
+      return vNum >= startAyatNum && vNum <= effectiveEndAyatNum;
+    } else if (startSurahId < effectiveEndSurahId) {
+      if (sId < startSurahId || sId > effectiveEndSurahId) return false;
+      if (sId === startSurahId) return vNum >= startAyatNum;
+      if (sId === effectiveEndSurahId) return vNum <= effectiveEndAyatNum;
+      return true; // Surah di antaranya otomatis penuh masuk rentang
+    } else {
+      if (sId === startSurahId) return vNum >= startAyatNum;
+      if (sId === effectiveEndSurahId) return vNum <= effectiveEndAyatNum;
+      return false;
+    }
+  };
+
+  // Navigasi cepat ke surat apa pun
+  const handleJumpToSurah = (sId) => {
+    const numId = parseInt(sId);
+    try {
+      const pos = calculateMushaf15Lines(numId, 1, 1);
+      if (pos && pos.startPage) {
+        setCurrentPage(pos.startPage);
+      }
+    } catch {}
   };
 
   // Toggle Fullscreen
@@ -178,20 +211,22 @@ export default function MushafMadinahSimakModal({
     }
   };
 
-  // KLIK AYAT: Otomatis tetapkan sebagai Ayat Terakhir yang Disetor
+  // KLIK AYAT: Otomatis tetapkan sebagai Ayat Terakhir yang Disetor (bisa beda surat dan beda halaman)
   const handleVerseClick = (verseKey, verseNum, surahId) => {
+    const targetSurahId = parseInt(surahId || currentSurahOnPage?.id || startSurahId);
     setSelectedVerseKey(verseKey);
-    setSelectedVerseInfo({ verseKey, verseNum, surahId });
+    setSelectedVerseInfo({ verseKey, verseNum, surahId: targetSurahId });
 
     // 1. Update state lokal untuk visual rentang setoran
     setLastSetorVerse(verseNum);
+    setLastSetorSurahId(targetSurahId);
 
     // 2. Sinkronkan ke formulir parent SetoranView
     if (setAyatAkhir) {
       setAyatAkhir(verseNum);
     }
     if (onAyatAkhirChange) {
-      onAyatAkhirChange(verseNum, surahId);
+      onAyatAkhirChange(verseNum, targetSurahId, currentPage);
     }
   };
 
@@ -214,7 +249,12 @@ export default function MushafMadinahSimakModal({
 
   const handleFinish = () => {
     if (setAyatAkhir) setAyatAkhir(effectiveEndAyatNum);
-    if (onFinish) onFinish();
+    if (onAyatAkhirChange) onAyatAkhirChange(effectiveEndAyatNum, effectiveEndSurahId, currentPage);
+    if (onFinish) onFinish({
+      ayatAkhir: effectiveEndAyatNum,
+      surahAkhirId: effectiveEndSurahId,
+      halaman: currentPage
+    });
     onClose();
   };
 
@@ -297,13 +337,41 @@ export default function MushafMadinahSimakModal({
                 </span>
               </div>
               <div style={{ fontSize: '0.74rem', color: '#6b7280', marginTop: '2px' }}>
-                {surahName} · Target: Ayat {startAyatNum} s/d <strong style={{ color: '#15803d' }}>Ayat {effectiveEndAyatNum}</strong> · Hlm {currentPage}/604
+                Mulai: <strong>{startSurahObj?.name} ({startAyatNum})</strong> → Batas: <strong style={{ color: '#15803d' }}>{endSurahObj?.name} ({effectiveEndAyatNum})</strong> · Hlm {currentPage}/604
               </div>
             </div>
           </div>
 
-          {/* Quick Page Nav + Zoom + Fullscreen + Close */}
+          {/* Quick Surah Jump + Quick Page Nav + Zoom + Fullscreen + Close */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {/* Quick Surah Jump Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <select
+                value={pageData?.surahs?.[0]?.id || lastSetorSurahId || startSurahId}
+                onChange={(e) => handleJumpToSurah(e.target.value)}
+                style={{
+                  height: '28px',
+                  borderRadius: '8px',
+                  border: '1.5px solid #86efac',
+                  background: '#ffffff',
+                  fontSize: '0.74rem',
+                  fontWeight: 800,
+                  color: '#15803d',
+                  padding: '0 6px',
+                  cursor: 'pointer',
+                  maxWidth: '160px',
+                  outline: 'none'
+                }}
+                title="Lompat langsung ke Surat pilihan"
+              >
+                {QURAN_SURAH.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.id}. {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Navigasi Halaman Cepat */}
             <div style={{
               display: 'flex',
@@ -675,10 +743,10 @@ export default function MushafMadinahSimakModal({
                     });
 
                     return segments.map((seg, si) => {
-                      const isTarget = isVerseInTarget(seg.verseNum);
+                      const isTarget = isVerseInTarget(seg.surahId, seg.verseNum);
                       const isMarked = markedVerseKeys.has(seg.verseKey);
                       const isSelected = selectedVerseKey === seg.verseKey;
-                      const isLastSetor = seg.verseNum === effectiveEndAyatNum;
+                      const isLastSetor = (seg.surahId === effectiveEndSurahId && seg.verseNum === effectiveEndAyatNum);
 
                       return (
                         <span
@@ -907,7 +975,7 @@ export default function MushafMadinahSimakModal({
             }}
           >
             <Check size={16} />
-            <span>Selesai Menyimak (Ayat {startAyatNum}–{effectiveEndAyatNum})</span>
+            <span>Selesai Menyimak ({startSurahObj?.name}:{startAyatNum} – {endSurahObj?.name}:{effectiveEndAyatNum})</span>
           </button>
         </div>
 

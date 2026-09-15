@@ -81,6 +81,16 @@ export default function App() {
     }).catch(err => {
       console.warn('[App] Auto-sync PostgreSQL notice:', err);
     });
+
+    const handleUpdate = () => {
+      loadData();
+    };
+    window.addEventListener('simtah_data_updated', handleUpdate);
+    window.addEventListener('simtah_santri_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('simtah_data_updated', handleUpdate);
+      window.removeEventListener('simtah_santri_updated', handleUpdate);
+    };
   }, []);
 
   const showToast = (message) => {
@@ -120,18 +130,73 @@ export default function App() {
   const handleSwitchRole = (newRole) => {
     setCurrentRole(newRole);
     storageService.setCurrentRole(newRole);
-    if (newRole === 'owner') {
+    if (newRole === 'orangtua') {
+      const allSantri = storageService.getAllSantriRaw();
+      const s = allSantri[0] || { id: 'ss-1789300033909', nama: 'Adilla', nis: '39938383' };
+      const ortuUser = {
+        id: 'ortu-' + s.id,
+        santriId: s.id,
+        nis: s.nis || '39938383',
+        namaSantri: s.nama,
+        nama: 'Wali dari ' + s.nama,
+        username: s.nama,
+        role: 'orangtua',
+        roleLabel: 'Wali Santri - ' + s.nama,
+        cabangId: s.cabangId || 'cabang-pusat',
+        halaqahId: s.halaqahId || s.halaqah_id || 'hq-1'
+      };
+      setAuthUser(ortuUser);
+      storageService.setAuthUser(ortuUser);
+      storageService.setParentSelectedStudent(s.id);
+      setActiveTab('dashboard');
+    } else if (newRole === 'pengampu') {
+      const pengampuUser = {
+        id: 'p-wahyudin',
+        nama: 'Ustadz Wahyudin Hafiz, S.Pd',
+        username: 'ustadz.wahyudin',
+        email: 'wahyudin@ihya.sch.id',
+        nip: '19890412201801',
+        role: 'pengampu',
+        roleLabel: 'Ustadz Pengampu',
+        halaqahId: 'hq-1',
+        cabangId: 'cabang-pusat'
+      };
+      setAuthUser(pengampuUser);
+      storageService.setAuthUser(pengampuUser);
+      setActiveTab('dashboard');
+    } else if (newRole === 'owner') {
+      const ownerUser = {
+        id: 'user-owner',
+        nama: 'Pimpinan / Owner Yayasan',
+        username: 'owner',
+        role: 'owner',
+        roleLabel: 'Owner Yayasan',
+        cabangId: 'ALL'
+      };
+      setAuthUser(ownerUser);
+      storageService.setAuthUser(ownerUser);
       setActiveTab('owner-dashboard');
     } else if (newRole === 'superadmin') {
+      const saUser = {
+        id: 'sa-pusat',
+        nama: 'Admin MA Ihya As-Sunnah',
+        username: 'admin.ma',
+        role: 'superadmin',
+        roleLabel: 'Super Admin Cabang',
+        cabangId: 'cabang-pusat'
+      };
+      setAuthUser(saUser);
+      storageService.setAuthUser(saUser);
       setActiveTab('sigap-dashboard');
     } else {
       setActiveTab('dashboard');
     }
+    loadData();
     const roleLabels = {
       owner: '👑 Owner (Yayasan & Multi-Cabang)',
-      superadmin: 'Super Admin (SIGAP Cabang)',
-      pengampu: 'Pengampu (Wahyudin Hafiz)',
-      orangtua: 'Orang Tua (Wali Santri)'
+      superadmin: '🛡️ Super Admin (SIGAP Cabang)',
+      pengampu: '🏅 Pengampu (Wahyudin Hafiz)',
+      orangtua: '👤 Orang Tua (Wali Santri Adilla)'
     };
     showToast(`Beralih ke peran: ${roleLabels[newRole] || newRole}`);
   };
@@ -197,6 +262,35 @@ export default function App() {
     }
   }
 
+  // Saring santri khusus role Orang Tua / Wali Santri: HANYA ANAKNYA SENDIRI
+  if (currentRole === 'orangtua') {
+    const parentChildId = authUser?.santriId || storageService.getParentSelectedStudent();
+    const parentChildNis = authUser?.nis;
+    const parentChildName = (authUser?.namaSantri || authUser?.username || '').trim().toLowerCase();
+
+    effectiveSantriList = santriList.filter(s => {
+      if (parentChildId && s.id === parentChildId) return true;
+      if (parentChildNis && (String(s.nis) === String(parentChildNis) || String(s.nisn) === String(parentChildNis))) return true;
+      if (parentChildName && (s.nama || '').trim().toLowerCase() === parentChildName) return true;
+      return false;
+    });
+
+    // Fallback jika belum terfilter, gunakan anak pertama
+    if (effectiveSantriList.length === 0 && santriList.length > 0) {
+      effectiveSantriList = [santriList[0]];
+    }
+  }
+
+  // Proteksi Menu Khusus Orang Tua / Wali (Hanya 4 Menu yang Diizinkan)
+  useEffect(() => {
+    if (currentRole === 'orangtua') {
+      const allowedOrtuTabs = ['dashboard', 'riwayat-presensi-santri', 'riwayat-presensi', 'santri', 'rapor'];
+      if (!allowedOrtuTabs.includes(activeTab)) {
+        setActiveTab('dashboard');
+      }
+    }
+  }, [currentRole, activeTab]);
+
   const handleSaveSetoran = (entry) => {
     const saved = storageService.addSetoran(entry);
     loadData();
@@ -216,6 +310,12 @@ export default function App() {
   const handleUpdateSantri = (id, fields) => {
     storageService.updateSantri(id, fields);
     loadData();
+  };
+
+  const handleDeleteSantri = (id) => {
+    storageService.deleteSantri(id);
+    loadData();
+    showToast("Data santri dan seluruh riwayat terkait berhasil dihapus.");
   };
 
   const handleSignOut = () => {
@@ -261,6 +361,7 @@ export default function App() {
         activeBranchId={activeBranchId}
         onSwitchBranch={handleSwitchBranch}
         cabangList={cabangList}
+        onSwitchRole={handleSwitchRole}
       />
 
       {/* Main Content Area */}
@@ -276,6 +377,7 @@ export default function App() {
           activeBranchId={activeBranchId}
           onSwitchBranch={handleSwitchBranch}
           cabangList={cabangList}
+          onSwitchRole={handleSwitchRole}
         />
 
         {/* View Routing */}
@@ -545,6 +647,7 @@ export default function App() {
                       onOpenQuickSetor={() => setIsQuickSetorOpen(true)}
                       showToast={showToast}
                       currentRole={currentRole}
+                      onDeleteSantri={handleDeleteSantri}
                     />
                   </div>
                 )}
@@ -579,7 +682,7 @@ export default function App() {
                   </div>
                 )}
 
-                {activeTab === 'rapor' && (
+                 {activeTab === 'rapor' && (
                   <div className="page-content-wrapper">
                     <RaporView 
                       santriList={effectiveSantriList}
@@ -588,6 +691,9 @@ export default function App() {
                       absensiList={absensiList}
                       settings={settings}
                       selectedSantriId={selectedSantriId}
+                      showToast={showToast}
+                      currentRole={currentRole}
+                      authUser={authUser}
                     />
                   </div>
                 )}

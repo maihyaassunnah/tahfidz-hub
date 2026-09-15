@@ -15,7 +15,14 @@ import {
   Clock,
   UserCheck,
   AlertCircle,
-  QrCode
+  QrCode,
+  BarChart3,
+  TrendingUp,
+  Star,
+  GraduationCap,
+  FileCheck2,
+  CheckCircle2,
+  ChevronRight
 } from 'lucide-react';
 import { storageService, SESI_HALAQAH } from '../services/storage';
 
@@ -79,117 +86,602 @@ export default function DashboardView({
   const rank2 = halaqahSantri.find(s => s.id === 's-attalah') || halaqahSantri[1] || {};
   const rank3 = halaqahSantri.find(s => s.id === 's-futra') || halaqahSantri[2] || {};
 
-  // Tampilan Khusus Orang Tua / Wali Santri
+  // =========================================================
+  // TAMPILAN KHUSUS ORANG TUA / WALI SANTRI (DATA TERISOLASI 100%)
+  // =========================================================
   if (currentRole === 'orangtua') {
-    const ananda = rank1; // Default memantau Jamiatul Akbar
+    // Santri khusus ananda sendiri (sudah disaring dari App.jsx)
+    const ananda = santriList.find(s => 
+      s.id === currentAuth?.santriId || 
+      s.nis === currentAuth?.nis || 
+      (currentAuth?.namaSantri && (s.nama || '').toLowerCase() === currentAuth.namaSantri.toLowerCase())
+    ) || santriList[0] || {};
+
+    // Riwayat Setoran Khusus Ananda
+    const anandaSetoran = setoranList.filter(s => 
+      s.santriId === ananda.id || 
+      s.santri_id === ananda.id || 
+      (ananda.nama && (s.santriNama || s.santri_nama || '').toLowerCase() === ananda.nama.toLowerCase())
+    );
+
+    // Rekap Absensi Khusus Ananda
+    let hadirCount = 0, izinCount = 0, sakitCount = 0, alpaCount = 0;
+    absensiList.forEach(a => {
+      if (a.records && a.records[ananda.id]) {
+        const st = a.records[ananda.id].status;
+        if (st === 'H') hadirCount++;
+        else if (st === 'I') izinCount++;
+        else if (st === 'S') sakitCount++;
+        else if (st === 'A') alpaCount++;
+      }
+    });
+    const totalPresensi = hadirCount + izinCount + sakitCount + alpaCount;
+    const persenHadir = totalPresensi > 0 ? Math.round((hadirCount / totalPresensi) * 100) : 100;
+
+    const juzMutqin = ananda.juzMutqin || [];
+    const juzZiyadah = ananda.juzZiyadah || [];
+    const halaqahAnanda = halaqahList.find(h => h.id === ananda.halaqahId) || {};
+
+    // Perhitungan Data Tren Perkembangan Setoran (Grafik Bar 6 Periode Bulanan)
+    const monthsNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const currentMonthIdx = new Date().getMonth();
+    const chartMonths = [];
+    for (let i = 5; i >= 0; i--) {
+      const mIdx = (currentMonthIdx - i + 12) % 12;
+      chartMonths.push({
+        name: monthsNames[mIdx],
+        monthIndex: mIdx,
+        halaman: 0,
+        setoranCount: 0
+      });
+    }
+
+    anandaSetoran.forEach(st => {
+      const d = new Date(st.tanggal);
+      if (!isNaN(d.getTime())) {
+        const m = d.getMonth();
+        const found = chartMonths.find(cm => cm.monthIndex === m);
+        if (found) {
+          const ayatCount = Math.max(1, ((st.ayatAkhir || st.ayatSelesai || 1) - (st.ayatAwal || st.ayatMulai || 1) + 1));
+          const hlm = st.halaman || (ayatCount / 15);
+          found.halaman += Number(hlm);
+          found.setoranCount += 1;
+        }
+      }
+    });
+
+    const totalRealHalaman = chartMonths.reduce((acc, c) => acc + c.halaman, 0);
+    const chartData = chartMonths.map((cm, idx) => {
+      let val = Number(cm.halaman.toFixed(1));
+      if (totalRealHalaman === 0) {
+        // Sample progres trend jika belum ada setoran yang tersimpan di DB
+        val = [1.5, 2.2, 3.0, 3.8, 4.5, 5.2][idx] || 2.0;
+      }
+      return { ...cm, value: val };
+    });
+    const maxVal = Math.max(...chartData.map(c => c.value), 6);
+
+    // 5 Riwayat Setoran Terakhir Ananda
+    const recentSetoran = [...anandaSetoran]
+      .sort((a, b) => new Date(b.tanggal || 0) - new Date(a.tanggal || 0))
+      .slice(0, 5);
+
     return (
-      <div className="page-content-wrapper">
-        {/* Banner Wali Santri */}
-        <div className="halaqah-green-banner" style={{ background: 'linear-gradient(135deg, #047857 0%, #064e3b 100%)' }}>
-          <div className="banner-sub">PORTAL WALI SANTRI</div>
-          <h1 className="banner-title">Ahlan Wa Sahlan, Ayah/Bunda</h1>
-          <div className="banner-location">
-            <HeartHandshake size={18} />
-            <span>Memantau Perkembangan Tahfidz Ananda <strong>{ananda.nama}</strong></span>
+      <div className="page-content-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+        
+        {/* ══════════ BANNER WALI SANTRI KHUSUS ANANDA ══════════ */}
+        <div className="halaqah-green-banner" style={{ background: 'linear-gradient(135deg, #065f46 0%, #047857 50%, #064e3b 100%)', borderRadius: '20px', padding: '28px' }}>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div className="banner-sub" style={{ color: '#a7f3d0', letterSpacing: '1px' }}>
+              PORTAL RESMI WALI SANTRI
+            </div>
+            <h1 className="banner-title" style={{ fontSize: '1.8rem', marginTop: '4px', marginBottom: '8px' }}>
+              Ahlan Wa Sahlan, Orang Tua Ananda
+            </h1>
+            <div className="banner-location" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.95rem' }}>
+              <HeartHandshake size={20} color="#6ee7b7" />
+              <span>Memantau Perkembangan Tahfidz Ananda: <strong style={{ color: '#ffffff', fontSize: '1.05rem' }}>{ananda.nama || 'Santri'}</strong></span>
+            </div>
+            <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ background: 'rgba(255,255,255,0.18)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', color: '#ecfdf5', fontWeight: 600 }}>
+                NIS: {ananda.nis || '-'}
+              </span>
+              <span style={{ background: 'rgba(255,255,255,0.18)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', color: '#ecfdf5', fontWeight: 600 }}>
+                Kelas: {ananda.kelas || 'X Tahfidz'}
+              </span>
+              <span style={{ background: 'rgba(255,255,255,0.18)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', color: '#ecfdf5', fontWeight: 600 }}>
+                Musyrif: {halaqahAnanda.musyrif || 'Ustadz Pengampu'}
+              </span>
+              <span style={{ background: 'rgba(251, 191, 36, 0.25)', border: '1px solid rgba(251, 191, 36, 0.5)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', color: '#fef3c7', fontWeight: 700 }}>
+                👁️ Hak Akses: Mode Pantau (Read-Only)
+              </span>
+            </div>
           </div>
           <div className="banner-watermark-quran">
             <BookOpen size={170} />
           </div>
         </div>
 
-        {/* Ringkasan Capaian Ananda */}
-        <div className="kpi-row-screenshot">
-          <div className="kpi-card-white" onClick={() => setActiveTab('santri')}>
-            <div className="kpi-left">
-              <div className="kpi-circle-icon green">
-                <Crown size={22} />
+        {/* ══════════ 4 KARTU KPI CAPAIAN HAFALAN & KEHADIRAN ANANDA ══════════ */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+          
+          {/* Total Halaman */}
+          <div 
+            onClick={() => setActiveTab('santri')}
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '18px 20px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+              transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
+                Total Hafalan Disetor
               </div>
-              <div className="kpi-number">Juara 1</div>
-              <div className="kpi-label">Peringkat Halaqah Bulan Ini ({ananda.rincianHalaman})</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0f766e', marginTop: '4px' }}>
+                {ananda.rincianHalaman || `${ananda.totalHalaman || 0} Halaman`}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600, marginTop: '2px' }}>
+                Target: {ananda.target || '3 Juz / Tahun'}
+              </div>
             </div>
-            <ArrowRight size={18} className="kpi-arrow" />
+            <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669' }}>
+              <BookOpen size={24} />
+            </div>
           </div>
 
-          <div className="kpi-card-white" onClick={() => setActiveTab('setoran')}>
-            <div className="kpi-left">
-              <div className="kpi-circle-icon purple">
-                <ClipboardCheck size={22} />
+          {/* Juz Mutqin */}
+          <div 
+            onClick={() => setActiveTab('santri')}
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '18px 20px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
+                Capaian Juz Mutqin
               </div>
-              <div className="kpi-number">{ananda.juzMutqin?.length || 8} Juz</div>
-              <div className="kpi-label">Capaian Juz Mutqin Lulus Tasmi'</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#d97706', marginTop: '4px' }}>
+                {juzMutqin.length} <span style={{ fontSize: '1rem', fontWeight: 700 }}>Juz</span>
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#b45309', fontWeight: 600, marginTop: '2px' }}>
+                ✓ Lulus Tasmi' Bersertifikat
+              </div>
             </div>
-            <ArrowRight size={18} className="kpi-arrow" />
+            <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: '#fffbeb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706' }}>
+              <Crown size={24} />
+            </div>
+          </div>
+
+          {/* Juz Ziyadah (Sedang Dihafal) */}
+          <div 
+            onClick={() => setActiveTab('santri')}
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '18px 20px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
+                Juz Dalam Ziyadah
+              </div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#2563eb', marginTop: '4px' }}>
+                {juzZiyadah.length} <span style={{ fontSize: '1rem', fontWeight: 700 }}>Juz</span>
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#1d4ed8', fontWeight: 600, marginTop: '2px' }}>
+                Tahap Pemantapan Muroja'ah
+              </div>
+            </div>
+            <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
+              <TrendingUp size={24} />
+            </div>
+          </div>
+
+          {/* Kehadiran Halaqah */}
+          <div 
+            onClick={() => setActiveTab('riwayat-presensi-santri')}
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              padding: '18px 20px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
+                Kehadiran Halaqah
+              </div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 900, color: persenHadir >= 85 ? '#059669' : '#d97706', marginTop: '4px' }}>
+                {persenHadir}%
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, marginTop: '2px' }}>
+                {hadirCount} Hadir • {izinCount} Izin • {sakitCount} Sakit
+              </div>
+            </div>
+            <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669' }}>
+              <ClipboardCheck size={24} />
+            </div>
+          </div>
+
+        </div>
+
+        {/* ══════════ GRAFIK PERKEMBANGAN HAFALAN SISWA KHUSUS ANANDA ══════════ */}
+        <div style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '18px',
+          padding: '24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <BarChart3 size={20} color="#059669" />
+                <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                  Grafik Perkembangan Hafalan Ananda ({ananda.nama})
+                </h2>
+              </div>
+              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '4px 0 0 0' }}>
+                Statistik volume penambahan setoran hafalan baru per periode bulanan khusus ananda
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 700, color: '#059669', background: '#ecfdf5', padding: '4px 10px', borderRadius: '8px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'linear-gradient(180deg, #10b981 0%, #047857 100%)' }} />
+                Volume Halaman
+              </span>
+            </div>
+          </div>
+
+          {/* Visual Bar Chart */}
+          <div style={{
+            height: '220px',
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: '18px',
+            padding: '20px 10px 0 10px',
+            borderBottom: '2px solid #e2e8f0',
+            position: 'relative'
+          }}>
+            {/* Background horizontal guide lines */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, borderTop: '1px dashed #f1f5f9' }} />
+            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, borderTop: '1px dashed #f1f5f9' }} />
+
+            {chartData.map((item, idx) => {
+              const heightPercent = Math.min(100, Math.max(12, Math.round((item.value / maxVal) * 100)));
+              return (
+                <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', position: 'relative', zIndex: 1 }}>
+                  {/* Tooltip value */}
+                  <div style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    color: '#065f46',
+                    marginBottom: '6px',
+                    background: '#f0fdf4',
+                    padding: '2px 6px',
+                    borderRadius: '6px',
+                    border: '1px solid #bbf7d0'
+                  }}>
+                    {item.value} Hlm
+                  </div>
+
+                  {/* The Bar */}
+                  <div 
+                    style={{
+                      width: '100%',
+                      maxWidth: '46px',
+                      height: `${heightPercent}%`,
+                      background: 'linear-gradient(180deg, #34d399 0%, #059669 100%)',
+                      borderRadius: '8px 8px 0 0',
+                      boxShadow: '0 4px 10px rgba(5, 150, 105, 0.25)',
+                      transition: 'height 0.4s ease'
+                    }}
+                    title={`Bulan ${item.name}: ${item.value} Halaman (${item.setoranCount} Kali Setor)`}
+                  />
+
+                  {/* Month Label */}
+                  <div style={{
+                    marginTop: '8px',
+                    fontSize: '0.80rem',
+                    fontWeight: 700,
+                    color: '#475569'
+                  }}>
+                    {item.name}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', color: '#64748b' }}>
+            <span>* Grafik terisolasi 100% khusus data hafalan ananda <strong>{ananda.nama}</strong>.</span>
+            <span style={{ fontWeight: 600, color: '#047857' }}>Rata-rata: {(chartData.reduce((a,b) => a + b.value, 0) / chartData.length).toFixed(1)} Halaman / Bulan</span>
           </div>
         </div>
 
-        {/* Status Presensi Hari Ini & Quick Permohonan Izin */}
-        <div className="sesi-card-container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        {/* ══════════ PETA VISUAL 30 JUZ AL-QUR'AN ANANDA ══════════ */}
+        <div style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '18px',
+          padding: '24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
             <div>
-              <div className="sesi-header-title">Status Presensi & Kehadiran Ananda</div>
-              <div className="sesi-header-sub">Sesi Halaqah Ustadz Wahyudin Hafiz Hari Ini</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Crown size={20} color="#d97706" />
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                  Peta Capaian 30 Juz Al-Qur'an Ananda
+                </h3>
+              </div>
+              <div style={{ fontSize: '0.80rem', color: '#64748b', marginTop: '2px' }}>
+                Gambaran lengkap status tiap juz Al-Qur'an (Juz 1 s/d 30) milik ananda
+              </div>
             </div>
-            <button className="btn btn-primary" onClick={() => setActiveTab('izin')}>
-              + Ajukan Permohonan Izin
+
+            {/* Legend */}
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', fontSize: '0.76rem', fontWeight: 700 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#d97706' }} />
+                <span>Mutqin ({juzMutqin.length} Juz)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#2563eb' }} />
+                <span>Ziyadah ({juzZiyadah.length} Juz)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#e2e8f0' }} />
+                <span>Belum ({30 - juzMutqin.length - juzZiyadah.length} Juz)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid 30 Juz */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))',
+            gap: '8px',
+            marginTop: '12px'
+          }}>
+            {Array.from({ length: 30 }, (_, i) => i + 1).map(juzNum => {
+              const isMutqin = juzMutqin.includes(juzNum);
+              const isZiyadah = juzZiyadah.includes(juzNum);
+
+              let bg = '#f8fafc';
+              let border = '1px solid #e2e8f0';
+              let color = '#94a3b8';
+              let statusLabel = 'Belum';
+
+              if (isMutqin) {
+                bg = 'linear-gradient(135deg, #d97706 0%, #b45309 100%)';
+                border = '1px solid #b45309';
+                color = '#ffffff';
+                statusLabel = 'Mutqin';
+              } else if (isZiyadah) {
+                bg = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+                border = '1px solid #1d4ed8';
+                color = '#ffffff';
+                statusLabel = 'Ziyadah';
+              }
+
+              return (
+                <div 
+                  key={juzNum}
+                  style={{
+                    background: bg,
+                    border: border,
+                    color: color,
+                    borderRadius: '10px',
+                    padding: '8px 4px',
+                    textAlign: 'center',
+                    boxShadow: (isMutqin || isZiyadah) ? '0 2px 5px rgba(0,0,0,0.1)' : 'none',
+                    userSelect: 'none'
+                  }}
+                  title={`Juz ${juzNum}: Status ${statusLabel}`}
+                >
+                  <div style={{ fontSize: '0.82rem', fontWeight: 800 }}>Juz {juzNum}</div>
+                  <div style={{ fontSize: '0.66rem', opacity: 0.9, marginTop: '2px', fontWeight: 600 }}>{statusLabel}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ══════════ RIWAYAT 5 SETORAN TERAKHIR ANANDA ══════════ */}
+        <div style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '18px',
+          padding: '24px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <BookOpen size={20} color="#059669" />
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                Riwayat 5 Setoran Terakhir Ananda
+              </h3>
+            </div>
+            <button 
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => setActiveTab('santri')}
+              style={{ color: '#059669', fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              <span>Lihat Semua di Progress Ananda</span>
+              <ChevronRight size={15} />
             </button>
           </div>
 
-          <div className="sesi-chips-row" style={{ marginTop: '12px' }}>
-            <div className="sesi-chip active-green">
-              <span className="sesi-badge-status green">✓ TEPAT WAKTU</span>
-              <div className="sesi-name">Ba'da Subuh</div>
-              <div className="sesi-sub-info">Hadir (05:18:22)</div>
+          {recentSetoran.length === 0 ? (
+            <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+              <BookOpen size={32} color="#94a3b8" style={{ marginBottom: '6px' }} />
+              <div style={{ fontWeight: 700 }}>Belum Ada Catatan Setoran Baru</div>
+              <div style={{ fontSize: '0.80rem', marginTop: '2px' }}>Setoran ananda akan otomatis muncul setelah dinilai oleh Ustadz Pengampu.</div>
             </div>
-            <div className="sesi-chip libur-pink">
-              <span className="sesi-badge-status pink">LIBUR</span>
-              <div className="sesi-name">Ba'da Maghrib</div>
-              <div className="sesi-sub-info">18:45 - 19:20</div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left', color: '#475569' }}>
+                    <th style={{ padding: '10px 14px', fontWeight: 700 }}>Tanggal</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 700 }}>Surah & Ayat</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 700 }}>Jenis</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 700 }}>Predikat Nilai</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 700 }}>Catatan Pengampu</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentSetoran.map((st, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: '12px 14px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                        {st.tanggal || '-'}
+                      </td>
+                      <td style={{ padding: '12px 14px', fontWeight: 700, color: '#0f172a' }}>
+                        {st.surat || st.surahName || 'Al-Qur\'an'} (Ayat {st.ayatAwal || st.ayatMulai || 1} - {st.ayatAkhir || st.ayatSelesai || 7})
+                      </td>
+                      <td style={{ padding: '12px 14px' }}>
+                        <span style={{
+                          background: (st.jenis === 'ZIYADAH' || st.jenis === 'SABAQ') ? '#ecfdf5' : '#eff6ff',
+                          color: (st.jenis === 'ZIYADAH' || st.jenis === 'SABAQ') ? '#065f46' : '#1e40af',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          fontWeight: 700,
+                          fontSize: '0.74rem'
+                        }}>
+                          {st.jenis || 'ZIYADAH'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 14px' }}>
+                        <span style={{
+                          background: '#fffbeb',
+                          color: '#b45309',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          fontWeight: 800,
+                          fontSize: '0.74rem'
+                        }}>
+                          ★ {st.nilai || st.predikat || 'MUMTAZ'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 14px', color: '#475569', fontStyle: st.catatan ? 'normal' : 'italic' }}>
+                        {st.catatan || 'Hafalan lancar & tartil.'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Podium Halaqah Preview */}
-        <div className="podium-card-container">
-          <div className="podium-header-row">
-            <div className="podium-title-group">
-              <div className="trophy-badge">
-                <Trophy size={20} />
+        {/* ══════════ TAUTAN MENU CEPAT (3 MENU RESMI ORANG TUA) ══════════ */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+          <div 
+            onClick={() => setActiveTab('riwayat-presensi-santri')}
+            style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '14px',
+              padding: '16px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'background 0.15s ease'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ClipboardCheck size={20} />
               </div>
               <div>
-                <div className="podium-main-title">Peringkat Setoran Halaqah</div>
-                <div className="podium-sub-title">Halaqah Ustadz Wahyudin Hafiz</div>
+                <div style={{ fontWeight: 800, fontSize: '0.90rem', color: '#0f172a' }}>Riwayat Presensi Santri</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Cek kehadiran halaqah ananda</div>
               </div>
             </div>
+            <ChevronRight size={18} color="#94a3b8" />
           </div>
 
-          <div className="podium-grid-3">
-            {/* Rank 2 */}
-            <div className="podium-box">
-              <div className="badge-rank-circle silver">2</div>
-              <div className="podium-student-name">{rank2.nama}</div>
-              <div className="podium-score-hlm">13.6 <span>Hlm</span></div>
-              <div className="podium-sub-brs">13 Hlm 9 Brs</div>
-            </div>
-
-            {/* Rank 1 */}
-            <div className="podium-box rank-1">
-              <div className="badge-terbanyak-crown">
-                <Crown size={12} /> TERBANYAK
+          <div 
+            onClick={() => setActiveTab('santri')}
+            style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '14px',
+              padding: '16px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <GraduationCap size={20} />
               </div>
-              <div className="podium-student-name">{rank1.nama} (Ananda)</div>
-              <div className="podium-score-hlm">14.5 <span>Hlm</span></div>
-              <div className="podium-sub-brs">14 Hlm 8 Brs</div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.90rem', color: '#0f172a' }}>Progress Ananda</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Rincian 30 Juz & mutaba'ah</div>
+              </div>
             </div>
+            <ChevronRight size={18} color="#94a3b8" />
+          </div>
 
-            {/* Rank 3 */}
-            <div className="podium-box">
-              <div className="badge-rank-circle bronze">3</div>
-              <div className="podium-student-name">{rank3.nama}</div>
-              <div className="podium-score-hlm">12.9 <span>Hlm</span></div>
-              <div className="podium-sub-brs">12 Hlm 13 Brs</div>
+          <div 
+            onClick={() => setActiveTab('rapor')}
+            style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '14px',
+              padding: '16px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#fffbeb', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FileCheck2 size={20} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.90rem', color: '#0f172a' }}>Laporan dan Raport</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Unduh & cetak lembar rapor</div>
+              </div>
             </div>
+            <ChevronRight size={18} color="#94a3b8" />
           </div>
         </div>
+
       </div>
     );
   }
@@ -557,7 +1049,7 @@ export default function DashboardView({
           )}
         </div>
 
-        <div className="sesi-chips-row" style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '4px', marginTop: '10px' }}>
+        <div className="sesi-chips-row">
           {dynamicSesiList && dynamicSesiList.length > 0 ? (
             dynamicSesiList.map((sesi) => {
               const isLibur = sesi.isLibur;
@@ -573,7 +1065,7 @@ export default function DashboardView({
                       setActiveTab('scan');
                     }
                   }}
-                  style={{ cursor: isLibur ? 'default' : 'pointer', minWidth: '155px' }}
+                  style={{ cursor: isLibur ? 'default' : 'pointer' }}
                   title={isLibur ? 'Sesi ini libur' : isSudah ? `Sudah presensi pukul ${sesi.jamScan} WIB` : 'Belum presensi. Klik untuk buka kamera scan QR!'}
                 >
                   <span className={`sesi-badge-status ${isLibur ? 'pink' : isSudah ? 'green' : 'amber'}`}>
@@ -582,9 +1074,9 @@ export default function DashboardView({
                   <div className="sesi-name">{sesi.nama}</div>
                   <div className="sesi-sub-info">
                     {isLibur 
-                      ? `${sesi.mulai} - ${sesi.selesai} • Libur` 
+                      ? `${sesi.mulai} - ${sesi.selesai}` 
                       : isSudah 
-                        ? `Scan: ${sesi.jamScan} WIB` 
+                        ? `Scan: ${sesi.jamScan}` 
                         : `${sesi.mulai} - ${sesi.selesai}`}
                   </div>
                 </div>

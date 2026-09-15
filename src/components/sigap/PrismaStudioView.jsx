@@ -22,6 +22,11 @@ import {
   Clock, 
   FileText,
   Activity,
+  GraduationCap,
+  MapPin,
+  Layers,
+  Sliders,
+  Award,
   X,
   Save,
   Server,
@@ -44,10 +49,13 @@ export default function PrismaStudioView({ showToast }) {
 
   // Prisma Studio URL configuration
   const [studioUrl, setStudioUrl] = useState(() => {
-    return localStorage.getItem('simtah_prisma_studio_url') || 
-      (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
-        ? `${window.location.origin}/studio/` 
-        : 'http://localhost:5555');
+    try {
+      const saved = sessionStorage.getItem('simtah_prisma_studio_url');
+      if (saved) return saved;
+    } catch (e) {}
+    return (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+      ? `${window.location.origin}/studio/` 
+      : 'http://localhost:5555');
   });
 
   // Modal State for Add/Edit
@@ -93,6 +101,26 @@ export default function PrismaStudioView({ showToast }) {
         break;
       case 'spp':
         setTableData(storageService.getPembayaranSPP());
+        break;
+      case 'kelas':
+        setTableData(storageService.getAllSigapKelasRaw());
+        break;
+      case 'alumni':
+        setTableData(storageService.getAllSigapAlumniRaw());
+        break;
+      case 'lokasi_qr':
+        setTableData(storageService.getAllSigapLokasiQRRaw());
+        break;
+      case 'rapor_template':
+        const tpl = storageService.getRaporTemplate();
+        setTableData(tpl ? [tpl] : []);
+        break;
+      case 'nilai_rapor':
+        setTableData(storageService.getAllNilaiRapor());
+        break;
+      case 'settings':
+        const s = storageService.getSettings() || {};
+        setTableData(Object.entries(s).map(([key, value]) => ({ key, value: typeof value === 'object' ? JSON.stringify(value) : String(value) })));
         break;
       default:
         setTableData([]);
@@ -157,7 +185,9 @@ export default function PrismaStudioView({ showToast }) {
   };
 
   const handleSaveStudioUrl = () => {
-    localStorage.setItem('simtah_prisma_studio_url', studioUrl);
+    try {
+      sessionStorage.setItem('simtah_prisma_studio_url', studioUrl);
+    } catch (e) {}
     if (showToast) showToast("URL Prisma Studio berhasil disimpan!");
   };
 
@@ -187,6 +217,14 @@ export default function PrismaStudioView({ showToast }) {
       initForm = { nama: '', nip: '', role: 'Pengampu', halaqah: 'Halaqah 1', kelas: 'X-A', sesi: 'Subuh', jadwal: '05:00 - 06:30', jam: '05:00', status: 'Tepat Waktu', keterangan: 'Hadir' };
     } else if (selectedModel === 'spp') {
       initForm = { invoiceNo: storageService.generateInvoiceNo(), santriNama: '', nis: '', kelas: 'X-A', bulan: 'September 2026', nominal: 350000, status: 'Lunas', metodeBayar: 'Transfer Bank BSI' };
+    } else if (selectedModel === 'kelas') {
+      initForm = { nama: '', unitSekolah: "MA IHYA' AS-SUNNAH", waliKelas: '', cabangId: 'cabang-pusat', aktif: true };
+    } else if (selectedModel === 'alumni') {
+      initForm = { nama: '', nik: '', nisn: '', nism: '-', lp: 'L', tahunLulus: '2026', cabangId: 'cabang-pusat' };
+    } else if (selectedModel === 'lokasi_qr') {
+      initForm = { kelas: 'X A', lokasi: 'Gedung A', kodeManual: 'MAIAS-XA', cabangId: 'cabang-pusat', gpsStatus: 'GPS: Locked', locked: true, lat: -7.3274, lng: 108.2155, radiusMeter: 50 };
+    } else if (selectedModel === 'settings') {
+      initForm = { key: '', value: '' };
     }
     setFormData(initForm);
     setIsModalOpen(true);
@@ -214,6 +252,10 @@ export default function PrismaStudioView({ showToast }) {
     else if (selectedModel === 'izin') storageService.deleteIzin(id);
     else if (selectedModel === 'monitoring') storageService.deleteMonitoring(id);
     else if (selectedModel === 'spp') storageService.deletePembayaranSPP(id);
+    else if (selectedModel === 'kelas') storageService.deleteSigapKelas(id);
+    else if (selectedModel === 'alumni') storageService.deleteSigapAlumni(id);
+    else if (selectedModel === 'lokasi_qr') storageService.deleteSigapLokasiQR(id);
+    else if (selectedModel === 'nilai_rapor') storageService.deleteNilaiRapor(id);
 
     loadModelData();
     if (showToast) showToast("Data berhasil dihapus dari database!");
@@ -234,6 +276,11 @@ export default function PrismaStudioView({ showToast }) {
       else if (selectedModel === 'izin') storageService.addIzin(formData);
       else if (selectedModel === 'monitoring') storageService.addMonitoring(formData);
       else if (selectedModel === 'spp') storageService.addPembayaranSPP(formData);
+      else if (selectedModel === 'kelas') storageService.addSigapKelas(formData);
+      else if (selectedModel === 'alumni') storageService.addSigapAlumni(formData);
+      else if (selectedModel === 'lokasi_qr') storageService.addSigapLokasiQR(formData);
+      else if (selectedModel === 'rapor_template') storageService.saveRaporTemplate(formData);
+      else if (selectedModel === 'nilai_rapor') storageService.saveNilaiRapor(formData);
       if (showToast) showToast("Data baru berhasil ditambahkan!");
     } else {
       const id = formData.id;
@@ -248,6 +295,11 @@ export default function PrismaStudioView({ showToast }) {
       else if (selectedModel === 'izin') storageService.updateIzin(id, formData);
       else if (selectedModel === 'monitoring') storageService.updateMonitoring(id, formData);
       else if (selectedModel === 'spp') storageService.updatePembayaranSPP(id, formData);
+      else if (selectedModel === 'kelas') storageService.updateSigapKelas(id, formData);
+      else if (selectedModel === 'alumni') storageService.addSigapAlumni(formData);
+      else if (selectedModel === 'lokasi_qr') storageService.updateSigapLokasiQR(id, formData);
+      else if (selectedModel === 'rapor_template') storageService.saveRaporTemplate(formData);
+      else if (selectedModel === 'nilai_rapor') storageService.saveNilaiRapor(formData);
       if (showToast) showToast("Perubahan data berhasil disimpan!");
     }
     setIsModalOpen(false);
@@ -274,7 +326,13 @@ export default function PrismaStudioView({ showToast }) {
     { id: 'setoran', name: 'Pencatatan Setoran', icon: BookOpen, count: storageService.getSetoran().length },
     { id: 'izin', name: 'Permohonan Izin', icon: FileText, count: storageService.getIzin().length },
     { id: 'monitoring', name: 'Monitoring Sigap', icon: Activity, count: ((storageService.getSigapMonitoring() || {}).liveFeed || []).length },
-    { id: 'spp', name: 'Pembayaran SPP', icon: FileText, count: storageService.getPembayaranSPP().length }
+    { id: 'spp', name: 'Pembayaran SPP', icon: FileText, count: storageService.getPembayaranSPP().length },
+    { id: 'rapor_template', name: 'Template Rapor', icon: FileText, count: 1 },
+    { id: 'nilai_rapor', name: 'Nilai Rapor Aspek', icon: Award, count: storageService.getAllNilaiRapor().length },
+    { id: 'kelas', name: 'Data Kelas', icon: Layers, count: storageService.getAllSigapKelasRaw().length },
+    { id: 'alumni', name: 'Data Alumni', icon: GraduationCap, count: storageService.getAllSigapAlumniRaw().length },
+    { id: 'lokasi_qr', name: 'Lokasi Presensi QR', icon: MapPin, count: storageService.getAllSigapLokasiQRRaw().length },
+    { id: 'settings', name: 'Pengaturan Sistem', icon: Sliders, count: Object.keys(storageService.getSettings() || {}).length }
   ];
 
   return (

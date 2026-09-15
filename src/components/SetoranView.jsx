@@ -25,6 +25,7 @@ import { QURAN_SURAH, getSurahById } from '../data/quranData';
 import { calculateMushaf15Lines } from '../utils/mushafCalculator';
 import { storageService } from '../services/storage';
 import MushafMadinahSimakModal from './MushafMadinahSimakModal';
+import CustomSelect from './common/CustomSelect';
 
 // Authentic Quran Verse texts for interactive Mushaf preview & Simak
 const MUSHAF_SAMPLE_VERSES = {
@@ -174,6 +175,146 @@ export default function SetoranView({
   // Audio simulation state for Simak
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
+  // Automasi Sabqi dari Sabaq terakhir, Manzil dari Manzil sebelumnya, & Sabaq lanjutan
+  const handleSelectJenisSetoran = (jenis, santriId = selectedSantriId) => {
+    setJenisSetoran(jenis);
+
+    const santriSetorans = setoranList.filter(s => s.santriId === santriId);
+
+    if (jenis === 'SABQI') {
+      // 1. "ketika mengklik sabqi maka otomatis ambil dari sabaq"
+      const lastSabaq = santriSetorans.find(s => {
+        const j = (s.jenis || '').toUpperCase();
+        return j === 'SABAQ' || j === 'ZIYADAH';
+      });
+
+      if (lastSabaq) {
+        const sId = parseInt(lastSabaq.surahId) || (QURAN_SURAH.find(q => q.name.toLowerCase() === (lastSabaq.surahName || lastSabaq.surat || '').toLowerCase())?.id) || 2;
+        const awal = parseInt(lastSabaq.ayatAwal || lastSabaq.ayat_mulai || 1);
+        const akhir = parseInt(lastSabaq.ayatAkhir || lastSabaq.ayat_selesai || awal);
+
+        setSelectedSurahId(sId);
+        setSelectedJuz(lastSabaq.juz || 1);
+        setAyatMulai(awal);
+        setAyatAkhir(akhir);
+        setIsSampaiBedaSurah(false);
+
+        if (showToast) {
+          showToast(`Sabqi otomatis dimuat dari Sabaq: ${lastSabaq.surahName || lastSabaq.surat} Ayat ${awal}-${akhir}`);
+        }
+      } else {
+        if (showToast) {
+          showToast("Belum ada riwayat Sabaq santri ini. Silakan tentukan ayat Sabqi secara manual.");
+        }
+      }
+    } else if (jenis === 'MANZIL') {
+      // 2. "adapun manzil maka mengikuti manzil sebelum nya"
+      const lastManzil = santriSetorans.find(s => {
+        const j = (s.jenis || '').toUpperCase();
+        return j === 'MANZIL' || j.includes('MUROJA');
+      });
+
+      if (lastManzil) {
+        const sId = parseInt(lastManzil.surahId) || (QURAN_SURAH.find(q => q.name.toLowerCase() === (lastManzil.surahName || lastManzil.surat || '').toLowerCase())?.id) || 1;
+        const surahObj = QURAN_SURAH.find(q => q.id === sId) || QURAN_SURAH[0];
+        const lastAkhir = parseInt(lastManzil.ayatAkhir || lastManzil.ayat_selesai || 1);
+
+        let nextAyatMulai = lastAkhir + 1;
+        let nextSurahId = sId;
+        let nextJuz = lastManzil.juz || 1;
+
+        if (nextAyatMulai > surahObj.versesCount) {
+          if (nextSurahId < 114) {
+            nextSurahId += 1;
+            nextAyatMulai = 1;
+            const nextSurahObj = QURAN_SURAH.find(q => q.id === nextSurahId);
+            if (nextSurahObj && nextSurahObj.juz) nextJuz = nextSurahObj.juz;
+          } else {
+            nextSurahId = 1;
+            nextAyatMulai = 1;
+            nextJuz = 1;
+          }
+        }
+
+        setSelectedSurahId(nextSurahId);
+        setSelectedJuz(nextJuz);
+        setAyatMulai(nextAyatMulai);
+        setAyatAkhir(nextAyatMulai);
+        setIsSampaiBedaSurah(false);
+
+        const targetSurahObj = QURAN_SURAH.find(q => q.id === nextSurahId);
+        if (showToast) {
+          showToast(`Manzil otomatis mengikuti Manzil sebelumnya: ${targetSurahObj?.name} mulai Ayat ${nextAyatMulai}`);
+        }
+      } else {
+        // Fallback mulai dari awal Al-Fatihah
+        setSelectedSurahId(1);
+        setSelectedJuz(1);
+        setAyatMulai(1);
+        setAyatAkhir(7);
+        setIsSampaiBedaSurah(false);
+        if (showToast) {
+          showToast("Memulai putaran Manzil baru dari Surah Al-Fatihah Ayat 1-7");
+        }
+      }
+    } else if (jenis === 'SABAQ') {
+      // 3. Sabaq otomatis melanjutkan ayat berikutnya dari sabaq santri ini
+      const lastSabaq = santriSetorans.find(s => {
+        const j = (s.jenis || '').toUpperCase();
+        return j === 'SABAQ' || j === 'ZIYADAH';
+      });
+
+      if (lastSabaq) {
+        const sId = parseInt(lastSabaq.surahId) || (QURAN_SURAH.find(q => q.name.toLowerCase() === (lastSabaq.surahName || lastSabaq.surat || '').toLowerCase())?.id) || 2;
+        const surahObj = QURAN_SURAH.find(q => q.id === sId) || QURAN_SURAH[1];
+        const lastAkhir = parseInt(lastSabaq.ayatAkhir || lastSabaq.ayat_selesai || 1);
+
+        let nextAyatMulai = lastAkhir + 1;
+        let nextSurahId = sId;
+        let nextJuz = lastSabaq.juz || 1;
+
+        if (nextAyatMulai > surahObj.versesCount) {
+          if (nextSurahId < 114) {
+            nextSurahId += 1;
+            nextAyatMulai = 1;
+            const nextSurahObj = QURAN_SURAH.find(q => q.id === nextSurahId);
+            if (nextSurahObj && nextSurahObj.juz) nextJuz = nextSurahObj.juz;
+          }
+        }
+
+        setSelectedSurahId(nextSurahId);
+        setSelectedJuz(nextJuz);
+        setAyatMulai(nextAyatMulai);
+        setAyatAkhir(nextAyatMulai);
+        setIsSampaiBedaSurah(false);
+
+        const targetSurahObj = QURAN_SURAH.find(q => q.id === nextSurahId);
+        if (showToast) {
+          showToast(`Sabaq otomatis melanjutkan hafalan: ${targetSurahObj?.name} mulai Ayat ${nextAyatMulai}`);
+        }
+      }
+    }
+  };
+
+  const handleSantriChange = (newId) => {
+    setSelectedSantriId(newId);
+    handleSelectJenisSetoran(jenisSetoran, newId);
+  };
+
+  const handleSimakAyatChange = (newAyat, surahId, pageNum) => {
+    setAyatAkhir(newAyat);
+    if (surahId && parseInt(surahId) !== parseInt(selectedSurahId)) {
+      setIsSampaiBedaSurah(true);
+      setSelectedSurahAkhirId(parseInt(surahId));
+      const sObj = QURAN_SURAH.find(s => s.id === parseInt(surahId));
+      if (sObj && sObj.juz) {
+        setSelectedJuzAkhir(sObj.juz);
+      }
+    } else {
+      setIsSampaiBedaSurah(false);
+    }
+  };
+
   // 10. Handle Form Submission
   const handleSubmitSetoran = (e) => {
     e.preventDefault();
@@ -192,17 +333,27 @@ export default function SetoranView({
     };
 
     const finalAyatAkhir = ayatAkhir || ayatMulai;
+    const finalSurahName = isSampaiBedaSurah && activeSurahAkhir.id !== activeSurah.id 
+      ? `${activeSurah.name} - ${activeSurahAkhir.name}`
+      : activeSurah.name;
 
     const newRecord = {
+      id: 'set-' + Date.now(),
       santriId: selectedSantriId,
+      santriNama: selectedSantri?.nama || 'Santri',
       tanggal: tanggal,
       jenis: jenisSetoran,
       surahId: activeSurah.id,
-      surahName: activeSurah.name,
+      surahAkhirId: isSampaiBedaSurah ? activeSurahAkhir.id : activeSurah.id,
+      surahName: finalSurahName,
+      surat: finalSurahName,
       arabicSurah: activeSurah.arabic,
       ayatAwal: parseInt(ayatMulai),
       ayatAkhir: parseInt(finalAyatAkhir),
+      ayat_mulai: parseInt(ayatMulai),
+      ayat_selesai: parseInt(finalAyatAkhir),
       juz: selectedJuz,
+      juzAkhir: isSampaiBedaSurah ? selectedJuzAkhir : selectedJuz,
       halaman: mushafPos.startPage,
       posisiMushaf: mushafPos.displayPos,
       barisBadge: mushafPos.countBadge,
@@ -213,7 +364,9 @@ export default function SetoranView({
       salahHafalan: salahHafalan,
       salahTajwid: salahTajwid,
       catatanTajwid: catatan,
-      musyrif: currentRole === 'pengampu' ? 'Wahyudin Hafiz' : 'Musyrif Halaqah'
+      catatan: catatan,
+      musyrif: currentRole === 'pengampu' ? 'Wahyudin Hafiz' : 'Musyrif Halaqah',
+      pengampuId: 'p-1'
     };
 
     if (onSaveSetoran) {
@@ -233,7 +386,7 @@ export default function SetoranView({
     } catch {}
 
     if (showToast) {
-      showToast(`Setoran ${activeSurah.name} (Ayat ${ayatMulai}-${finalAyatAkhir}) berhasil disimpan!`);
+      showToast(`Setoran ${finalSurahName} (Ayat ${ayatMulai}-${finalAyatAkhir}) berhasil disimpan!`);
     }
 
     // Advance to next verse for faster workflow
@@ -259,7 +412,7 @@ export default function SetoranView({
   };
 
   return (
-    <div style={{ padding: '4px 0 40px 0' }}>
+    <div className="page-content-wrapper" style={{ padding: '4px 0 40px 0', width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
       {/* Top Page Title */}
       <div className="setoran-page-header">
         <div>
@@ -286,83 +439,85 @@ export default function SetoranView({
             </div>
 
             {/* Date Pill Picker */}
-            <div className="setoran-date-pill">
-              <Calendar size={16} style={{ color: '#16a34a' }} />
-              <span>Tanggal: <strong>{formattedDateHeader}</strong></span>
-              <div style={{ position: 'relative', display: 'inline-block' }}>
-                <input 
-                  type="date"
-                  value={tanggal}
-                  onChange={(e) => setTanggal(e.target.value)}
-                  style={{
-                    background: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '8px',
-                    padding: '3px 8px',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    color: '#0f172a',
-                    cursor: 'pointer',
-                    outline: 'none'
-                  }}
-                  title="Ganti Tanggal Setoran"
-                />
+            <div className="setoran-date-pill" style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '6px 12px',
+              boxSizing: 'border-box'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                <Calendar size={16} style={{ color: '#059669', flexShrink: 0 }} />
+                <span style={{ fontSize: '0.80rem', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>
+                  Tanggal: <strong style={{ color: '#0f172a' }}>{formattedDateHeader}</strong>
+                </span>
               </div>
+              <input 
+                type="date"
+                value={tanggal}
+                onChange={(e) => setTanggal(e.target.value)}
+                style={{
+                  background: '#ffffff',
+                  border: '1.5px solid #10b981',
+                  borderRadius: '8px',
+                  padding: '3px 8px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  color: '#047857',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  flexShrink: 0
+                }}
+                title="Ganti Tanggal Setoran"
+              />
             </div>
           </div>
 
           <form onSubmit={handleSubmitSetoran}>
             {/* Field: PILIH SANTRI */}
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ marginBottom: '18px' }}>
               <label className="setoran-label">PILIH SANTRI</label>
-              <div style={{ position: 'relative' }}>
-                <select 
-                  className="setoran-santri-select"
-                  value={selectedSantriId}
-                  onChange={(e) => setSelectedSantriId(e.target.value)}
-                >
-                  {santriList.map(santri => (
-                    <option key={santri.id} value={santri.id}>
-                      {santri.nama} {santri.kelas ? `(${santri.kelas})` : ''}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown 
-                  size={18} 
-                  style={{ 
-                    position: 'absolute', 
-                    right: '16px', 
-                    top: '50%', 
-                    transform: 'translateY(-50%)', 
-                    pointerEvents: 'none',
-                    color: '#64748b'
-                  }} 
-                />
-              </div>
+              <CustomSelect 
+                value={selectedSantriId}
+                onChange={(e) => handleSantriChange(e.target.value)}
+                options={santriList.map(santri => ({
+                  value: santri.id,
+                  label: `${santri.nama} ${santri.kelas ? `(${santri.kelas})` : ''}`
+                }))}
+                searchable={true}
+                searchPlaceholder="Cari nama santri..."
+                placeholder="-- Pilih Santri --"
+              />
             </div>
 
             {/* Field: JENIS SETORAN (Segmented 3 Buttons) */}
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ marginBottom: '18px' }}>
               <label className="setoran-label">JENIS SETORAN</label>
               <div className="setoran-jenis-segmented">
                 <button 
                   type="button"
                   className={`setoran-jenis-btn ${jenisSetoran === 'SABAQ' ? 'active-sabaq' : ''}`}
-                  onClick={() => setJenisSetoran('SABAQ')}
+                  onClick={() => handleSelectJenisSetoran('SABAQ')}
                 >
                   SABAQ
                 </button>
                 <button 
                   type="button"
                   className={`setoran-jenis-btn ${jenisSetoran === 'SABQI' ? 'active-sabqi' : ''}`}
-                  onClick={() => setJenisSetoran('SABQI')}
+                  onClick={() => handleSelectJenisSetoran('SABQI')}
+                  title="Otomatis mengambil dari Sabaq terakhir"
                 >
                   SABQI
                 </button>
                 <button 
                   type="button"
                   className={`setoran-jenis-btn ${jenisSetoran === 'MANZIL' ? 'active-manzil' : ''}`}
-                  onClick={() => setJenisSetoran('MANZIL')}
+                  onClick={() => handleSelectJenisSetoran('MANZIL')}
+                  title="Otomatis mengikuti Manzil sebelumnya"
                 >
                   MANZIL
                 </button>
@@ -371,24 +526,25 @@ export default function SetoranView({
 
             {/* Card: Mode Setoran Ganda */}
             <div className="setoran-ganda-card">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{
-                  width: '38px',
-                  height: '38px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '10px',
                   background: '#f1f5f9',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#64748b'
+                  color: '#64748b',
+                  flexShrink: 0
                 }}>
-                  <Layers size={19} />
+                  <Layers size={18} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.90rem', color: 'var(--text-main)' }}>
                     Mode Setoran Ganda
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                  <div style={{ fontSize: '0.74rem', color: '#64748b' }}>
                     Input Sabqi & Sabaq sekaligus
                   </div>
                 </div>
@@ -405,7 +561,8 @@ export default function SetoranView({
                   padding: '3px',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s',
-                  position: 'relative'
+                  position: 'relative',
+                  flexShrink: 0
                 }}
               >
                 <div style={{
@@ -420,13 +577,13 @@ export default function SetoranView({
               </div>
             </div>
 
-            {/* Inner Card: Hafalan Sabaq (Baru) */}
+            {/* Inner Card: Hafalan Sabaq/Sabqi/Manzil */}
             <div className="setoran-inner-card">
               {/* Badge & Title */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
                 <span style={{
-                  background: '#f3e8ff',
-                  color: '#6d28d9',
+                  background: jenisSetoran === 'SABAQ' ? '#f3e8ff' : jenisSetoran === 'SABQI' ? '#dbeafe' : '#d1fae5',
+                  color: jenisSetoran === 'SABAQ' ? '#6d28d9' : jenisSetoran === 'SABQI' ? '#1d4ed8' : '#047857',
                   fontWeight: 800,
                   fontSize: '0.72rem',
                   padding: '3px 10px',
@@ -435,17 +592,17 @@ export default function SetoranView({
                 }}>
                   {jenisSetoran}
                 </span>
-                <span style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-main)' }}>
+                <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)' }}>
                   {jenisSetoran === 'SABAQ' ? 'Hafalan Sabaq (Baru)' : jenisSetoran === 'SABQI' ? 'Hafalan Sabqi (Kemarin)' : 'Muroja\'ah Manzil'}
                 </span>
               </div>
 
               {/* SECTION: MULAI DARI */}
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <div style={{ marginBottom: '14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16a34a' }}></div>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '0.04em' }}>
+                    <span style={{ fontSize: '0.76rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '0.04em' }}>
                       MULAI DARI
                     </span>
                   </div>
@@ -454,84 +611,72 @@ export default function SetoranView({
                     type="button"
                     onClick={() => setShowMushafModal(true)}
                     style={{
-                      display: 'flex',
+                      display: 'inline-flex',
                       alignItems: 'center',
                       gap: '6px',
                       background: '#f0fdf4',
                       border: '1px solid #bbf7d0',
                       borderRadius: '8px',
-                      padding: '5px 12px',
-                      fontSize: '0.78rem',
+                      padding: '4px 10px',
+                      fontSize: '0.74rem',
                       fontWeight: 700,
                       color: '#15803d',
                       cursor: 'pointer'
                     }}
                   >
-                    <BookOpen size={14} />
+                    <BookOpen size={13} />
                     <span>Buka Mushaf di Ayat Ini</span>
                   </button>
                 </div>
 
-                {/* 3 Dropdowns: JUZ, SURAT, AYAT */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '10px' }}>
-                  <div>
-                    <label style={{ fontSize: '0.70rem', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '4px' }}>
-                      JUZ
-                    </label>
-                    <select 
-                      className="form-select"
-                      style={{ height: '42px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 700 }}
-                      value={selectedJuz}
-                      onChange={(e) => setSelectedJuz(parseInt(e.target.value))}
-                    >
-                      {Array.from({ length: 30 }, (_, i) => i + 1).map(juz => (
-                        <option key={juz} value={juz}>Juz {juz}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ fontSize: '0.70rem', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '4px' }}>
-                      SURAT
-                    </label>
-                    <select 
-                      className="form-select"
-                      style={{ height: '42px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 700 }}
+                {/* Responsive Selection Grid */}
+                <div className="setoran-selection-grid">
+                  <div className="grid-span-all">
+                    <label className="setoran-sublabel">SURAT</label>
+                    <CustomSelect 
                       value={selectedSurahId}
                       onChange={(e) => handleSurahChange(e.target.value)}
-                    >
-                      {QURAN_SURAH.map(s => (
-                        <option key={s.id} value={s.id}>
-                          {s.id}. {s.arabic} ({s.name})
-                        </option>
-                      ))}
-                    </select>
+                      options={QURAN_SURAH.map(s => ({
+                        value: s.id,
+                        label: `${s.id}. ${s.name} (${s.arabic})`
+                      }))}
+                      searchable={true}
+                      searchPlaceholder="Cari surat Al-Qur'an..."
+                    />
                   </div>
 
                   <div>
-                    <label style={{ fontSize: '0.70rem', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '4px' }}>
-                      AYAT
-                    </label>
-                    <select 
-                      className="form-select"
-                      style={{ height: '42px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 700 }}
+                    <label className="setoran-sublabel">JUZ</label>
+                    <CustomSelect 
+                      value={selectedJuz}
+                      onChange={(e) => setSelectedJuz(parseInt(e.target.value))}
+                      options={Array.from({ length: 30 }, (_, i) => i + 1).map(juz => ({
+                        value: juz,
+                        label: `Juz ${juz}`
+                      }))}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="setoran-sublabel">AYAT</label>
+                    <CustomSelect 
                       value={ayatMulai}
                       onChange={(e) => {
                         const val = parseInt(e.target.value);
                         setAyatMulai(val);
                         if (!ayatAkhir || ayatAkhir < val) setAyatAkhir(val);
                       }}
-                    >
-                      {Array.from({ length: activeSurah.versesCount }, (_, i) => i + 1).map(a => (
-                        <option key={a} value={a}>Ayat {a}</option>
-                      ))}
-                    </select>
+                      options={Array.from({ length: activeSurah.versesCount }, (_, i) => i + 1).map(a => ({
+                        value: a,
+                        label: `Ayat ${a}`
+                      }))}
+                    />
                   </div>
                 </div>
               </div>
 
               {/* Middle Pill Switch: Sampai Juz/Surat Berbeda? */}
-              <div style={{ textAlign: 'center', margin: '14px 0' }}>
+              <div style={{ textAlign: 'center', margin: '12px 0' }}>
                 <button
                   type="button"
                   onClick={() => setIsSampaiBedaSurah(!isSampaiBedaSurah)}
@@ -542,8 +687,8 @@ export default function SetoranView({
                     background: '#ffffff',
                     border: '1px solid #e2e8f0',
                     borderRadius: '20px',
-                    padding: '6px 18px',
-                    fontSize: '0.78rem',
+                    padding: '5px 16px',
+                    fontSize: '0.76rem',
                     fontWeight: 700,
                     color: isSampaiBedaSurah ? '#6d28d9' : '#64748b',
                     cursor: 'pointer',
@@ -563,96 +708,73 @@ export default function SetoranView({
               </div>
 
               {/* SECTION: SAMPAI DENGAN */}
-              <div style={{ marginBottom: '18px' }}>
+              <div style={{ marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#7c3aed' }}></div>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#6d28d9', letterSpacing: '0.04em' }}>
+                  <span style={{ fontSize: '0.76rem', fontWeight: 800, color: '#6d28d9', letterSpacing: '0.04em' }}>
                     SAMPAI DENGAN
                   </span>
                 </div>
 
                 {!isSampaiBedaSurah ? (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ fontStyle: 'italic', color: '#94a3b8', fontSize: '0.85rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <div style={{ fontStyle: 'italic', color: '#94a3b8', fontSize: '0.80rem' }}>
                       Sama dengan lokasi mulai (Satu Surat)
                     </div>
 
-                    <div style={{ minWidth: '180px' }}>
-                      <label style={{ fontSize: '0.70rem', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '4px' }}>
-                        AYAT AKHIR
-                      </label>
-                      <select 
-                        className="form-select"
-                        style={{ 
-                          height: '42px', 
-                          borderRadius: '10px', 
-                          fontSize: '0.88rem', 
-                          fontWeight: 700,
-                          borderColor: '#f59e0b',
-                          background: '#ffffff'
-                        }}
+                    <div style={{ minWidth: '150px', flex: 1 }}>
+                      <label className="setoran-sublabel">AYAT AKHIR</label>
+                      <CustomSelect 
                         value={ayatAkhir}
                         onChange={(e) => setAyatAkhir(parseInt(e.target.value))}
-                      >
-                        <option value="">-- Pilih Ayat --</option>
-                        {Array.from({ length: activeSurah.versesCount }, (_, i) => i + 1)
+                        placeholder="-- Pilih Ayat --"
+                        options={Array.from({ length: activeSurah.versesCount }, (_, i) => i + 1)
                           .filter(a => a >= ayatMulai)
-                          .map(a => (
-                            <option key={a} value={a}>Ayat {a}</option>
-                          ))}
-                      </select>
+                          .map(a => ({
+                            value: a,
+                            label: `Ayat ${a}`
+                          }))}
+                      />
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '10px' }}>
-                    <div>
-                      <label style={{ fontSize: '0.70rem', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '4px' }}>
-                        JUZ AKHIR
-                      </label>
-                      <select 
-                        className="form-select"
-                        style={{ height: '42px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 700 }}
-                        value={selectedJuzAkhir}
-                        onChange={(e) => setSelectedJuzAkhir(parseInt(e.target.value))}
-                      >
-                        {Array.from({ length: 30 }, (_, i) => i + 1).map(juz => (
-                          <option key={juz} value={juz}>Juz {juz}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label style={{ fontSize: '0.70rem', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '4px' }}>
-                        SURAT AKHIR
-                      </label>
-                      <select 
-                        className="form-select"
-                        style={{ height: '42px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 700 }}
+                  <div className="setoran-selection-grid">
+                    <div className="grid-span-all">
+                      <label className="setoran-sublabel">SURAT AKHIR</label>
+                      <CustomSelect 
                         value={selectedSurahAkhirId}
                         onChange={(e) => setSelectedSurahAkhirId(parseInt(e.target.value))}
-                      >
-                        {QURAN_SURAH.map(s => (
-                          <option key={s.id} value={s.id}>
-                            {s.id}. {s.arabic} ({s.name})
-                          </option>
-                        ))}
-                      </select>
+                        options={QURAN_SURAH.map(s => ({
+                          value: s.id,
+                          label: `${s.id}. ${s.name} (${s.arabic})`
+                        }))}
+                        searchable={true}
+                        searchPlaceholder="Cari surat Al-Qur'an..."
+                      />
                     </div>
 
                     <div>
-                      <label style={{ fontSize: '0.70rem', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '4px' }}>
-                        AYAT AKHIR
-                      </label>
-                      <select 
-                        className="form-select"
-                        style={{ height: '42px', borderRadius: '10px', fontSize: '0.88rem', fontWeight: 700, borderColor: '#f59e0b' }}
+                      <label className="setoran-sublabel">JUZ AKHIR</label>
+                      <CustomSelect 
+                        value={selectedJuzAkhir}
+                        onChange={(e) => setSelectedJuzAkhir(parseInt(e.target.value))}
+                        options={Array.from({ length: 30 }, (_, i) => i + 1).map(juz => ({
+                          value: juz,
+                          label: `Juz ${juz}`
+                        }))}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="setoran-sublabel">AYAT AKHIR</label>
+                      <CustomSelect 
                         value={ayatAkhir}
                         onChange={(e) => setAyatAkhir(parseInt(e.target.value))}
-                      >
-                        {Array.from({ length: activeSurahAkhir.versesCount }, (_, i) => i + 1).map(a => (
-                          <option key={a} value={a}>Ayat {a}</option>
-                        ))}
-                      </select>
+                        options={Array.from({ length: activeSurahAkhir.versesCount }, (_, i) => i + 1).map(a => ({
+                          value: a,
+                          label: `Ayat ${a}`
+                        }))}
+                      />
                     </div>
                   </div>
                 )}
@@ -660,36 +782,37 @@ export default function SetoranView({
 
               {/* POSISI MUSHAF (15 BARIS) BANNER */}
               <div className="posisi-mushaf-banner">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{
-                    width: '36px',
-                    height: '36px',
+                    width: '34px',
+                    height: '34px',
                     borderRadius: '8px',
                     background: '#16a34a',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    flexShrink: 0
                   }}>
-                    <BookOpen size={18} />
+                    <BookOpen size={16} />
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.70rem', fontWeight: 800, color: '#166534', letterSpacing: '0.04em' }}>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#166534', letterSpacing: '0.04em' }}>
                       POSISI MUSHAF (15 BARIS)
                     </div>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#14532d' }}>
+                    <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#14532d' }}>
                       {mushafPos.displayPos}
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{
                     background: '#ffffff',
                     border: '1px solid #86efac',
                     borderRadius: '8px',
-                    padding: '4px 12px',
-                    fontSize: '0.78rem',
+                    padding: '4px 10px',
+                    fontSize: '0.74rem',
                     fontWeight: 800,
                     color: '#15803d'
                   }}>
@@ -704,8 +827,8 @@ export default function SetoranView({
                       color: '#ffffff',
                       border: 'none',
                       borderRadius: '8px',
-                      padding: '6px 14px',
-                      fontSize: '0.82rem',
+                      padding: '5px 12px',
+                      fontSize: '0.78rem',
                       fontWeight: 800,
                       cursor: 'pointer'
                     }}
@@ -716,7 +839,7 @@ export default function SetoranView({
               </div>
 
               {/* Counters: SALAH HAFALAN, SALAH TAJWID, STATUS */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '12px', marginBottom: '20px' }}>
+              <div className="setoran-eval-grid">
                 <div>
                   <label className="setoran-label">SALAH HAFALAN</label>
                   <div className="setoran-stepper">
@@ -727,7 +850,7 @@ export default function SetoranView({
                     >
                       -
                     </button>
-                    <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)' }}>
+                    <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>
                       {salahHafalan}
                     </span>
                     <button 
@@ -750,7 +873,7 @@ export default function SetoranView({
                     >
                       -
                     </button>
-                    <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)' }}>
+                    <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>
                       {salahTajwid}
                     </span>
                     <button 
@@ -763,9 +886,9 @@ export default function SetoranView({
                   </div>
                 </div>
 
-                <div>
+                <div className="grid-status-span">
                   <label className="setoran-label">STATUS</label>
-                  <div style={{ display: 'flex', height: '42px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', height: '40px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
                     <button
                       type="button"
                       onClick={() => setStatusLanjut('Lanjut')}
@@ -775,7 +898,7 @@ export default function SetoranView({
                         background: statusLanjut === 'Lanjut' ? '#16a34a' : '#ffffff',
                         color: statusLanjut === 'Lanjut' ? '#ffffff' : '#64748b',
                         fontWeight: 800,
-                        fontSize: '0.85rem',
+                        fontSize: '0.82rem',
                         cursor: 'pointer',
                         transition: 'all 0.15s'
                       }}
@@ -791,7 +914,7 @@ export default function SetoranView({
                         background: statusLanjut === 'Ulang' ? '#e11d48' : '#ffffff',
                         color: statusLanjut === 'Ulang' ? '#ffffff' : '#64748b',
                         fontWeight: 800,
-                        fontSize: '0.85rem',
+                        fontSize: '0.82rem',
                         cursor: 'pointer',
                         transition: 'all 0.15s'
                       }}
@@ -803,9 +926,9 @@ export default function SetoranView({
               </div>
 
               {/* Assessment & Notes Row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '16px' }}>
+              <div className="setoran-notes-grid">
                 <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#6d28d9', letterSpacing: '0.04em', display: 'block', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '0.72rem', fontWeight: 800, color: '#6d28d9', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
                     PENILAIAN (PREDIKAT)
                   </label>
                   <div className="predikat-pills-grid">
@@ -828,7 +951,7 @@ export default function SetoranView({
                     rows="3"
                     className="form-input"
                     placeholder="Catatan tambahan..."
-                    style={{ resize: 'none', fontSize: '0.82rem', height: '76px', borderRadius: '12px' }}
+                    style={{ resize: 'none', fontSize: '0.80rem', height: '70px', borderRadius: '12px' }}
                     value={catatan}
                     onChange={(e) => setCatatan(e.target.value)}
                   />
@@ -839,7 +962,7 @@ export default function SetoranView({
 
             {/* Bottom Submit Button */}
             <button type="submit" className="btn-simpan-setoran">
-              <BookOpen size={19} />
+              <BookOpen size={18} />
               <span>Simpan Setoran</span>
             </button>
           </form>
@@ -897,8 +1020,8 @@ export default function SetoranView({
           </div>
 
           {/* Filter Pills & Limit Dropdown */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', gap: '8px' }}>
-            <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               {['SABAQ', 'SABQI', 'MANZIL'].map(f => (
                 <button
                   key={f}
@@ -920,9 +1043,9 @@ export default function SetoranView({
               ))}
             </div>
 
-            <select 
-              className="form-select"
-              style={{ height: '32px', width: '90px', padding: '2px 8px', fontSize: '0.75rem', fontWeight: 700, borderRadius: '8px' }}
+            <CustomSelect 
+              style={{ width: '110px' }}
+              triggerStyle={{ minHeight: '34px', borderRadius: '10px', padding: '0 10px', fontSize: '0.75rem', fontWeight: 700 }}
               value={historyLimit}
               onChange={(e) => setHistoryLimit(parseInt(e.target.value))}
             >
@@ -930,7 +1053,7 @@ export default function SetoranView({
               <option value="5">5 Data</option>
               <option value="10">10 Data</option>
               <option value="999">Semua</option>
-            </select>
+            </CustomSelect>
           </div>
 
           {/* Timeline Cards */}
@@ -1138,13 +1261,7 @@ export default function SetoranView({
         ayatMulai={ayatMulai}
         ayatAkhir={ayatAkhir || ayatMulai}
         setAyatAkhir={setAyatAkhir}
-        onAyatAkhirChange={(newAyat, surahId) => {
-          setAyatAkhir(newAyat);
-          if (surahId && parseInt(surahId) !== parseInt(selectedSurahId)) {
-            setIsSampaiBedaSurah(true);
-            setSelectedSurahAkhirId(parseInt(surahId));
-          }
-        }}
+        onAyatAkhirChange={handleSimakAyatChange}
         santriName={selectedSantri?.nama || selectedSantri?.name || 'Santri'}
         salahHafalan={salahHafalan}
         setSalahHafalan={setSalahHafalan}

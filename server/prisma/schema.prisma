@@ -68,6 +68,7 @@ model Pengampu {
   halaqahList Halaqah[]
   setoranList SetoranSantri[]
   monitoringList MonitoringSigap[]
+  nilaiRaporList NilaiRapor[]
 
   @@map("pengampu")
 }
@@ -107,6 +108,7 @@ model Santri {
   absensiList     AbsensiSantri[]
   setoranList     SetoranSantri[]
   pembayaranSpp   PembayaranSPP[]
+  nilaiRaporList  NilaiRapor[]
 
   @@map("santri")
 }
@@ -284,5 +286,62 @@ model Settings {
   updatedAt DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6)
 
   @@map("settings")
+}
+
+model RaporTemplate {
+  id              String    @id @default("default-template") @db.VarChar(64)
+  namaYayasan     String?   @default("YAYASAN IHYA AS SUNNAH TASIKMALAYA") @map("nama_yayasan") @db.VarChar(255)
+  namaMadrasah    String?   @default("MADRASAH ALIYAH IHYA AS SUNNAH") @map("nama_madrasah") @db.VarChar(255)
+  alamatMadrasah  String?   @default("Kompleks Islamic Center PPIAS, Jl. Paseh No. 12, Tasikmalaya, Jawa Barat") @map("alamat_madrasah") @db.Text
+  website         String?   @default("www.ma-ihyaassunnah.sch.id") @db.VarChar(150)
+  email           String?   @default("tahfidz@ma-ihyaassunnah.sch.id") @db.VarChar(150)
+  judulRapor      String?   @default("LEMBAR EVALUASI & RAPOR TAHFIDZ AL-QUR'AN") @map("judul_rapor") @db.VarChar(255)
+  semester        String?   @default("Ganjil 2026/2027") @db.VarChar(100)
+  namaMudir       String?   @default("Ustadz Dr. Abu Haidar, M.Pd.I") @map("nama_mudir") @db.VarChar(150)
+  nipMudir        String?   @default("197501012000031001") @map("nip_mudir") @db.VarChar(64)
+  tempatTanggal   String?   @default("Tasikmalaya, 20 Desember 2026") @map("tempat_tanggal") @db.VarChar(100)
+  aspekPenilaian  Json?     @map("aspek_penilaian")
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("rapor_template")
+}
+
+model NilaiRapor {
+  id             String    @id @db.VarChar(64)
+  santriId       String    @map("santri_id") @db.VarChar(64)
+  pengampuId     String?   @map("pengampu_id") @db.VarChar(64)
+  semester       String?   @default("Ganjil 2026/2027") @db.VarChar(100)
+  tahunAjaran    String?   @default("2026/2027") @map("tahun_ajaran") @db.VarChar(32)
+  
+  // 4 Aspek Kualitas Tahfidz Utama (Sesuai Gambar 2)
+  kelancaran     Int?      @default(90) // Kelancaran & Daya Ingat (Al-Hifdz)
+  tajwid         Int?      @default(91) // Ahkamut Tajwid (Hukum Tajwid)
+  fashohah       Int?      @default(89) // Makharijul Huruf & Shifat (Fashohah)
+  adab           Int?      @default(95) // Adab Halaqah & Tilawah
+
+  // Keterangan / Evaluasi
+  evalKelancaran String?   @default("Hafalan lancar, tartil, dan mutqin") @map("eval_kelancaran") @db.Text
+  evalTajwid     String?   @default("Ghunnah, ikhfa', dan mad diterapkan dengan baik") @map("eval_tajwid") @db.Text
+  evalFashohah   String?   @default("Pengucapan huruf jelas dan fasih sesuai kaidah") @map("eval_fashohah") @db.Text
+  evalAdab       String?   @default("Menghormati mushaf, ustadz, dan teman halaqah") @map("eval_adab") @db.Text
+
+  // Rata-rata & Predikat Keseluruhan
+  rataRata       Float?    @default(91.25) @map("rata_rata")
+  predikat       String?   @default("Mumtaz (Istimewa)") @db.VarChar(50)
+  catatanMusyrif String?   @map("catatan_musyrif") @db.Text
+  tempatRapor    String?   @default("Tasikmalaya") @map("tempat_rapor") @db.VarChar(100)
+  tanggalRapor   String?   @default("2026-12-20") @map("tanggal_rapor") @db.VarChar(64)
+
+  aspekDetail    Json?     @map("aspek_detail")
+
+  createdAt      DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  santri         Santri    @relation(fields: [santriId], references: [id], onDelete: Cascade)
+  pengampu       Pengampu? @relation(fields: [pengampuId], references: [id], onDelete: SetNull)
+
+  @@unique([santriId, semester])
+  @@map("nilai_rapor")
 }
 

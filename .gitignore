@@ -30,3 +30,13 @@ scratch/
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary utility scripts
+decode.cjs
+p1.cjs
+test_literal.js
+update_gps_qr.cjs
+update_jadwal.js
+update_storage.js
+handlers_payload.b64
+

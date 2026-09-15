@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Users, 
   BookOpen, 
@@ -23,14 +23,28 @@ import {
   FileText,
   Check,
   ChevronRight,
-  Bell
+  Bell,
+  Sun,
+  Sunrise,
+  CloudSun,
+  Moon,
+  Flame,
+  Timer,
+  CheckCheck
 } from 'lucide-react';
 import { storageService } from '../../services/storage';
+import CustomSelect from '../common/CustomSelect';
 
 export default function DashboardSigapView({ setActiveTab, showToast }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [monitoringData, setMonitoringData] = useState(storageService.getSigapMonitoring());
-  const [izinList, setIzinList] = useState(storageService.getSigapIzinGuru());
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  const [monitoringData, setMonitoringData] = useState(() => storageService.getSigapMonitoring());
+  const [izinList, setIzinList] = useState(() => storageService.getSigapIzinGuru());
+  const [pengampuPresensiList, setPengampuPresensiList] = useState(() => storageService.getPengampuPresensiList());
+  const [allPengampu, setAllPengampu] = useState(() => storageService.getAllUniquePengampu('ALL'));
+  const [sesiList, setSesiList] = useState(() => storageService.getSesi());
+
   const [totalSetoran, setTotalSetoran] = useState(() => {
     return (storageService.getAllSetoranRaw ? storageService.getAllSetoranRaw().length : (storageService.getSetoran('ALL') || []).length) || 0;
   });
@@ -38,9 +52,10 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
   const siswaList = storageService.getSigapSiswa();
   const guruList = storageService.getSigapGuru();
 
-  // State Filter Presensi Pengampu (Hanya 1. Filter Sesi & 2. Filter Terlambat/Izin/Alpa)
-  const [sesiFilter, setSesiFilter] = useState('semua'); // 'semua', 'subuh', 'dhuha', 'ashar', 'maghrib'
-  const [activeStatusFilter, setActiveStatusFilter] = useState('semua'); // 'semua', 'terlambat', 'izin', 'alpa', 'tepat-waktu'
+  // State Filter Presensi Pengampu (Filter Sesi: 'aktif' [default], 'subuh', 'pagi', 'ashar', 'malam', 'semua')
+  const [sesiFilter, setSesiFilter] = useState('aktif');
+  const [activeStatusFilter, setActiveStatusFilter] = useState('semua'); // 'semua', 'sudah', 'tepat-waktu', 'terlambat', 'belum', 'izin', 'alpa'
+  const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('cards'); // 'cards' (default Monitor Presensi) | 'table'
 
   // State Modal Detail & Koreksi
@@ -52,13 +67,24 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
     selisihMenit: 0
   });
 
+  // Timer Real-Time Berjalan Setiap Detik
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const reloadData = () => {
     setMonitoringData(storageService.getSigapMonitoring());
     setIzinList(storageService.getSigapIzinGuru());
+    setPengampuPresensiList(storageService.getPengampuPresensiList());
+    setAllPengampu(storageService.getAllUniquePengampu('ALL'));
+    setSesiList(storageService.getSesi());
     setTotalSetoran((storageService.getAllSetoranRaw ? storageService.getAllSetoranRaw().length : (storageService.getSetoran('ALL') || []).length) || 0);
   };
 
-  // Real-time listener saat ada izin diajukan oleh pengampu atau data diupdate
+  // Real-time listener saat ada izin diajukan oleh pengampu atau presensi diupdate
   useEffect(() => {
     const handleUpdate = () => {
       reloadData();
@@ -78,7 +104,7 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
     setTimeout(() => {
       reloadData();
       setIsRefreshing(false);
-      showToast && showToast("Data Dashboard & Presensi Pengampu diperbarui!");
+      showToast && showToast("Data Dashboard & Presensi Seluruh Pengampu diperbarui!");
     }, 400);
   };
 
@@ -91,246 +117,381 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
   const pendingIzinCount = pendingIzinList.length;
 
   // =========================================================================
-  // ATURAN STATUS PRESENSI PENGAMPU SESUAI SPESIFIKASI:
-  // 1. Izin: Jika ada yang izin -> Keterangan & Status: Izin
-  // 2. Hadir: Jika sudah absen -> Keterangan & Status: Hadir (Tepat Waktu / Terlambat)
-  // 3. Belum Absen: Jika belum absen dan waktu sesi belum lewat -> Belum Absen
-  // 4. Alpa: Jika belum absen dan sudah lewat waktu absennya -> Alpa
+  // DETEKSI SESI AKTIF SAAT INI (REAL-TIME DETECTION)
   // =========================================================================
-  const checkIfSesiLewat = (item) => {
-    if (item.status === 'Alpa' || item.status === 'Alfa') return true;
-    if (item.jadwal && item.jadwal.includes('-')) {
-      const parts = item.jadwal.split('-');
-      const endTimeStr = parts[1]?.trim();
-      if (endTimeStr && endTimeStr.includes(':')) {
-        const [endH, endM] = endTimeStr.split(':').map(Number);
-        const now = new Date();
-        const currentTotalMin = now.getHours() * 60 + now.getMinutes();
-        const endTotalMin = endH * 60 + endM;
-        if (currentTotalMin > endTotalMin) {
-          return true;
-        } else {
-          return false;
-        }
+  const detectActiveSession = () => {
+    const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
+    const list = sesiList || [];
+    
+    // 1. Cek apakah ada sesi yang sedang berlangsung saat ini
+    for (const s of list) {
+      const [bukaH, bukaM] = (s.bukaScan || s.jamMulai || s.mulai || '05:00').split(':').map(Number);
+      const [endH, endM] = (s.jamSelesai || s.selesai || '06:30').split(':').map(Number);
+      const bMin = bukaH * 60 + bukaM;
+      const eMin = endH * 60 + endM;
+      if (nowMin >= bMin && nowMin <= eMin) {
+        return { ...s, isCurrentlyRunning: true };
       }
     }
-    const sesiLower = (item.sesi || '').toLowerCase();
-    const now = new Date();
-    const currentTotalMin = now.getHours() * 60 + now.getMinutes();
-    if (sesiLower.includes('subuh')) return currentTotalMin > (6 * 60 + 30);
-    if (sesiLower.includes('pagi') || sesiLower.includes('dhuha')) return currentTotalMin > (10 * 60);
-    if (sesiLower.includes('ashar')) return currentTotalMin > (17 * 60 + 30);
-    if (sesiLower.includes('maghrib') || sesiLower.includes('malam')) return currentTotalMin > (20 * 60 + 30);
-    return false;
+
+    // 2. Jika di luar jam sesi, cari sesi berikutnya atau yang paling relevan hari ini
+    if (nowMin < 7 * 60) return { ...(list.find(s => s.id === 'subuh') || list[0]), isCurrentlyRunning: false };
+    if (nowMin < 12 * 60) return { ...(list.find(s => s.id === 'pagi') || list[1] || list[0]), isCurrentlyRunning: false };
+    if (nowMin < 17 * 60 + 30) return { ...(list.find(s => s.id === 'ashar') || list[2] || list[0]), isCurrentlyRunning: false };
+    return { ...(list.find(s => s.id === 'malam') || list[3] || list[0]), isCurrentlyRunning: false };
   };
 
-  const evaluateItemStatus = (item) => {
-    // 1. IZIN: jika ada yang ijin maka keterangan nya izin
-    const isIzin = item.status === 'Izin' || 
-                   item.status === 'Sakit' || 
-                   (item.keterangan && item.keterangan.toLowerCase().includes('izin')) ||
-                   (item.alasanIzin && item.alasanIzin.trim() !== '');
+  const activeDetectedSession = detectActiveSession();
 
-    if (isIzin) {
-      const ketText = item.keterangan && item.keterangan.toLowerCase().includes('izin')
-        ? item.keterangan
-        : (item.alasanIzin ? `Izin: ${item.alasanIzin}` : 'Izin Resmi Disetujui');
+  // =========================================================================
+  // ATURAN STATUS PRESENSI PENGAMPU SESUAI SPESIFIKASI USER:
+  // 1. SUDAH: Jika sudah absen -> Hadir (Tepat Waktu / Terlambat)
+  // 2. IJIN: Jika ada pengajuan izin resmi yang disetujui / aktif
+  // 3. BELUM: Jika belum absen dan waktu sekarang belum melewati batas absensi
+  // 4. ALPA: JIKA SUDAH LEWAT BATAS ABSENSI NYA MAKA OTOMATIS ALPA
+  // =========================================================================
+  const evaluatePengampuAttendance = (p, sesi) => {
+    const todayISO = currentTime.toISOString().split('T')[0];
+    const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+    const [startH, startM] = (sesi.mulai || sesi.jamMulai || '05:00').split(':').map(Number);
+    const [endH, endM] = (sesi.selesai || sesi.jamSelesai || '06:30').split(':').map(Number);
+    const [batasH, batasM] = (sesi.batasScan || '05:30').split(':').map(Number);
+    const [bukaH, bukaM] = (sesi.bukaScan || '04:45').split(':').map(Number);
+
+    const startMin = startH * 60 + startM;
+    const endMin = endH * 60 + endM;
+    const batasMin = batasH * 60 + batasM;
+    const bukaMin = bukaH * 60 + bukaM;
+
+    const isLewatBatas = nowMin > batasMin;
+    const isSessionStarted = nowMin >= bukaMin;
+    const cleanPName = storageService._cleanName(p.nama);
+
+    // 1. Cek Kehadiran (SUDAH) di PENGAMPU_PRESENSI & liveFeed
+    const pRecord = (pengampuPresensiList || []).find(r => 
+      r.tanggal === todayISO &&
+      (storageService._cleanName(r.namaGuru) === cleanPName || r.pengampuId === p.id) &&
+      (r.sesiId === sesi.id || (r.sesiNama || '').toLowerCase().includes(sesi.id) || (r.sesiNama || '').toLowerCase().includes((sesi.nama || '').toLowerCase()))
+    );
+
+    const feedRecord = (monitoringData.liveFeed || []).find(f => 
+      (storageService._cleanName(f.nama) === cleanPName || f.pengampuId === p.id) &&
+      (f.tanggal === todayISO || !f.tanggal) &&
+      ((f.sesi || '').toLowerCase().includes(sesi.id) || (f.sesi || '').toLowerCase().includes((sesi.nama || '').toLowerCase()))
+    );
+
+    const matchedScan = pRecord || feedRecord;
+    const isExplicitAlpa = matchedScan && (matchedScan.status === 'Alpa' || matchedScan.status === 'Alfa');
+    const hasValidScan = matchedScan && !isExplicitAlpa && (
+      matchedScan.status === 'Sudah' || 
+      matchedScan.status === 'Tepat Waktu' || 
+      matchedScan.status === 'Terlambat' || 
+      (matchedScan.jamScan && matchedScan.jamScan !== '-') || 
+      (matchedScan.jam && matchedScan.jam !== '-')
+    );
+
+    if (hasValidScan) {
+      const isLate = matchedScan.status === 'Terlambat' || 
+                     (matchedScan.selisihMenit > 0) || 
+                     (matchedScan.keterangan || '').toLowerCase().includes('telat');
+      const selisih = matchedScan.selisihMenit || 0;
+      const jamScan = matchedScan.jamScan || matchedScan.jam || '-';
       return {
+        statusKey: 'SUDAH',
+        type: 'sudah',
+        subType: isLate ? 'terlambat' : 'tepat-waktu',
+        badge: isLate ? `✓ SUDAH (Telat ${selisih}m)` : '✓ SUDAH (Tepat Waktu)',
+        badgeMobile: isLate ? `✓ Telat ${selisih}m` : '✓ SUDAH',
+        badgeClass: isLate ? 'badge-status-late' : 'badge-status-ontime',
+        label: 'Sudah Absen',
+        keterangan: matchedScan.keterangan || (isLate ? `Hadir Terlambat ${selisih} Menit` : 'Hadir Tepat Waktu'),
+        jamScan: jamScan,
+        selisihMenit: selisih,
+        borderAccent: isLate ? '#f97316' : '#10b981',
+        avatarBg: isLate ? '#ffedd5' : '#dcfce7',
+        avatarColor: isLate ? '#c2410c' : '#15803d',
+        metode: matchedScan.metode || 'QR Scan GPS',
+        scheduleText: `Scan: ${jamScan} WIB `,
+        scheduleSubText: `(Jadwal: ${sesi.jamMulai || sesi.mulai} - ${sesi.jamSelesai || sesi.selesai})`,
+        scheduleColor: isLate ? '#c2410c' : '#047857'
+      };
+    }
+
+    // 2. Cek Izin Resmi (IJIN)
+    const activeIzin = (izinList || []).find(i => {
+      const cleanIName = storageService._cleanName(i.nama);
+      const nameMatch = cleanIName === cleanPName || i.guruId === p.id;
+      if (!nameMatch) return false;
+      const statusValid = i.status === 'Disetujui' || i.status === 'Perlu Persetujuan' || i.status === 'Menunggu' || !i.status;
+      if (!statusValid) return false;
+      const sesiMatch = !i.sesi || 
+                        i.sesi.toLowerCase().includes('semua') || 
+                        i.sesi.toLowerCase().includes('hari ini') || 
+                        i.sesi.toLowerCase().includes(sesi.id) || 
+                        i.sesi.toLowerCase().includes((sesi.nama || '').toLowerCase());
+      return sesiMatch;
+    });
+
+    if (activeIzin || (matchedScan && matchedScan.status === 'Izin')) {
+      const iSource = activeIzin || matchedScan;
+      const ketIzin = iSource.keterangan || (iSource.alasan ? `Izin: ${iSource.alasan}` : (iSource.jenisIzin ? `Izin ${iSource.jenisIzin}` : 'Izin Resmi Disetujui'));
+      const badalText = iSource.guruBadal ? ` (Badal: ${iSource.guruBadal})` : '';
+      return {
+        statusKey: 'IJIN',
         type: 'izin',
-        badge: '📋 Izin',
-        badgeMobile: '📋 Izin',
+        subType: 'izin',
+        badge: '📋 IJIN',
+        badgeMobile: '📋 IJIN',
         badgeClass: 'badge-status-izin',
         label: 'Izin',
-        keterangan: ketText,
+        keterangan: ketIzin + badalText,
+        jamScan: '-',
+        selisihMenit: 0,
         borderAccent: '#3b82f6',
         avatarBg: '#dbeafe',
         avatarColor: '#1d4ed8',
-        scheduleText: `Jadwal: ${item.jadwal || '-'} • `,
+        metode: 'Surat Permohonan',
+        scheduleText: `Jadwal: ${sesi.jamMulai || sesi.mulai} - ${sesi.jamSelesai || sesi.selesai} • `,
         scheduleHighlight: 'Izin Resmi',
         scheduleHighlightColor: '#2563eb'
       };
     }
 
-    // 2. HADIR: jika sudah absen maka hadir
-    const hasScan = item.jam && item.jam !== '-' && item.jam.trim() !== '';
-    if (hasScan || item.status === 'Tepat Waktu' || item.status === 'Terlambat') {
-      const isLate = item.status === 'Terlambat' || 
-                     item.selisihMenit > 0 || 
-                     (item.keterangan && item.keterangan.toLowerCase().includes('telat'));
+    // 3 & 4. BELUM SCAN:
+    // JIKA SUDAH LEWAT BATAS ABSENSI NYA MAKA OTOMATIS ALPA!
+    if (isLewatBatas || isExplicitAlpa) {
       return {
-        type: 'hadir',
-        subType: isLate ? 'terlambat' : 'tepat-waktu',
-        badge: isLate ? `⚠️ Hadir (Telat ${item.selisihMenit || 5}m)` : '✓ Hadir (Tepat Waktu)',
-        badgeMobile: isLate ? `⚠️ Telat ${item.selisihMenit || 5}m` : '✓ Hadir',
-        badgeClass: isLate ? 'badge-status-late' : 'badge-status-ontime',
-        label: 'Hadir',
-        keterangan: item.keterangan || (isLate ? `Telat ${item.selisihMenit || 5} Menit` : 'Tepat Waktu'),
-        borderAccent: isLate ? '#f97316' : '#10b981',
-        avatarBg: isLate ? '#ffedd5' : '#dcfce7',
-        avatarColor: isLate ? '#c2410c' : '#15803d',
-        scheduleText: `Scan: ${item.jam} WIB `,
-        scheduleSubText: `(${item.jadwal || '-'})`,
-        scheduleColor: isLate ? '#c2410c' : '#047857'
-      };
-    }
-
-    // 3 & 4. BELUM SCAN: Cek apakah sudah lewat waktu absennya (Alpa) atau belum lewat (Belum Absen)
-    const isLewat = checkIfSesiLewat(item);
-
-    if (isLewat || item.status === 'Alpa' || item.status === 'Alfa') {
-      // 4. ALPA: jika sudah lewat waktu absen nya maka alpa
-      return {
+        statusKey: 'ALPA',
         type: 'alpa',
-        badge: '✗ Alpa',
-        badgeMobile: '✗ Alpa',
+        subType: 'alpa',
+        badge: '✗ ALPA',
+        badgeMobile: '✗ ALPA',
         badgeClass: 'badge-status-alpa',
-        label: 'Alpa',
-        keterangan: item.keterangan && !item.keterangan.toLowerCase().includes('menunggu') 
-          ? item.keterangan 
-          : 'Alpa: Melewati batas waktu presensi halaqah',
+        label: 'Otomatis Alpa',
+        keterangan: (matchedScan && matchedScan.keterangan && isExplicitAlpa)
+          ? matchedScan.keterangan
+          : `Otomatis Alpa (Melewati Batas Waktu ${sesi.batasScan || '05:30'} WIB)`,
+        jamScan: '-',
+        selisihMenit: 0,
         borderAccent: '#ef4444',
         avatarBg: '#fee2e2',
         avatarColor: '#b91c1c',
-        scheduleText: `Jadwal: ${item.jadwal || '-'} • `,
-        scheduleHighlight: 'Alpa (Lewat Waktu Sesi)',
+        metode: 'Sistem Otomatis',
+        scheduleText: `Batas: ${sesi.batasScan || '-'} WIB • `,
+        scheduleHighlight: 'Otomatis Alpa (Lewat Batas)',
         scheduleHighlightColor: '#dc2626'
       };
     }
 
-    // 3. BELUM ABSEN: jika belum absen maka belum absen
+    // JIKA BELUM LEWAT BATAS ABSENSI NYA -> STATUS: BELUM
     return {
-      type: 'belum-absen',
-      badge: '○ Belum Absen',
-      badgeMobile: '○ Belum Absen',
+      statusKey: 'BELUM',
+      type: 'belum',
+      subType: 'belum',
+      badge: '○ BELUM',
+      badgeMobile: '○ BELUM',
       badgeClass: 'badge-status-pending',
       label: 'Belum Absen',
-      keterangan: item.keterangan && !item.keterangan.toLowerCase().includes('alpa')
-        ? item.keterangan
-        : 'Belum Absen (Menunggu Jadwal Sesi Presensi)',
+      keterangan: isSessionStarted 
+        ? `Belum Absen (Batas Waktu: ${sesi.batasScan} WIB)`
+        : `Menunggu Jadwal Sesi (${sesi.jamMulai || sesi.mulai} - ${sesi.jamSelesai || sesi.selesai} WIB)`,
+      jamScan: '-',
+      selisihMenit: 0,
       borderAccent: '#94a3b8',
       avatarBg: '#f1f5f9',
       avatarColor: '#475569',
-      scheduleText: `Jadwal: ${item.jadwal || '-'} • `,
-      scheduleHighlight: 'Belum Absen',
+      metode: 'Menunggu Scan QR',
+      scheduleText: `Batas: ${sesi.batasScan} WIB • `,
+      scheduleHighlight: isSessionStarted ? 'Belum Presensi' : 'Menunggu Sesi',
       scheduleHighlightColor: '#64748b'
     };
   };
 
-  // Perhitungan KPI Presensi Keseluruhan
-  const feedList = monitoringData.liveFeed || [];
-  const countOntime = feedList.filter(f => evaluateItemStatus(f).subType === 'tepat-waktu').length;
-  const countLate = feedList.filter(f => evaluateItemStatus(f).subType === 'terlambat').length;
-  const countHadir = countOntime + countLate;
-  const countIzin = feedList.filter(f => evaluateItemStatus(f).type === 'izin').length;
-  const countBelumAbsen = feedList.filter(f => evaluateItemStatus(f).type === 'belum-absen').length;
-  const countAlpa = feedList.filter(f => evaluateItemStatus(f).type === 'alpa').length;
-  const totalSudahAbsen = countHadir;
+  // Sesi yang akan dievaluasi dan ditampilkan
+  const sessionsToDisplay = useMemo(() => {
+    if (sesiFilter === 'semua') return sesiList || [];
+    if (sesiFilter === 'aktif') return activeDetectedSession ? [activeDetectedSession] : (sesiList || []).slice(0, 1);
+    const found = (sesiList || []).find(s => s.id === sesiFilter || (s.nama || '').toLowerCase().includes(sesiFilter.toLowerCase()));
+    return found ? [found] : ((sesiList || []).slice(0, 1));
+  }, [sesiFilter, sesiList, activeDetectedSession]);
 
-  // Hitung jumlah status sesuai sesi terpilih
-  const feedForSesi = feedList.filter(item => {
-    if (sesiFilter === 'semua') return true;
-    const itemSesi = (item.sesi || '').toLowerCase();
-    if (sesiFilter === 'subuh') return itemSesi.includes('subuh');
-    if (sesiFilter === 'dhuha') return itemSesi.includes('dhuha') || itemSesi.includes('pagi');
-    if (sesiFilter === 'ashar') return itemSesi.includes('ashar');
-    if (sesiFilter === 'maghrib') return itemSesi.includes('maghrib');
-    return itemSesi.includes(sesiFilter.toLowerCase());
-  });
+  // Evaluasi SEMUA PENGAMPU untuk sesi yang ditampilkan
+  const allEvaluatedItems = useMemo(() => {
+    const list = [];
+    sessionsToDisplay.forEach(sesi => {
+      (allPengampu || []).forEach(p => {
+        const evaluation = evaluatePengampuAttendance(p, sesi);
+        list.push({
+          id: `${p.id}-${sesi.id}`,
+          pengampuId: p.id,
+          nama: p.nama,
+          nip: p.nip || 'NON-NIP',
+          role: p.role || 'Pengampu Halaqoh',
+          email: p.email,
+          noHp: p.noHp,
+          mapel: p.halaqah || ('Halaqah ' + p.nama),
+          kelas: p.kelas || 'Masjid Pusat PPIAS',
+          sesi: sesi.nama,
+          sesiId: sesi.id,
+          jadwal: `${sesi.jamMulai || sesi.mulai} - ${sesi.jamSelesai || sesi.selesai}`,
+          bukaScan: sesi.bukaScan,
+          batasScan: sesi.batasScan,
+          toleransiMenit: sesi.toleransiMenit || 15,
+          evaluation: evaluation
+        });
+      });
+    });
+    return list;
+  }, [sessionsToDisplay, allPengampu, pengampuPresensiList, monitoringData, izinList, currentTime]);
 
-  const countHadirForSesi = feedForSesi.filter(f => evaluateItemStatus(f).type === 'hadir').length;
-  const countOntimeForSesi = feedForSesi.filter(f => evaluateItemStatus(f).subType === 'tepat-waktu').length;
-  const countLateForSesi = feedForSesi.filter(f => evaluateItemStatus(f).subType === 'terlambat').length;
-  const countIzinForSesi = feedForSesi.filter(f => evaluateItemStatus(f).type === 'izin').length;
-  const countBelumAbsenForSesi = feedForSesi.filter(f => evaluateItemStatus(f).type === 'belum-absen').length;
-  const countAlpaForSesi = feedForSesi.filter(f => evaluateItemStatus(f).type === 'alpa').length;
+  // Perhitungan KPI Presensi Keseluruhan untuk Sesi Terpilih
+  const countTotal = allEvaluatedItems.length;
+  const countSudah = allEvaluatedItems.filter(item => item.evaluation.statusKey === 'SUDAH').length;
+  const countOntime = allEvaluatedItems.filter(item => item.evaluation.subType === 'tepat-waktu').length;
+  const countLate = allEvaluatedItems.filter(item => item.evaluation.subType === 'terlambat').length;
+  const countIjin = allEvaluatedItems.filter(item => item.evaluation.statusKey === 'IJIN').length;
+  const countBelum = allEvaluatedItems.filter(item => item.evaluation.statusKey === 'BELUM').length;
+  const countAlpa = allEvaluatedItems.filter(item => item.evaluation.statusKey === 'ALPA').length;
 
-  // Filter Data (Filter Sesi & Filter Status Presensi)
-  const filteredFeed = feedForSesi.filter(item => {
-    const ev = evaluateItemStatus(item);
-    if (activeStatusFilter === 'hadir') return ev.type === 'hadir';
-    if (activeStatusFilter === 'tepat-waktu') return ev.subType === 'tepat-waktu';
-    if (activeStatusFilter === 'terlambat') return ev.subType === 'terlambat';
-    if (activeStatusFilter === 'izin') return ev.type === 'izin';
-    if (activeStatusFilter === 'belum-absen') return ev.type === 'belum-absen';
-    if (activeStatusFilter === 'alpa') return ev.type === 'alpa';
-    return true;
-  });
+  // Filter Data (Filter Status Presensi & Search Term)
+  const filteredFeed = useMemo(() => {
+    return allEvaluatedItems.filter(item => {
+      // 1. Filter Status Presensi
+      if (activeStatusFilter === 'sudah' && item.evaluation.statusKey !== 'SUDAH') return false;
+      if (activeStatusFilter === 'tepat-waktu' && item.evaluation.subType !== 'tepat-waktu') return false;
+      if (activeStatusFilter === 'terlambat' && item.evaluation.subType !== 'terlambat') return false;
+      if (activeStatusFilter === 'belum' && item.evaluation.statusKey !== 'BELUM') return false;
+      if (activeStatusFilter === 'izin' && item.evaluation.statusKey !== 'IJIN') return false;
+      if (activeStatusFilter === 'alpa' && item.evaluation.statusKey !== 'ALPA') return false;
 
-  // Export CSV Detail
+      // 2. Filter Search Keyword
+      if (searchTerm.trim() !== '') {
+        const q = searchTerm.toLowerCase();
+        const matchNama = (item.nama || '').toLowerCase().includes(q);
+        const matchNip = (item.nip || '').toLowerCase().includes(q);
+        const matchMapel = (item.mapel || '').toLowerCase().includes(q);
+        const matchKelas = (item.kelas || '').toLowerCase().includes(q);
+        const matchSesi = (item.sesi || '').toLowerCase().includes(q);
+        const matchKet = (item.evaluation.keterangan || '').toLowerCase().includes(q);
+        if (!matchNama && !matchNip && !matchMapel && !matchKelas && !matchSesi && !matchKet) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [allEvaluatedItems, activeStatusFilter, searchTerm]);
+
+  // Export CSV Detail Sesuai Data Lengkap Pengampu
   const handleExportCSV = () => {
-    const headers = ["No", "Nama Pengampu", "NIP", "Peran", "Sesi", "Halaqah Bimbingan", "Kelas / Lokasi", "Jadwal", "Jam Scan", "Status", "Keterangan", "Selisih Telat (Menit)", "Metode"];
-    const rows = filteredFeed.map((f, i) => [
+    const headers = [
+      "No", "Nama Pengampu", "NIP", "Peran", "Sesi Halaqah", 
+      "Halaqah Bimbingan", "Kelas / Lokasi", "Jadwal", "Batas Akhir Scan", 
+      "Jam Scan", "Status Absensi", "Keterangan", "Selisih Menit", "Metode"
+    ];
+    const rows = filteredFeed.map((item, i) => [
       i + 1,
-      `"${f.nama || ''}"`,
-      `"${f.nip || '-'}"`,
-      `"${f.role || 'Pengampu'}"`,
-      `"${f.sesi || '-'}"`,
-      `"${f.mapel || '-'}"`,
-      `"${f.kelas || '-'}"`,
-      `"${f.jadwal || '-'}"`,
-      `"${f.jam || '-'}"`,
-      `"${f.status || '-'}"`,
-      `"${f.keterangan || '-'}"`,
-      f.selisihMenit || 0,
-      `"${f.metode || '-'}"`
+      `"${item.nama || ''}"`,
+      `"${item.nip || '-'}"`,
+      `"${item.role || 'Pengampu'}"`,
+      `"${item.sesi || '-'}"`,
+      `"${item.mapel || '-'}"`,
+      `"${item.kelas || '-'}"`,
+      `"${item.jadwal || '-'}"`,
+      `"${item.batasScan || '-'}"`,
+      `"${item.evaluation.jamScan || '-'}"`,
+      `"${item.evaluation.statusKey || '-'}"`,
+      `"${item.evaluation.keterangan || '-'}"`,
+      item.evaluation.selisihMenit || 0,
+      `"${item.evaluation.metode || '-'}"`
     ]);
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\r\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Presensi_Pengampu_Tahfidz_MAIAS_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `Presensi_Pengampu_${sesiFilter}_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast && showToast("Data presensi pengampu berhasil diekspor ke CSV!");
+    showToast && showToast("Data presensi seluruh pengampu berhasil diekspor ke CSV!");
   };
 
-  // Kirim Rekap Kehadiran via WhatsApp
+  // Kirim Rekap Kehadiran Pengampu via WhatsApp
   const handleShareWA = () => {
-    const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    let text = `*LAPORAN KEHADIRAN PENGAMPU HALAQAH TAHFIDZ MA IHYA AS-SUNNAH*%0A`;
-    text += `*Hari / Tanggal:* ${today}%0A`;
-    text += `---------------------------------------%0A`;
-    text += `*Ringkasan Kehadiran:*%0A`;
-    text += `• Total Terjadwal: ${feedList.length}%0A`;
-    text += `• Sudah Presensi: ${totalSudahAbsen}%0A`;
-    text += `• Tepat Waktu: ${countOntime} orang%0A`;
-    text += `• Terlambat: ${countLate} orang%0A`;
-    text += `• Izin / Sakit: ${countIzin} orang%0A`;
-    text += `• Belum Absen: ${countPending} orang%0A`;
-    text += `---------------------------------------%0A`;
+    const todayStr = currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const timeStr = currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(':', '.') + ' WIB';
     
+    let text = `*LAPORAN KEHADIRAN PENGAMPU HALAQAH TAHFIDZ*%0A`;
+    text += `*MA IHYA AS-SUNNAH TASIKMALAYA*%0A`;
+    text += `*Hari / Tanggal:* ${todayStr}%0A`;
+    text += `*Waktu Pelaporan:* ${timeStr}%0A`;
+    text += `*Sesi Halaqah:* ${sesiFilter === 'semua' ? 'Semua Sesi Terjadwal' : (sessionsToDisplay[0]?.nama || 'Sesi Terjadwal')}%0A`;
+    if (sessionsToDisplay.length === 1) {
+      text += `*Batas Akhir Scan:* ${sessionsToDisplay[0]?.batasScan || '-'} WIB%0A`;
+    }
+    text += `---------------------------------------%0A`;
+    text += `*RINGKASAN KEHADIRAN PENGAMPU:*%0A`;
+    text += `• Total Pengampu: ${countTotal} orang%0A`;
+    text += `• Sudah Presensi: ${countSudah} orang (${countOntime} Tepat Waktu, ${countLate} Telat)%0A`;
+    text += `• Izin / Sakit: ${countIjin} orang%0A`;
+    text += `• Belum Absen: ${countBelum} orang%0A`;
+    text += `• Otomatis ALPA: ${countAlpa} orang (Lewat batas)%0A`;
+    text += `---------------------------------------%0A`;
+
+    // Rincian Alpa
+    const alpaItems = allEvaluatedItems.filter(i => i.evaluation.statusKey === 'ALPA');
+    if (alpaItems.length > 0) {
+      text += `*DAFTAR PENGAMPU ALPA (LEWAT BATAS):*%0A`;
+      alpaItems.forEach((item, idx) => {
+        text += `${idx + 1}. ${item.nama} - *ALPA* (${item.sesi})%0A`;
+      });
+      text += `---------------------------------------%0A`;
+    }
+
     // Rincian Keterlambatan
-    const lateItems = feedList.filter(f => f.status === 'Terlambat');
+    const lateItems = allEvaluatedItems.filter(i => i.evaluation.subType === 'terlambat');
     if (lateItems.length > 0) {
-      text += `*Rincian Pengampu Terlambat:*%0A`;
+      text += `*DAFTAR TERLAMBAT:*%0A`;
       lateItems.forEach((item, idx) => {
-        text += `${idx + 1}. ${item.nama} - *${item.keterangan}* (Scan ${item.jam} WIB)%0A`;
+        text += `${idx + 1}. ${item.nama} - Telat ${item.evaluation.selisihMenit}m (Scan ${item.evaluation.jamScan} WIB)%0A`;
       });
       text += `---------------------------------------%0A`;
     }
 
-    // Rincian Izin / Sakit
-    const izinItems = feedList.filter(f => f.status === 'Izin' || f.status === 'Sakit');
+    // Rincian Izin
+    const izinItems = allEvaluatedItems.filter(i => i.evaluation.statusKey === 'IJIN');
     if (izinItems.length > 0) {
-      text += `*Rincian Izin & Sakit:*%0A`;
+      text += `*DAFTAR IZIN RESMI:*%0A`;
       izinItems.forEach((item, idx) => {
-        text += `${idx + 1}. ${item.nama} - *${item.status}* (${item.alasanIzin || item.keterangan})%0A`;
+        text += `${idx + 1}. ${item.nama} - ${item.evaluation.keterangan}%0A`;
       });
       text += `---------------------------------------%0A`;
     }
 
-    text += `_Diperbarui otomatis oleh Sistem Tahfidz HUB MA Ihya As-Sunnah_`;
+    text += `_Diperbarui otomatis secara real-time oleh Sistem Tahfidz HUB MA Ihya As-Sunnah_`;
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
-  // Handle Edit / Koreksi Status
+  // Handle Edit / Koreksi Status Presensi Pengampu oleh Super Admin
   const handleOpenKoreksi = (item) => {
     setEditingItem(item);
+    const ev = item.evaluation;
+    let initialStatus = 'Tepat Waktu';
+    if (ev.statusKey === 'SUDAH') {
+      initialStatus = ev.subType === 'terlambat' ? 'Terlambat' : 'Tepat Waktu';
+    } else if (ev.statusKey === 'IJIN') {
+      initialStatus = 'Izin';
+    } else if (ev.statusKey === 'ALPA') {
+      initialStatus = 'Alpa';
+    } else {
+      initialStatus = 'Belum Absen';
+    }
+
     setEditStatusForm({
-      status: item.status || 'Tepat Waktu',
-      keterangan: item.keterangan || '',
-      selisihMenit: item.selisihMenit || 0
+      status: initialStatus,
+      keterangan: ev.keterangan || '',
+      selisihMenit: ev.selisihMenit || 0
     });
   };
 
@@ -344,18 +505,32 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
     } else if (editStatusForm.status === 'Tepat Waktu' && !ket) {
       ket = 'Tepat Waktu (Koreksi Admin)';
     } else if (editStatusForm.status === 'Alpa' && !ket) {
-      ket = 'Alpa: Melewati batas waktu presensi halaqah';
+      ket = `Alpa: Melewati batas waktu presensi (${editingItem.batasScan || '05:30'} WIB)`;
     } else if (editStatusForm.status === 'Izin' && !ket) {
       ket = 'Izin Resmi Disetujui';
     } else if (editStatusForm.status === 'Belum Absen' && !ket) {
-      ket = 'Belum Absen (Menunggu Jadwal Sesi Presensi)';
+      ket = `Belum Absen (Batas Waktu: ${editingItem.batasScan || '05:30'} WIB)`;
     }
 
+    const todayISO = currentTime.toISOString().split('T')[0];
+
     storageService.updateStatusPresensiPengampu(
-      editingItem.id,
+      editingItem.pengampuId || editingItem.id,
       editStatusForm.status,
       ket,
-      parseInt(editStatusForm.selisihMenit, 10) || 0
+      parseInt(editStatusForm.selisihMenit, 10) || 0,
+      {
+        pengampuId: editingItem.pengampuId || editingItem.id,
+        nama: editingItem.nama,
+        nip: editingItem.nip,
+        role: editingItem.role,
+        sesi: editingItem.sesi,
+        sesiId: editingItem.sesiId,
+        mapel: editingItem.mapel,
+        kelas: editingItem.kelas,
+        jadwal: editingItem.jadwal,
+        tanggal: todayISO
+      }
     );
 
     reloadData();
@@ -465,13 +640,13 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
             const el = document.getElementById('panel-presensi-pengampu');
             if (el) el.scrollIntoView({ behavior: 'smooth' });
           }}
-          title={`Presensi Harian Pengampu: ${totalSudahAbsen} hadir`}
+          title={`Presensi Pengampu: ${countSudah} dari ${countTotal} hadir`}
         >
           <div className="sigap-kpi-icon-box orange">
             <Clock size={20} />
           </div>
           <div className="sigap-kpi-content">
-            <div className="sigap-kpi-val">{totalSudahAbsen}</div>
+            <div className="sigap-kpi-val">{countSudah}</div>
             <div className="sigap-kpi-label">Presensi Harian</div>
           </div>
         </div>
@@ -548,36 +723,42 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
 
       {/* 4. BARIS 3: PANEL MONITORING PRESENSI PENGAMPU HARI INI */}
       <div className="sigap-presensi-panel" id="panel-presensi-pengampu">
-        {/* Header Panel */}
+        {/* Header Panel (Judul & Keterangan Gambar 4 & 5 Disembunyikan di Mobile) */}
         <div className="sigap-presensi-header">
-          <div>
+          <div className="sigap-mobile-hide">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
-                Monitoring Presensi Pengampu Hari Ini
+              <h2 style={{ fontSize: '1.18rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
+                Monitoring Presensi Seluruh Pengampu Halaqah
               </h2>
               <span style={{
-                background: '#f1f5f9',
-                color: '#0f766e',
+                background: '#ecfdf5',
+                color: '#047857',
                 fontSize: '11px',
                 fontWeight: 800,
-                padding: '2px 8px',
-                borderRadius: '6px'
+                padding: '2px 9px',
+                borderRadius: '6px',
+                border: '1px solid #a7f3d0',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
               }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
                 Real-Time
               </span>
             </div>
             <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '4px 0 0 0' }}>
-              Daftar seluruh ustadz pengampu halaqah tahfidz yang terdata beserta status absensi hari ini, rincian tepat waktu, keterlambatan, dan izin.
+              Daftar seluruh ustadz pengampu halaqah tahfidz terjadwal beserta status absensi hari ini (Sudah, Belum, Izin). Jika waktu telah melewati batas absensi, pengampu yang belum absen otomatis tercatat <b>ALPA</b>.
             </p>
           </div>
 
           {/* Action Buttons: Kirim WA & Export CSV */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <button 
               className="sigap-btn-green"
               onClick={handleShareWA}
-              title="Kirim ringkasan laporan ke WhatsApp"
+              title="Kirim ringkasan laporan presensi ke WhatsApp"
             >
+              <Share2 size={13} style={{ marginRight: '4px' }} />
               <span>Rekap WA</span>
             </button>
 
@@ -586,611 +767,463 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
               onClick={handleExportCSV}
               title="Download rekapan kehadiran dalam format CSV"
             >
+              <Download size={13} style={{ marginRight: '4px' }} />
               <span>Export CSV</span>
             </button>
           </div>
         </div>
 
-        {/* Mini KPI Counters Bar (5 Metrik Kehadiran Lengkap) */}
-        <div className="sigap-mini-kpi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))' }}>
-          {/* Hadir Tepat Waktu */}
-          <div 
-            className="sigap-mini-kpi-card" 
-            style={{ borderLeft: '4px solid #10b981', cursor: 'pointer' }}
-            onClick={() => setActiveStatusFilter(activeStatusFilter === 'tepat-waktu' ? 'semua' : 'tepat-waktu')}
-            title="Klik untuk filter: Hadir Tepat Waktu"
-          >
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>HADIR (TEPAT WAKTU)</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', marginTop: '2px' }}>
-                {countOntime} <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>Pengampu</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Hadir Terlambat */}
-          <div 
-            className="sigap-mini-kpi-card" 
-            style={{ borderLeft: '4px solid #f97316', cursor: 'pointer' }}
-            onClick={() => setActiveStatusFilter(activeStatusFilter === 'terlambat' ? 'semua' : 'terlambat')}
-            title="Klik untuk filter: Hadir Terlambat"
-          >
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>HADIR (TERLAMBAT)</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#c2410c', marginTop: '2px' }}>
-                {countLate} <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>Pengampu</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Izin Resmi */}
-          <div 
-            className="sigap-mini-kpi-card" 
-            style={{ borderLeft: '4px solid #3b82f6', cursor: 'pointer' }}
-            onClick={() => setActiveStatusFilter(activeStatusFilter === 'izin' ? 'semua' : 'izin')}
-            title="Klik untuk filter: Izin"
-          >
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>IZIN RESMI</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#2563eb', marginTop: '2px' }}>
-                {countIzin} <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>Pengampu</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Belum Absen */}
-          <div 
-            className="sigap-mini-kpi-card" 
-            style={{ borderLeft: '4px solid #94a3b8', cursor: 'pointer' }}
-            onClick={() => setActiveStatusFilter(activeStatusFilter === 'belum-absen' ? 'semua' : 'belum-absen')}
-            title="Klik untuk filter: Belum Absen (Menunggu Sesi)"
-          >
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>BELUM ABSEN</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#475569', marginTop: '2px' }}>
-                {countBelumAbsen} <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>Pengampu</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Alpa (Lewat Waktu Sesi) */}
-          <div 
-            className="sigap-mini-kpi-card" 
-            style={{ borderLeft: '4px solid #ef4444', cursor: 'pointer' }}
-            onClick={() => setActiveStatusFilter(activeStatusFilter === 'alpa' ? 'semua' : 'alpa')}
-            title="Klik untuk filter: Alpa (Lewat Batas Waktu Sesi)"
-          >
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>ALPA (LEWAT WAKTU)</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#dc2626', marginTop: '2px' }}>
-                {countAlpa} <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>Pengampu</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Toolbar: 1. Filter Sesi & 2. Filter Status Kehadiran (Semua, Hadir, Tepat Waktu, Terlambat, Izin, Belum Absen, Alpa) */}
-        <div className="sigap-filter-tabs-row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            {/* 1. FILTER SESI */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Clock size={14} color="#0d9488" />
-                <span>Sesi:</span>
-              </span>
-              <select
-                value={sesiFilter}
-                onChange={(e) => setSesiFilter(e.target.value)}
-                style={{
-                  fontSize: '12px',
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  border: '1.5px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#0f172a',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  outline: 'none'
-                }}
-              >
-                <option value="semua">Semua Sesi ({feedList.length})</option>
-                <option value="subuh">Ba'da Subuh</option>
-                <option value="dhuha">Pagi / Dhuha</option>
-                <option value="ashar">Ba'da Ashar</option>
-                <option value="maghrib">Ba'da Maghrib</option>
-              </select>
-            </div>
-
-            {/* 2. FILTER STATUS SESUAI ATURAN USER */}
+        {/* =========================================================================
+            NAVIGASI TAB SESI HALAQAH & JAM REAL-TIME WIB
+            ========================================================================= */}
+        <div style={{
+          background: '#f8fafc',
+          padding: '12px 16px',
+          borderRadius: '14px',
+          border: '1px solid #e2e8f0',
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          {/* Baris 1: Tab Pilihan Sesi & Jam Digital */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            {/* Quick Session Tabs */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-              <button 
-                type="button"
-                className={`sigap-tab-pill ${activeStatusFilter === 'semua' ? 'active' : ''}`}
-                onClick={() => setActiveStatusFilter('semua')}
-                style={{ fontSize: '11.5px', padding: '5px 11px' }}
-              >
-                Semua
-                <span className="sigap-badge-count">{feedForSesi.length}</span>
-              </button>
+              <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', marginRight: '4px' }}>
+                <Clock size={14} color="#0d9488" />
+                <span>Pilih Sesi:</span>
+              </span>
 
-              <button 
+              {/* Tab 1: Sesi Aktif Saat Ini */}
+              <button
                 type="button"
-                className={`sigap-tab-pill ${activeStatusFilter === 'hadir' ? 'active' : ''}`}
-                onClick={() => setActiveStatusFilter('hadir')}
-                style={{ 
-                  fontSize: '11.5px', 
-                  padding: '5px 11px',
-                  background: activeStatusFilter === 'hadir' ? '#059669' : undefined,
-                  color: activeStatusFilter === 'hadir' ? '#ffffff' : undefined,
-                  borderColor: activeStatusFilter === 'hadir' ? '#047857' : undefined
+                className={`sigap-tab-pill ${sesiFilter === 'aktif' ? 'active' : ''}`}
+                onClick={() => setSesiFilter('aktif')}
+                style={{
+                  fontSize: '11.5px',
+                  padding: '5px 12px',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: sesiFilter === 'aktif' ? '#0d9488' : '#ffffff',
+                  color: sesiFilter === 'aktif' ? '#ffffff' : '#0f766e',
+                  borderColor: sesiFilter === 'aktif' ? '#0f766e' : '#ccfbf1'
                 }}
-                title="Menampilkan seluruh pengampu yang sudah absen (Tepat Waktu & Terlambat)"
+                title="Menampilkan sesi yang sedang aktif atau terjadwal saat ini"
               >
-                Hadir
-                <span className="sigap-badge-count">{countHadirForSesi}</span>
+                <Flame size={13} color={sesiFilter === 'aktif' ? '#fef08a' : '#ea580c'} />
+                <span>Sesi Aktif: {activeDetectedSession?.nama || "Ba'da Subuh"}</span>
+                {activeDetectedSession?.isCurrentlyRunning && (
+                  <span style={{
+                    width: '7px',
+                    height: '7px',
+                    borderRadius: '50%',
+                    background: sesiFilter === 'aktif' ? '#fef08a' : '#10b981',
+                    boxShadow: '0 0 6px #10b981'
+                  }}></span>
+                )}
               </button>
 
-              <button 
+              {/* Tab 2: Ba'da Subuh */}
+              <button
                 type="button"
-                className={`sigap-tab-pill ${activeStatusFilter === 'terlambat' ? 'active' : ''}`}
-                onClick={() => setActiveStatusFilter('terlambat')}
-                style={{ 
-                  fontSize: '11.5px', 
-                  padding: '5px 11px',
-                  background: activeStatusFilter === 'terlambat' ? '#ea580c' : undefined,
-                  color: activeStatusFilter === 'terlambat' ? '#ffffff' : undefined,
-                  borderColor: activeStatusFilter === 'terlambat' ? '#c2410c' : undefined
-                }}
+                className={`sigap-tab-pill ${sesiFilter === 'subuh' ? 'active' : ''}`}
+                onClick={() => setSesiFilter('subuh')}
+                style={{ fontSize: '11.5px', padding: '5px 11px', fontWeight: 700 }}
               >
-                Terlambat
-                <span className="sigap-badge-count">{countLateForSesi}</span>
+                <Sunrise size={13} style={{ marginRight: '4px', display: 'inline' }} />
+                <span>Ba'da Subuh</span>
               </button>
 
-              <button 
+              {/* Tab 3: Pagi / Dhuha */}
+              <button
                 type="button"
-                className={`sigap-tab-pill ${activeStatusFilter === 'izin' ? 'active' : ''}`}
-                onClick={() => setActiveStatusFilter('izin')}
-                style={{ 
-                  fontSize: '11.5px', 
-                  padding: '5px 11px',
-                  background: activeStatusFilter === 'izin' ? '#2563eb' : undefined,
-                  color: activeStatusFilter === 'izin' ? '#ffffff' : undefined,
-                  borderColor: activeStatusFilter === 'izin' ? '#1d4ed8' : undefined
-                }}
+                className={`sigap-tab-pill ${sesiFilter === 'pagi' ? 'active' : ''}`}
+                onClick={() => setSesiFilter('pagi')}
+                style={{ fontSize: '11.5px', padding: '5px 11px', fontWeight: 700 }}
               >
-                Izin
-                <span className="sigap-badge-count">{countIzinForSesi}</span>
+                <Sun size={13} style={{ marginRight: '4px', display: 'inline' }} />
+                <span>Pagi / Dhuha</span>
               </button>
 
-              <button 
+              {/* Tab 4: Ba'da Ashar */}
+              <button
                 type="button"
-                className={`sigap-tab-pill ${activeStatusFilter === 'belum-absen' ? 'active' : ''}`}
-                onClick={() => setActiveStatusFilter('belum-absen')}
-                style={{ 
-                  fontSize: '11.5px', 
-                  padding: '5px 11px',
-                  background: activeStatusFilter === 'belum-absen' ? '#475569' : undefined,
-                  color: activeStatusFilter === 'belum-absen' ? '#ffffff' : undefined,
-                  borderColor: activeStatusFilter === 'belum-absen' ? '#334155' : undefined
-                }}
+                className={`sigap-tab-pill ${sesiFilter === 'ashar' ? 'active' : ''}`}
+                onClick={() => setSesiFilter('ashar')}
+                style={{ fontSize: '11.5px', padding: '5px 11px', fontWeight: 700 }}
               >
-                Belum Absen
-                <span className="sigap-badge-count">{countBelumAbsenForSesi}</span>
+                <CloudSun size={13} style={{ marginRight: '4px', display: 'inline' }} />
+                <span>Ba'da Ashar</span>
               </button>
 
-              <button 
+              {/* Tab 5: Ba'da Maghrib */}
+              <button
                 type="button"
-                className={`sigap-tab-pill ${activeStatusFilter === 'alpa' ? 'active' : ''}`}
-                onClick={() => setActiveStatusFilter('alpa')}
-                style={{ 
-                  fontSize: '11.5px', 
-                  padding: '5px 11px',
-                  background: activeStatusFilter === 'alpa' ? '#dc2626' : undefined,
-                  color: activeStatusFilter === 'alpa' ? '#ffffff' : undefined,
-                  borderColor: activeStatusFilter === 'alpa' ? '#b91c1c' : undefined
-                }}
+                className={`sigap-tab-pill ${sesiFilter === 'malam' ? 'active' : ''}`}
+                onClick={() => setSesiFilter('malam')}
+                style={{ fontSize: '11.5px', padding: '5px 11px', fontWeight: 700 }}
               >
-                Alpa
-                <span className="sigap-badge-count">{countAlpaForSesi}</span>
+                <Moon size={13} style={{ marginRight: '4px', display: 'inline' }} />
+                <span>Ba'da Maghrib</span>
               </button>
 
-              <button 
+              {/* Tab 6: Semua Sesi */}
+              <button
                 type="button"
-                className={`sigap-tab-pill ${activeStatusFilter === 'tepat-waktu' ? 'active' : ''}`}
-                onClick={() => setActiveStatusFilter('tepat-waktu')}
-                style={{ fontSize: '11.5px', padding: '5px 11px' }}
+                className={`sigap-tab-pill ${sesiFilter === 'semua' ? 'active' : ''}`}
+                onClick={() => setSesiFilter('semua')}
+                style={{ fontSize: '11.5px', padding: '5px 11px', fontWeight: 700 }}
               >
-                Tepat Waktu
-                <span className="sigap-badge-count">{countOntimeForSesi}</span>
+                <span>Semua Sesi</span>
               </button>
+            </div>
+
+            {/* Jam Digital Real-Time WIB */}
+            <div style={{
+              background: '#0f172a',
+              color: '#38bdf8',
+              padding: '6px 14px',
+              borderRadius: '10px',
+              fontFamily: 'monospace',
+              fontSize: '12px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}>
+              <Timer size={14} color="#38bdf8" />
+              <span>
+                {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/:/g, '.')} WIB
+              </span>
+              <span style={{ color: '#94a3b8', fontSize: '11px', fontFamily: 'sans-serif', fontWeight: 600 }}>
+                ({currentTime.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })})
+              </span>
             </div>
           </div>
 
-          {/* Toggle Tampilan: Kartu Monitor vs Tabel */}
-          <div style={{ display: 'flex', background: '#f1f5f9', padding: '2px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-            <button
-              type="button"
-              onClick={() => setViewMode('cards')}
-              style={{
-                border: 'none',
-                background: viewMode === 'cards' ? '#ffffff' : 'transparent',
-                color: viewMode === 'cards' ? '#0f766e' : '#64748b',
-                padding: '5px 11px',
-                borderRadius: '6px',
-                fontSize: '11.5px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: viewMode === 'cards' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+          {/* Baris 2: Banner Informasi Sesi Terfokus & Peringatan Batas Absensi */}
+          {sessionsToDisplay.length === 1 && (() => {
+            const curSesi = sessionsToDisplay[0];
+            const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
+            const [startH, startM] = (curSesi.mulai || curSesi.jamMulai || '05:00').split(':').map(Number);
+            const [endH, endM] = (curSesi.selesai || curSesi.jamSelesai || '06:30').split(':').map(Number);
+            const [batasH, batasM] = (curSesi.batasScan || '05:30').split(':').map(Number);
+            const [bukaH, bukaM] = (curSesi.bukaScan || '04:45').split(':').map(Number);
+
+            const startMin = startH * 60 + startM;
+            const endMin = endH * 60 + endM;
+            const batasMin = batasH * 60 + batasM;
+            const bukaMin = bukaH * 60 + bukaM;
+
+            const isLewatBatas = nowMin > batasMin;
+            const isCurrentlyRunning = nowMin >= bukaMin && nowMin <= endMin;
+            const minutesLeft = batasMin - nowMin;
+
+            return (
+              <div style={{
+                background: isLewatBatas ? '#fef2f2' : isCurrentlyRunning ? '#ecfdf5' : '#f0fdf4',
+                border: `1.5px solid ${isLewatBatas ? '#fecaca' : isCurrentlyRunning ? '#a7f3d0' : '#bbf7d0'}`,
+                borderRadius: '10px',
+                padding: '10px 14px',
                 display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: '4px'
-              }}
-              title="Tampilan Kartu Monitor Presensi"
-            >
-              <span>🪪 Kartu Monitor</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('table')}
-              style={{
-                border: 'none',
-                background: viewMode === 'table' ? '#ffffff' : 'transparent',
-                color: viewMode === 'table' ? '#0f766e' : '#64748b',
-                padding: '5px 11px',
-                borderRadius: '6px',
-                fontSize: '11.5px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: viewMode === 'table' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-              title="Tampilan Tabel Data"
-            >
-              <span>📋 Tabel Data</span>
-            </button>
+                flexWrap: 'wrap',
+                gap: '10px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '8px',
+                    background: isLewatBatas ? '#fee2e2' : isCurrentlyRunning ? '#d1fae5' : '#e0f2fe',
+                    color: isLewatBatas ? '#dc2626' : isCurrentlyRunning ? '#059669' : '#0284c7',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    {isLewatBatas ? <AlertTriangle size={18} /> : isCurrentlyRunning ? <Flame size={18} /> : <Clock size={18} />}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12.5px', fontWeight: 800, color: isLewatBatas ? '#991b1b' : '#065f46' }}>
+                      Sesi: {curSesi.nama} ({curSesi.jamMulai || curSesi.mulai} - {curSesi.jamSelesai || curSesi.selesai} WIB)
+                    </div>
+                    <div style={{ fontSize: '11.5px', color: isLewatBatas ? '#b91c1c' : '#047857', marginTop: '2px', fontWeight: 600 }}>
+                      {isLewatBatas ? (
+                        <span>
+                          ⚠️ <b>Batas Waktu Absensi ({curSesi.batasScan || '05:30'} WIB) Telah Terlewati!</b> Seluruh pengampu yang belum presensi otomatis berstatus <b>ALPA</b>.
+                        </span>
+                      ) : isCurrentlyRunning ? (
+                        <span>
+                          🟢 <b>Sesi Sedang Berlangsung!</b> Batas akhir scan presensi pukul <b>{curSesi.batasScan || '05:30'} WIB</b> (Sisa waktu: <b>{minutesLeft > 0 ? `${minutesLeft} menit lagi` : 'Hampir habis'}</b>).
+                        </span>
+                      ) : (
+                        <span>
+                          ⚪ Sesi terjadwal pukul {curSesi.jamMulai || curSesi.mulai} - {curSesi.jamSelesai || curSesi.selesai} WIB. Batas scan: <b>{curSesi.batasScan} WIB</b>.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                  <span style={{
+                    background: isLewatBatas ? '#dc2626' : isCurrentlyRunning ? '#059669' : '#64748b',
+                    color: '#ffffff',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    padding: '4px 10px',
+                    borderRadius: '6px'
+                  }}>
+                    {isLewatBatas ? 'Lewat Batas (Alpa)' : isCurrentlyRunning ? 'Sedang Berlangsung' : 'Terjadwal'}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Mini KPI Counters Bar (1 Baris Ringkas & Singkat Sesuai Permintaan User) */}
+        <div style={{ 
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: '8px',
+          padding: '12px 16px',
+          background: '#f8fafc',
+          borderBottom: '1px solid #f1f5f9'
+        }}>
+          {/* Total */}
+          <div 
+            onClick={() => setActiveStatusFilter('semua')}
+            style={{
+              background: activeStatusFilter === 'semua' ? '#f0fdfa' : '#ffffff',
+              border: `1px solid ${activeStatusFilter === 'semua' ? '#0d9488' : '#e2e8f0'}`,
+              borderLeft: '3px solid #0d9488',
+              borderRadius: '8px',
+              padding: '6px 8px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            title="Total Seluruh Pengampu"
+          >
+            <div style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Total</div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#0f766e', marginTop: '1px' }}>{countTotal}</div>
+          </div>
+
+          {/* Sudah */}
+          <div 
+            onClick={() => setActiveStatusFilter(activeStatusFilter === 'sudah' ? 'semua' : 'sudah')}
+            style={{
+              background: activeStatusFilter === 'sudah' ? '#ecfdf5' : '#ffffff',
+              border: `1px solid ${activeStatusFilter === 'sudah' ? '#10b981' : '#e2e8f0'}`,
+              borderLeft: '3px solid #10b981',
+              borderRadius: '8px',
+              padding: '6px 8px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            title="Sudah Absen"
+          >
+            <div style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Sudah</div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#059669', marginTop: '1px' }}>{countSudah}</div>
+          </div>
+
+          {/* Belum */}
+          <div 
+            onClick={() => setActiveStatusFilter(activeStatusFilter === 'belum' ? 'semua' : 'belum')}
+            style={{
+              background: activeStatusFilter === 'belum' ? '#f1f5f9' : '#ffffff',
+              border: `1px solid ${activeStatusFilter === 'belum' ? '#64748b' : '#e2e8f0'}`,
+              borderLeft: '3px solid #94a3b8',
+              borderRadius: '8px',
+              padding: '6px 8px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            title="Belum Absen"
+          >
+            <div style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Belum</div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#475569', marginTop: '1px' }}>{countBelum}</div>
+          </div>
+
+          {/* Izin */}
+          <div 
+            onClick={() => setActiveStatusFilter(activeStatusFilter === 'izin' ? 'semua' : 'izin')}
+            style={{
+              background: activeStatusFilter === 'izin' ? '#eff6ff' : '#ffffff',
+              border: `1px solid ${activeStatusFilter === 'izin' ? '#3b82f6' : '#e2e8f0'}`,
+              borderLeft: '3px solid #3b82f6',
+              borderRadius: '8px',
+              padding: '6px 8px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            title="Izin Resmi"
+          >
+            <div style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Izin</div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#2563eb', marginTop: '1px' }}>{countIjin}</div>
+          </div>
+
+          {/* Alpa */}
+          <div 
+            onClick={() => setActiveStatusFilter(activeStatusFilter === 'alpa' ? 'semua' : 'alpa')}
+            style={{
+              background: activeStatusFilter === 'alpa' ? '#fef2f2' : '#ffffff',
+              border: `1px solid ${activeStatusFilter === 'alpa' ? '#ef4444' : '#e2e8f0'}`,
+              borderLeft: '3px solid #ef4444',
+              borderRadius: '8px',
+              padding: '6px 8px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+            title="Alpa (Otomatis)"
+          >
+            <div style={{ fontSize: '10px', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Alpa</div>
+            <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#dc2626', marginTop: '1px' }}>{countAlpa}</div>
           </div>
         </div>
 
-        {/* MONITOR PRESENSI PENGAMPU HARI INI (Menggantikan Tabel Gambar 2) */}
-        {viewMode === 'cards' ? (
-          filteredFeed.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
-              <div style={{ fontWeight: 700, fontSize: '13px' }}>Tidak ada data presensi yang sesuai kriteria filter.</div>
-              <div style={{ fontSize: '11px', marginTop: '4px' }}>Coba ganti filter sesi atau filter status presensi.</div>
+        {/* DAFTAR PRESENSI PENGAMPU (RINGKAS & PROFESIONAL: HANYA NAMA & STATUS, TIDAK BOLD) */}
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {filteredFeed.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '30px 20px', color: '#94a3b8' }}>
+              <div style={{ fontWeight: 500, fontSize: '13px' }}>Tidak ada data pengampu yang sesuai kriteria.</div>
             </div>
           ) : (
-            <div className="sigap-monitor-grid">
-              {filteredFeed.map((item, idx) => {
-                const ev = evaluateItemStatus(item);
+            filteredFeed.map((item) => {
+              const ev = item.evaluation;
+              const initial = (item.nama || 'G')
+                .split(' ')
+                .filter(Boolean)
+                .map(n => n[0])
+                .slice(0, 2)
+                .join('')
+                .toUpperCase();
 
-                const initial = (item.nama || 'G')
-                  .split(' ')
-                  .filter(Boolean)
-                  .map(n => n[0])
-                  .slice(0, 2)
-                  .join('')
-                  .toUpperCase();
+              const getStatusBadge = () => {
+                if (ev.statusKey === 'SUDAH') {
+                  return {
+                    label: ev.subType === 'terlambat' ? `✓ Telat ${ev.selisihMenit}m` : '✓ Hadir',
+                    bg: '#ecfdf5',
+                    color: '#059669',
+                    border: '#a7f3d0'
+                  };
+                }
+                if (ev.statusKey === 'IJIN') {
+                  return {
+                    label: 'Izin',
+                    bg: '#eff6ff',
+                    color: '#2563eb',
+                    border: '#bfdbfe'
+                  };
+                }
+                if (ev.statusKey === 'BELUM') {
+                  return {
+                    label: 'Belum Absen',
+                    bg: '#f8fafc',
+                    color: '#64748b',
+                    border: '#e2e8f0'
+                  };
+                }
+                return {
+                  label: '✕ ALPA',
+                  bg: '#fef2f2',
+                  color: '#dc2626',
+                  border: '#fecaca'
+                };
+              };
 
-                return (
-                  <React.Fragment key={item.id || idx}>
-                    {/* 1. TAMPILAN MOBILE (HP): HANYA NAMA PENGAMPU, SESI, DAN STATUS */}
-                    <div 
-                      className="sigap-monitor-card-mobile"
-                      onClick={() => setSelectedDetail(item)}
-                      style={{
-                        borderLeft: `4px solid ${ev.borderAccent}`
-                      }}
-                      title="Ketuk untuk melihat detail atau koreksi presensi"
-                    >
-                      <div className="sigap-monitor-mobile-left">
-                        <div 
-                          className="sigap-monitor-mobile-avatar" 
-                          style={{ background: ev.avatarBg, color: ev.avatarColor }}
-                        >
-                          {initial}
-                          <span className="sigap-mobile-avatar-dot" style={{ background: ev.borderAccent }}></span>
-                        </div>
-                        <div className="sigap-monitor-mobile-info">
-                          <div className="sigap-monitor-mobile-name">{item.nama}</div>
-                          <div className="sigap-monitor-mobile-sesi">{item.sesi || 'Sesi Subuh'}</div>
-                        </div>
-                      </div>
+              const badge = getStatusBadge();
 
-                      <div className="sigap-monitor-mobile-right">
-                        {ev.type === 'hadir' && (
-                          <span className={`${ev.subType === 'terlambat' ? 'badge-status-late' : 'badge-status-ontime'} sigap-mobile-pill`}>
-                            {ev.badgeMobile}
-                          </span>
-                        )}
-                        {ev.type === 'izin' && (
-                          <span className="badge-status-izin sigap-mobile-pill">
-                            📋 Izin
-                          </span>
-                        )}
-                        {ev.type === 'belum-absen' && (
-                          <span className="badge-status-pending sigap-mobile-pill">
-                            ○ Belum Absen
-                          </span>
-                        )}
-                        {ev.type === 'alpa' && (
-                          <span className="badge-status-alpa sigap-mobile-pill">
-                            ✗ Alpa
-                          </span>
-                        )}
-                      </div>
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedDetail(item)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 14px',
+                    background: '#ffffff',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0',
+                    borderLeft: `4px solid ${ev.borderAccent || '#94a3b8'}`,
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                  title="Klik untuk melihat detail atau koreksi presensi"
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <div style={{
+                      position: 'relative',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: ev.avatarBg || '#f1f5f9',
+                      color: ev.avatarColor || '#475569',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      flexShrink: 0
+                    }}>
+                      {initial}
+                      <span style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        right: 0,
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        background: ev.borderAccent || '#94a3b8',
+                        border: '1.5px solid #ffffff'
+                      }}></span>
                     </div>
 
-                    {/* 2. TAMPILAN DESKTOP (> 640px): LENGKAP DENGAN MAPEL, LOKASI & AKSI */}
-                    <div 
-                      className="sigap-monitor-card-desktop sigap-monitor-card"
-                      style={{
-                        borderLeft: `5px solid ${ev.borderAccent}`
-                      }}
-                    >
-                      {/* Header Kartu: Avatar, Nama, Status Badge */}
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '11px', minWidth: 0 }}>
-                          <div style={{
-                            position: 'relative',
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            background: ev.avatarBg,
-                            color: ev.avatarColor,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 800,
-                            fontSize: '0.85rem',
-                            flexShrink: 0,
-                            border: `1.5px solid ${ev.borderAccent}33`
-                          }}>
-                            {initial}
-                            <span style={{
-                              position: 'absolute',
-                              bottom: 0,
-                              right: 0,
-                              width: '11px',
-                              height: '11px',
-                              borderRadius: '50%',
-                              background: ev.borderAccent,
-                              border: '2px solid #ffffff'
-                            }}></span>
-                          </div>
-                          <div style={{ minWidth: 0 }}>
-                            <div 
-                              style={{ 
-                                fontWeight: 800, 
-                                color: '#0f172a', 
-                                fontSize: '13.5px', 
-                                lineHeight: 1.25, 
-                                whiteSpace: 'nowrap', 
-                                overflow: 'hidden', 
-                                textOverflow: 'ellipsis' 
-                              }} 
-                              title={item.nama}
-                            >
-                              {item.nama}
-                            </div>
-                            <div style={{ fontSize: '11px', color: '#475569', fontWeight: 600, marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              <span>{item.role || 'Pengampu'}</span> • <span style={{ color: '#64748b' }}>NIP: {item.nip || 'NON-NIP'}</span>
-                            </div>
-                          </div>
-                        </div>
+                    <span style={{
+                      fontSize: '13.5px',
+                      fontWeight: 500,
+                      color: '#1e293b',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
+                      {item.nama}
+                    </span>
+                  </div>
 
-                        {/* Status Badge Kehadiran */}
-                        <div style={{ flexShrink: 0 }}>
-                          <span className={ev.badgeClass} style={{ fontSize: '11px', padding: '3px 9px', fontWeight: 800 }}>
-                            {ev.badge}
-                          </span>
-                        </div>
-                      </div>
+                  <div style={{ flexShrink: 0 }}>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      background: badge.bg,
+                      color: badge.color,
+                      border: `1px solid ${badge.border}`
+                    }}>
+                      {badge.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
 
-                      {/* Middle Info: Halaqah Bimbingan, Sesi, Lokasi */}
-                      <div style={{ 
-                        background: '#f8fafc', 
-                        padding: '9px 12px', 
-                        borderRadius: '10px', 
-                        fontSize: '12px', 
-                        border: '1px solid #e2e8f0',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '5px'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-                            <BookOpen size={13} style={{ color: '#0d9488', flexShrink: 0 }} />
-                            <span style={{ fontWeight: 800, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {item.mapel}
-                            </span>
-                          </div>
-                          <span style={{ 
-                            background: '#ecfdf5', 
-                            color: '#065f46', 
-                            fontWeight: 800, 
-                            fontSize: '10.5px', 
-                            padding: '2px 7px', 
-                            borderRadius: '6px',
-                            border: '1px solid #a7f3d0',
-                            flexShrink: 0 
-                          }}>
-                            {item.sesi}
-                          </span>
-                        </div>
-                        <div style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', fontWeight: 500 }}>
-                          <MapPin size={12} style={{ color: '#64748b', flexShrink: 0 }} />
-                          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {item.kelas}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Bottom: Scan Time, Keterangan & Aksi */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', paddingTop: '8px', borderTop: '1px dashed #e2e8f0' }}>
-                        <div style={{ fontSize: '11px', minWidth: 0 }}>
-                          {ev.type === 'hadir' ? (
-                            <div style={{ color: ev.scheduleColor, fontWeight: 800, fontSize: '11.5px' }}>
-                              {ev.scheduleText}
-                              <span style={{ fontWeight: 600, color: '#64748b', marginLeft: '5px', fontSize: '10.5px' }}>
-                                {ev.scheduleSubText}
-                              </span>
-                            </div>
-                          ) : (
-                            <div style={{ color: '#475569', fontWeight: 600 }}>
-                              {ev.scheduleText}
-                              <span style={{ color: ev.scheduleHighlightColor, fontWeight: 800 }}>
-                                {ev.scheduleHighlight}
-                              </span>
-                            </div>
-                          )}
-                          <div style={{ 
-                            fontSize: '11px', 
-                            color: ev.type === 'alpa' ? '#b91c1c' : ev.type === 'izin' ? '#1d4ed8' : '#334155', 
-                            fontWeight: ev.type === 'alpa' ? 700 : 600, 
-                            marginTop: '2px', 
-                            whiteSpace: 'nowrap', 
-                            overflow: 'hidden', 
-                            textOverflow: 'ellipsis' 
-                          }}>
-                            {ev.keterangan}
-                          </div>
-                        </div>
-
-                        {/* Tombol Aksi Detail & Koreksi */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                          <button 
-                            className="sigap-btn-detail"
-                            onClick={() => setSelectedDetail(item)}
-                            title="Lihat Detail Presensi"
-                          >
-                            <Eye size={12} />
-                            <span>Detail</span>
-                          </button>
-                          <button 
-                            className="sigap-btn-koreksi"
-                            onClick={() => handleOpenKoreksi(item)}
-                            title="Koreksi / Ubah Status"
-                          >
-                            <Edit3 size={11} />
-                            <span>Koreksi</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          )
-        ) : (
-          /* Tabel Data Presensi Pengampu (Alternatif Mode Tabel) */
-          <div className="sigap-table-wrap">
-            <table className="sigap-table">
-              <thead>
-                <tr>
-                  <th>PENGAMPU / USTADZ</th>
-                  <th>SESI & HALAQAH TAHFIDZ</th>
-                  <th>KELAS / LOKASI</th>
-                  <th>JAM SCAN & JADWAL</th>
-                  <th>STATUS & KETERANGAN</th>
-                  <th>METODE</th>
-                  <th style={{ textAlign: 'center' }}>AKSI</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredFeed.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
-                      <div style={{ fontWeight: 700, fontSize: '13px' }}>Tidak ada data presensi yang sesuai kriteria filter.</div>
-                      <div style={{ fontSize: '11px', marginTop: '4px' }}>Coba ganti filter sesi atau filter status presensi.</div>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredFeed.map((item, idx) => (
-                    <tr key={item.id || idx}>
-                      <td>
-                        <div>
-                          <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '13px' }}>
-                            {item.nama}
-                          </div>
-                          <div style={{ fontSize: '11px', color: '#64748b' }}>
-                            {item.role || 'Pengampu'} • <span style={{ color: '#94a3b8' }}>{item.nip || 'NON-NIP'}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '12.5px' }}>
-                          {item.mapel}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#0d9488', fontWeight: 700 }}>
-                          {item.sesi}
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ color: '#334155', fontWeight: 600, fontSize: '12px' }}>
-                          {item.kelas}
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '13px' }}>
-                          {item.jam && item.jam !== '-' ? `${item.jam} WIB` : <span style={{ color: '#94a3b8' }}>-</span>}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#64748b' }}>
-                          Jadwal: {item.jadwal || '-'}
-                        </div>
-                      </td>
-                      <td>
-                        {(() => {
-                          const ev = evaluateItemStatus(item);
-                          return (
-                            <div>
-                              <span className={ev.badgeClass}>{ev.badge}</span>
-                              <div style={{ 
-                                fontSize: '11px', 
-                                color: ev.type === 'alpa' ? '#b91c1c' : ev.type === 'izin' ? '#1d4ed8' : ev.subType === 'terlambat' ? '#c2410c' : '#059669', 
-                                fontWeight: 600, 
-                                marginTop: '3px' 
-                              }}>
-                                {ev.keterangan}
-                              </div>
-                            </div>
-                          );
-                        })()}
-                      </td>
-                      <td>
-                        <div style={{ fontSize: '11.5px', color: '#475569', fontWeight: 600 }}>
-                          {item.metode || 'QR Scan'}
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                          <button 
-                            className="sigap-btn-detail"
-                            onClick={() => setSelectedDetail(item)}
-                            title="Lihat Detail Presensi"
-                          >
-                            <span>Detail</span>
-                          </button>
-                          <button 
-                            className="sigap-btn-koreksi"
-                            onClick={() => handleOpenKoreksi(item)}
-                            title="Koreksi / Ubah Status"
-                          >
-                            <span>Koreksi</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Footer Info */}
+        {/* Footer Info Panel */}
         <div style={{
           padding: '12px 24px',
           background: '#f8fafc',
@@ -1204,20 +1237,24 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
           gap: '8px'
         }}>
           <div>
-            Menampilkan <b>{filteredFeed.length}</b> dari <b>{feedList.length}</b> pengampu terjadwal hari ini (Tanggal 10 September 2026).
+            Menampilkan <b>{filteredFeed.length}</b> dari <b>{countTotal}</b> pengampu pada {sesiFilter === 'semua' ? 'Semua Sesi' : `Sesi ${sessionsToDisplay[0]?.nama || 'Terjadwal'}`} ({currentTime.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}).
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></span>
-              Tepat Waktu: <b>{countOntime}</b>
+              Sudah (Hadir): <b>{countSudah}</b>
             </span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f97316' }}></span>
-              Terlambat: <b>{countLate}</b>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#94a3b8' }}></span>
+              Belum Absen: <b>{countBelum}</b>
             </span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }}></span>
-              Izin & Sakit: <b>{countIzin}</b>
+              Izin & Sakit: <b>{countIjin}</b>
+            </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }}></span>
+              Otomatis Alpa: <b>{countAlpa}</b>
             </span>
           </div>
         </div>
@@ -1243,7 +1280,7 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
             <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {/* Profil Pengampu */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#ccfbf1', color: '#0f766e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '16px' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: selectedDetail.evaluation?.avatarBg || '#ccfbf1', color: selectedDetail.evaluation?.avatarColor || '#0f766e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '16px' }}>
                   {(selectedDetail.nama || 'U').charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -1257,21 +1294,16 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
                 <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                   <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>STATUS KEHADIRAN</div>
                   <div style={{ marginTop: '4px' }}>
-                    {(() => {
-                      const ev = evaluateItemStatus(selectedDetail);
-                      return (
-                        <span className={ev.badgeClass} style={{ fontSize: '11px', padding: '3px 9px', fontWeight: 800 }}>
-                          {ev.badge}
-                        </span>
-                      );
-                    })()}
+                    <span className={selectedDetail.evaluation?.badgeClass} style={{ fontSize: '11px', padding: '3px 9px', fontWeight: 800 }}>
+                      {selectedDetail.evaluation?.badge}
+                    </span>
                   </div>
                 </div>
 
                 <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                   <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>WAKTU SCAN</div>
                   <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', marginTop: '4px' }}>
-                    {selectedDetail.jam && selectedDetail.jam !== '-' ? `${selectedDetail.jam} WIB` : '-'}
+                    {selectedDetail.evaluation?.jamScan && selectedDetail.evaluation?.jamScan !== '-' ? `${selectedDetail.evaluation.jamScan} WIB` : '-'}
                   </div>
                 </div>
               </div>
@@ -1283,6 +1315,10 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
                   <span style={{ fontWeight: 700, color: '#0f172a' }}>{selectedDetail.sesi} ({selectedDetail.jadwal || '-'})</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e2e8f0', paddingBottom: '6px' }}>
+                  <span style={{ color: '#64748b' }}>Batas Akhir Scan:</span>
+                  <span style={{ fontWeight: 700, color: '#dc2626' }}>{selectedDetail.batasScan} WIB</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e2e8f0', paddingBottom: '6px' }}>
                   <span style={{ color: '#64748b' }}>Halaqah Bimbingan:</span>
                   <span style={{ fontWeight: 700, color: '#0f172a' }}>{selectedDetail.mapel}</span>
                 </div>
@@ -1292,37 +1328,20 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e2e8f0', paddingBottom: '6px' }}>
                   <span style={{ color: '#64748b' }}>Metode Absensi:</span>
-                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{selectedDetail.metode}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e2e8f0', paddingBottom: '6px' }}>
-                  <span style={{ color: '#64748b' }}>Lokasi GPS / Akurasi:</span>
-                  <span style={{ fontWeight: 700, color: '#0d9488' }}>{selectedDetail.lokasiGps || 'Terverifikasi Sesuai Radius'}</span>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{selectedDetail.evaluation?.metode || 'QR Scan GPS'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e2e8f0', paddingBottom: '6px' }}>
                   <span style={{ color: '#64748b' }}>Keterangan:</span>
                   <span style={{ 
                     fontWeight: 800, 
-                    color: evaluateItemStatus(selectedDetail).type === 'alpa' ? '#dc2626' : 
-                           evaluateItemStatus(selectedDetail).type === 'izin' ? '#2563eb' : 
-                           selectedDetail.status === 'Terlambat' ? '#c2410c' : '#059669' 
+                    color: selectedDetail.evaluation?.statusKey === 'ALPA' ? '#dc2626' : 
+                           selectedDetail.evaluation?.statusKey === 'IJIN' ? '#2563eb' : 
+                           selectedDetail.evaluation?.subType === 'terlambat' ? '#c2410c' : '#059669' 
                   }}>
-                    {evaluateItemStatus(selectedDetail).keterangan}
+                    {selectedDetail.evaluation?.keterangan}
                   </span>
                 </div>
               </div>
-
-              {/* Tugas atau Alasan Izin jika ada */}
-              {selectedDetail.alasanIzin && (
-                <div style={{ background: '#eff6ff', padding: '12px', borderRadius: '10px', border: '1px solid #bfdbfe', fontSize: '12px' }}>
-                  <div style={{ fontWeight: 800, color: '#1e40af', marginBottom: '4px' }}>Alasan Izin:</div>
-                  <div style={{ color: '#1e3a8a' }}>{selectedDetail.alasanIzin}</div>
-                  {selectedDetail.tugasSiswa && (
-                    <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px solid #dbeafe', color: '#1e40af' }}>
-                      <b>Tugas Pengganti Siswa:</b> {selectedDetail.tugasSiswa}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             <div className="sigap-modal-footer">
@@ -1373,8 +1392,8 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
                   <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', display: 'block', marginBottom: '5px' }}>
                     STATUS KEHADIRAN
                   </label>
-                  <select 
-                    className="form-input"
+                  <CustomSelect 
+                    triggerStyle={{ minHeight: '42px', borderRadius: '12px', fontSize: '13px' }}
                     value={editStatusForm.status}
                     onChange={(e) => {
                       const st = e.target.value;
@@ -1388,7 +1407,6 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
                                     st === 'Belum Absen' ? 'Belum Absen (Menunggu Jadwal Sesi Presensi)' : prev.keterangan
                       }));
                     }}
-                    style={{ fontSize: '13px', padding: '9px 12px' }}
                   >
                     <option value="Tepat Waktu">Hadir - Tepat Waktu</option>
                     <option value="Terlambat">Hadir - Terlambat</option>
@@ -1396,7 +1414,7 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
                     <option value="Sakit">Sakit</option>
                     <option value="Belum Absen">Belum Absen</option>
                     <option value="Alpa">Alpa (Melewati Waktu Absen)</option>
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 {editStatusForm.status === 'Terlambat' && (

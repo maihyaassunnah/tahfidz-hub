@@ -47,7 +47,8 @@ export default function Sidebar({
   showToast,
   activeBranchId,
   onSwitchBranch,
-  cabangList = []
+  cabangList = [],
+  onSwitchRole
 }) {
   const [pendingIzinCount, setPendingIzinCount] = useState(() => storageService.getPendingSigapIzinCount());
 
@@ -463,6 +464,19 @@ export default function Sidebar({
             <KeyRound size={13} color="#0d9488" />
             <span>Ubah Password</span>
           </button>
+
+          {onSwitchRole && (
+            <button 
+              type="button"
+              className="sigap-btn-ubah-pass" 
+              onClick={() => onSwitchRole('orangtua')}
+              style={{ marginTop: '6px', background: '#faf5ff', borderColor: '#d8b4fe', color: '#7c3aed' }}
+              title="Buka Portal Orang Tua / Wali Santri"
+            >
+              <Users size={13} color="#7c3aed" />
+              <span>Buka Portal Orang Tua</span>
+            </button>
+          )}
         </div>
 
         {/* DAFTAR MENU NAVIGASI (DENGAN PEMBATAS KATEGORI) */}
@@ -665,16 +679,18 @@ export default function Sidebar({
   // 2. TAMPILAN SIDEBAR PENGAMPU & ORANG TUA (TAHFIDZ)
   // =========================================================
   const getUserProfile = () => {
+    const auth = storageService.getAuthUser();
     if (currentRole === 'orangtua') {
+      const childName = auth?.namaSantri || auth?.username || 'Ananda';
       return {
-        initial: 'W',
-        name: 'H. Akbar Sasmita',
-        roleLabel: 'Wali Jamiatul Akbar'
+        initial: (childName || 'W').charAt(0).toUpperCase(),
+        name: auth?.nama || ('Wali dari ' + childName),
+        roleLabel: auth?.nis ? `NIS: ${auth.nis}` : 'Wali Santri'
       };
     } else {
       return {
-        initial: 'W',
-        name: 'Wahyudin Hafiz',
+        initial: (auth?.nama || 'W').charAt(0).toUpperCase(),
+        name: auth?.nama || 'Wahyudin Hafiz',
         roleLabel: 'Ubah Password'
       };
     }
@@ -704,46 +720,76 @@ export default function Sidebar({
       </div>
 
       {/* User Card */}
-      <div className="sidebar-user-card">
-        <div className="user-avatar-circle">
-          {profile.initial}
-        </div>
-        <div>
-          <div className="user-name">{profile.name}</div>
-          <div className="user-link-sub" onClick={onOpenPasswordModal}>
-            <KeyRound size={12} />
-            <span>{currentRole === 'pengampu' ? 'Ubah Password' : profile.roleLabel}</span>
+      <div className="sidebar-user-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="user-avatar-circle">
+            {profile.initial}
           </div>
-        </div>
-      </div>
-
-      {/* NAV GROUP: AL-QUR'AN */}
-      <div className="sidebar-nav-group">
-        <div className="nav-group-title">AL-QUR'AN</div>
-        <div 
-          className={`nav-item ${activeTab === 'mushaf' ? 'active' : ''}`}
-          onClick={() => setActiveTab('mushaf')}
-        >
-          <div className="nav-item-left">
-            <div style={{
-              width: '24px',
-              height: '24px',
-              borderRadius: '50%',
-              border: '1.5px solid #10b981',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#10b981'
-            }}>
-              <BookOpen size={13} />
+          <div>
+            <div className="user-name">{profile.name}</div>
+            <div className="user-link-sub" onClick={currentRole === 'pengampu' ? onOpenPasswordModal : undefined} style={{ cursor: currentRole === 'pengampu' ? 'pointer' : 'default' }}>
+              <KeyRound size={12} />
+              <span>{profile.roleLabel}</span>
             </div>
-            <span>Mushaf Al-Qur'an</span>
           </div>
-          {activeTab === 'mushaf' && <ChevronRight size={16} className="nav-chevron" />}
         </div>
+
+        {onSwitchRole && currentRole === 'pengampu' && (
+          <button 
+            type="button"
+            className="sigap-btn-ubah-pass" 
+            onClick={() => onSwitchRole('orangtua')}
+            style={{ width: '100%', marginTop: '4px', background: '#faf5ff', borderColor: '#d8b4fe', color: '#7c3aed', padding: '5px 8px', fontSize: '0.74rem' }}
+            title="Buka Portal Orang Tua / Wali Santri"
+          >
+            <Users size={12} color="#7c3aed" />
+            <span>Buka Portal Orang Tua</span>
+          </button>
+        )}
+
+        {onSwitchRole && currentRole === 'orangtua' && (
+          <button 
+            type="button"
+            className="sigap-btn-ubah-pass" 
+            onClick={() => onSwitchRole('superadmin')}
+            style={{ width: '100%', marginTop: '4px', background: '#f0fdf4', borderColor: '#86efac', color: '#15803d', padding: '5px 8px', fontSize: '0.74rem' }}
+            title="Kembali ke Super Admin"
+          >
+            <Shield size={12} color="#15803d" />
+            <span>Kembali ke Admin</span>
+          </button>
+        )}
       </div>
 
-      {/* NAV GROUP: DASHBOARD */}
+      {/* NAV GROUP: AL-QUR'AN (Khusus Pengampu / Super Admin) */}
+      {currentRole !== 'orangtua' && (
+        <div className="sidebar-nav-group">
+          <div className="nav-group-title">AL-QUR'AN</div>
+          <div 
+            className={`nav-item ${activeTab === 'mushaf' ? 'active' : ''}`}
+            onClick={() => setActiveTab('mushaf')}
+          >
+            <div className="nav-item-left">
+              <div style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                border: '1.5px solid #10b981',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#10b981'
+              }}>
+                <BookOpen size={13} />
+              </div>
+              <span>Mushaf Al-Qur'an</span>
+            </div>
+            {activeTab === 'mushaf' && <ChevronRight size={16} className="nav-chevron" />}
+          </div>
+        </div>
+      )}
+
+      {/* NAV GROUP: DASHBOARD (MENU 1) */}
       <div className="sidebar-nav-group">
         <div className="nav-group-title">DASHBOARD</div>
         <div 
@@ -758,7 +804,7 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* NAV GROUP: PRESENSI */}
+      {/* NAV GROUP: PRESENSI (MENU 2: RIWAYAT PRESENSI SANTRI) */}
       <div className="sidebar-nav-group">
         <div className="nav-group-title">PRESENSI</div>
         
@@ -786,30 +832,34 @@ export default function Sidebar({
           {(activeTab === 'riwayat-presensi' || activeTab === 'riwayat-presensi-santri') && <ChevronRight size={16} className="nav-chevron" />}
         </div>
 
-        <div 
-          className={`nav-item ${activeTab === 'riwayat-presensi-pengampu' ? 'active' : ''}`}
-          onClick={() => setActiveTab('riwayat-presensi-pengampu')}
-        >
-          <div className="nav-item-left">
-            <UserCheck size={18} className="nav-icon" />
-            <span>Riwayat Presensi Pengampu</span>
-          </div>
-          {activeTab === 'riwayat-presensi-pengampu' && <ChevronRight size={16} className="nav-chevron" />}
-        </div>
+        {currentRole !== 'orangtua' && (
+          <>
+            <div 
+              className={`nav-item ${activeTab === 'riwayat-presensi-pengampu' ? 'active' : ''}`}
+              onClick={() => setActiveTab('riwayat-presensi-pengampu')}
+            >
+              <div className="nav-item-left">
+                <UserCheck size={18} className="nav-icon" />
+                <span>Riwayat Presensi Pengampu</span>
+              </div>
+              {activeTab === 'riwayat-presensi-pengampu' && <ChevronRight size={16} className="nav-chevron" />}
+            </div>
 
-        <div 
-          className={`nav-item ${activeTab === 'izin' ? 'active' : ''}`}
-          onClick={() => setActiveTab('izin')}
-        >
-          <div className="nav-item-left">
-            <FileText size={18} className="nav-icon" />
-            <span>Permohonan Izin</span>
-          </div>
-          {activeTab === 'izin' && <ChevronRight size={16} className="nav-chevron" />}
-        </div>
+            <div 
+              className={`nav-item ${activeTab === 'izin' ? 'active' : ''}`}
+              onClick={() => setActiveTab('izin')}
+            >
+              <div className="nav-item-left">
+                <FileText size={18} className="nav-icon" />
+                <span>Permohonan Izin</span>
+              </div>
+              {activeTab === 'izin' && <ChevronRight size={16} className="nav-chevron" />}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* NAV GROUP: AKADEMIK */}
+      {/* NAV GROUP: AKADEMIK (MENU 3: PROGRESS ANANDA) */}
       <div className="sidebar-nav-group">
         <div className="nav-group-title">AKADEMIK</div>
 
@@ -819,37 +869,39 @@ export default function Sidebar({
         >
           <div className="nav-item-left">
             <GraduationCap size={18} className="nav-icon" />
-            <span>{currentRole === 'orangtua' ? 'Progres Ananda' : 'Santri'}</span>
+            <span>{currentRole === 'orangtua' ? 'Progress Ananda' : 'Santri'}</span>
           </div>
           {activeTab === 'santri' && <ChevronRight size={16} className="nav-chevron" />}
         </div>
 
         {currentRole !== 'orangtua' && (
-          <div 
-            className={`nav-item ${activeTab === 'presensi-santri' ? 'active' : ''}`}
-            onClick={() => setActiveTab('presensi-santri')}
-          >
-            <div className="nav-item-left">
-              <ClipboardCheck size={18} className="nav-icon" />
-              <span>Presensi Santri</span>
+          <>
+            <div 
+              className={`nav-item ${activeTab === 'presensi-santri' ? 'active' : ''}`}
+              onClick={() => setActiveTab('presensi-santri')}
+            >
+              <div className="nav-item-left">
+                <ClipboardCheck size={18} className="nav-icon" />
+                <span>Presensi Santri</span>
+              </div>
+              {activeTab === 'presensi-santri' && <ChevronRight size={16} className="nav-chevron" />}
             </div>
-            {activeTab === 'presensi-santri' && <ChevronRight size={16} className="nav-chevron" />}
-          </div>
-        )}
 
-        <div 
-          className={`nav-item ${activeTab === 'setoran' ? 'active' : ''}`}
-          onClick={() => setActiveTab('setoran')}
-        >
-          <div className="nav-item-left">
-            <BookOpen size={18} className="nav-icon" />
-            <span>Setoran</span>
-          </div>
-          {activeTab === 'setoran' && <ChevronRight size={16} className="nav-chevron" />}
-        </div>
+            <div 
+              className={`nav-item ${activeTab === 'setoran' ? 'active' : ''}`}
+              onClick={() => setActiveTab('setoran')}
+            >
+              <div className="nav-item-left">
+                <BookOpen size={18} className="nav-icon" />
+                <span>Setoran</span>
+              </div>
+              {activeTab === 'setoran' && <ChevronRight size={16} className="nav-chevron" />}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* NAV GROUP: LAPORAN */}
+      {/* NAV GROUP: LAPORAN (MENU 4: LAPORAN DAN RAPORT) */}
       <div className="sidebar-nav-group">
         <div className="nav-group-title">LAPORAN</div>
         <div 
@@ -858,7 +910,7 @@ export default function Sidebar({
         >
           <div className="nav-item-left">
             <FileCheck2 size={18} className="nav-icon" />
-            <span>Laporan & Rapor</span>
+            <span>Laporan dan Raport</span>
           </div>
           {activeTab === 'rapor' && <ChevronRight size={16} className="nav-chevron" />}
         </div>

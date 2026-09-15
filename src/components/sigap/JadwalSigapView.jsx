@@ -29,6 +29,7 @@ import {
   Ban
 } from 'lucide-react';
 import { storageService } from '../../services/storage';
+import CustomSelect from '../common/CustomSelect';
 
 const LIST_MAPEL = [
   'Aqidah',
@@ -475,8 +476,8 @@ export default function JadwalSigapView({ showToast }) {
 
   return (
     <div className="page-content-wrapper" style={{ animation: 'fadeIn 0.25s ease-out' }}>
-      {/* 1. TOP HEADER DENGAN TAB SWITCHER */}
-      <div className="sigap-page-header-row" style={{ alignItems: 'center', marginBottom: '16px' }}>
+      {/* 1. TOP HEADER DENGAN TAB SWITCHER (DISEMBUNYIKAN DI TAMPILAN MOBILE) */}
+      <div className="sigap-page-header-row sigap-mobile-hide" style={{ alignItems: 'center', marginBottom: '16px' }}>
         <div>
           <h1 className="sigap-page-title" style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800 }}>Atur Jadwal Sesi Halaqoh</h1>
           <p style={{ margin: '3px 0 0 0', fontSize: '12px', color: '#64748b' }}>
@@ -775,24 +776,6 @@ export default function JadwalSigapView({ showToast }) {
             overflow: 'hidden',
             marginBottom: '24px'
           }}>
-            {/* PETUNJUK MOBILE & TABLET SCROLL */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '8px 16px',
-              background: '#f8fafc',
-              borderBottom: '1px solid #e2e8f0',
-              fontSize: '11px',
-              color: '#64748b'
-            }}>
-              <span>
-                💡 <strong>Petunjuk:</strong> Klik tombol <strong>Edit Sesi</strong> di kolom pertama untuk ubah nama sesi & jam. Klik sel hari untuk menandai Masuk / Keluar.
-              </span>
-              <span style={{ fontWeight: 700, color: '#0f766e', fontSize: '11px' }}>
-                ↔ Geser tabel kanan/kiri di layar HP/Tablet
-              </span>
-            </div>
 
             {/* CONTAINER OVERFLOW X UNTUK TABLET & MOBILE */}
             <div style={{
@@ -1354,12 +1337,11 @@ export default function JadwalSigapView({ showToast }) {
               </div>
 
               {/* Select Kelas */}
-              <div className="sigap-select-box" style={{ padding: '4px 10px' }}>
-                <select 
-                  className="sigap-select"
+              <div style={{ minWidth: '160px' }}>
+                <CustomSelect 
                   value={selectedKelas}
                   onChange={(e) => setSelectedKelas(e.target.value)}
-                  style={{ fontSize: '12px', fontWeight: 700 }}
+                  triggerStyle={{ minHeight: '38px', borderRadius: '12px', fontSize: '12px', fontWeight: 700 }}
                 >
                   <option value="X A">Kelas: X A</option>
                   <option value="X B">Kelas: X B</option>
@@ -1367,7 +1349,7 @@ export default function JadwalSigapView({ showToast }) {
                   <option value="XI B">Kelas: XI B</option>
                   <option value="XII A">Kelas: XII A</option>
                   <option value="XII B">Kelas: XII B</option>
-                </select>
+                </CustomSelect>
               </div>
 
               {/* Download CSV */}
@@ -1420,17 +1402,18 @@ export default function JadwalSigapView({ showToast }) {
                 <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', display: 'block', marginBottom: '4px' }}>
                   Pilih Guru:
                 </label>
-                <select 
-                  className="form-input" 
-                  style={{ fontSize: '12px', padding: '6px 8px' }}
+                <CustomSelect 
+                  triggerStyle={{ minHeight: '38px', borderRadius: '12px', fontSize: '12px' }}
                   value={selectedGuru}
                   onChange={(e) => setSelectedGuru(e.target.value)}
+                  searchable={true}
+                  searchPlaceholder="Cari nama guru..."
                 >
                   <option value="-- Tanpa Guru --">-- Tanpa Guru --</option>
                   {guruList.map(g => (
                     <option key={g.id} value={g.nama}>{g.nama}</option>
                   ))}
-                </select>
+                </CustomSelect>
               </div>
 
               <div>
@@ -2365,38 +2348,42 @@ export default function JadwalSigapView({ showToast }) {
                   <label style={{ fontSize: '11px', fontWeight: 800, color: '#334155', display: 'block', marginBottom: '4px' }}>
                     Pilih Guru / Ustadz Pengampu *
                   </label>
-                  <select
-                    className="form-input"
-                    style={{ width: '100%', padding: '8px', fontSize: '13px', borderRadius: '8px', border: '1.5px solid #cbd5e1' }}
+                  <CustomSelect
+                    triggerStyle={{ minHeight: '42px', borderRadius: '12px', fontSize: '13px' }}
                     value={plottingForm.namaGuru}
                     onChange={e => setPlottingForm({ ...plottingForm, namaGuru: e.target.value })}
+                    searchable={true}
+                    searchPlaceholder="Cari ustadz / guru..."
+                    placeholder="-- Pilih Guru Pengampu --"
                     required
                   >
                     <option value="">-- Pilih Guru Pengampu --</option>
                     {guruList.map(g => (
                       <option key={g.id} value={g.nama}>{g.nama} ({g.jabatan || 'Guru'})</option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div>
                   <label style={{ fontSize: '11px', fontWeight: 800, color: '#334155', display: 'block', marginBottom: '4px' }}>
                     Pilih Ruangan / Lokasi QR *
                   </label>
-                  <select
-                    className="form-input"
-                    style={{ width: '100%', padding: '8px', fontSize: '13px', borderRadius: '8px', border: '1.5px solid #cbd5e1' }}
+                  <CustomSelect
+                    triggerStyle={{ minHeight: '42px', borderRadius: '12px', fontSize: '13px' }}
                     value={plottingForm.lokasiId}
                     onChange={e => setPlottingForm({ ...plottingForm, lokasiId: e.target.value })}
+                    searchable={true}
+                    searchPlaceholder="Cari nama lokasi QR..."
+                    placeholder="-- Pilih Lokasi QR Kelas / Masjid --"
                     required
                   >
                     <option value="">-- Pilih Lokasi QR Kelas / Masjid --</option>
                     {lokasiQRList.map(l => (
                       <option key={l.id} value={l.id}>
-                        {l.kelas} - {l.lokasi} (QR: {l.kodeManual})
+                        {l.kelas} — {l.lokasi} ({l.kodeManual})
                       </option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div>
@@ -2579,9 +2566,8 @@ export default function JadwalSigapView({ showToast }) {
                   <label style={{ fontSize: '11px', fontWeight: 800, color: '#334155', display: 'block', marginBottom: '4px' }}>
                     Kategori Libur *
                   </label>
-                  <select
-                    className="form-input"
-                    style={{ width: '100%', padding: '8px', fontSize: '13px', borderRadius: '8px', border: '1.5px solid #cbd5e1' }}
+                  <CustomSelect
+                    triggerStyle={{ minHeight: '42px', borderRadius: '12px', fontSize: '13px' }}
                     value={liburForm.kategori}
                     onChange={e => setLiburForm({ ...liburForm, kategori: e.target.value })}
                   >
@@ -2590,7 +2576,7 @@ export default function JadwalSigapView({ showToast }) {
                     <option value="Event Khusus">Tasmi' Akbar / Wisuda Tahfidz</option>
                     <option value="Ujian">Ujian Semester / Syahadah</option>
                     <option value="Lainnya">Lainnya</option>
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div>

@@ -489,6 +489,223 @@ class ApiService {
       throw err;
     }
   }
+
+  // 9. Kelas
+  async getKelas() {
+    try {
+      const res = await fetch(`${this.baseUrl}/kelas`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get kelas:', err.message);
+      return null;
+    }
+  }
+
+  async saveKelas(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/kelas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to save kelas:', err);
+      throw err;
+    }
+  }
+
+  async deleteKelas(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/kelas/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to delete kelas:', err);
+      throw err;
+    }
+  }
+
+  // 10. Alumni
+  async getAlumni() {
+    try {
+      const res = await fetch(`${this.baseUrl}/alumni`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get alumni:', err.message);
+      return null;
+    }
+  }
+
+  async saveAlumni(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/alumni`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to save alumni:', err);
+      throw err;
+    }
+  }
+
+  async deleteAlumni(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/alumni/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to delete alumni:', err);
+      throw err;
+    }
+  }
+
+  // 11. Lokasi QR
+  async getLokasiQR() {
+    try {
+      const res = await fetch(`${this.baseUrl}/lokasi-qr`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get lokasi qr:', err.message);
+      return null;
+    }
+  }
+
+  async saveLokasiQR(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/lokasi-qr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to save lokasi qr:', err);
+      throw err;
+    }
+  }
+
+  async deleteLokasiQR(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/lokasi-qr/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to delete lokasi qr:', err);
+      throw err;
+    }
+  }
+
+  // 12. Settings
+  async getSettings() {
+    try {
+      const res = await fetch(`${this.baseUrl}/settings`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get settings:', err.message);
+      return null;
+    }
+  }
+
+  async saveSettings(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to save settings:', err);
+      throw err;
+    }
+  }
+
+  // 13. Template Rapor
+  async getRaporTemplate() {
+    try {
+      const res = await fetch(`${this.baseUrl}/rapor-template`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get rapor template:', err.message);
+      return null;
+    }
+  }
+
+  async saveRaporTemplate(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/rapor-template`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to save rapor template:', err);
+      throw err;
+    }
+  }
+
+  // 14. Nilai Rapor & Aspek Kualitas Tahfidz
+  async getNilaiRapor() {
+    try {
+      const res = await fetch(`${this.baseUrl}/nilai-rapor`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get nilai rapor:', err.message);
+      return null;
+    }
+  }
+
+  async getNilaiRaporBySantri(santriId) {
+    try {
+      const res = await fetch(`${this.baseUrl}/nilai-rapor/santri/${santriId}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to get nilai rapor for santri:', err.message);
+      return null;
+    }
+  }
+
+  async saveNilaiRapor(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/nilai-rapor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to save nilai rapor:', err);
+      throw err;
+    }
+  }
+
+  async deleteNilaiRapor(id) {
+    try {
+      const res = await fetch(`${this.baseUrl}/nilai-rapor/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to delete nilai rapor:', err);
+      throw err;
+    }
+  }
 }
 
 export const apiService = new ApiService();

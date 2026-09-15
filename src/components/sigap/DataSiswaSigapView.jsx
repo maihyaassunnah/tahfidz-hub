@@ -18,10 +18,12 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { storageService } from '../../services/storage';
+import CustomSelect from '../common/CustomSelect';
 
 export default function DataSiswaSigapView({ showToast }) {
   const [siswaList, setSiswaList] = useState(storageService.getSigapSiswa());
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedGender, setSelectedGender] = useState('Semua Gender');
   const [selectedPengampu, setSelectedPengampu] = useState('Semua Pengampu');
   const [isAscending, setIsAscending] = useState(true);
 
@@ -126,7 +128,10 @@ export default function DataSiswaSigapView({ showToast }) {
                           (s.nik && s.nik.includes(searchTerm)) ||
                           (s.pengampu && s.pengampu.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchPengampu = selectedPengampu === 'Semua Pengampu' || s.pengampu === selectedPengampu;
-      return matchSearch && matchPengampu;
+      const matchGender = selectedGender === 'Semua Gender' || 
+        (selectedGender === 'Laki-laki' && (s.lp === 'L' || s.lp === 'Laki-laki')) ||
+        (selectedGender === 'Perempuan' && (s.lp === 'P' || s.lp === 'Perempuan'));
+      return matchSearch && matchPengampu && matchGender;
     })
     .sort((a, b) => {
       if (isAscending) {
@@ -150,14 +155,15 @@ export default function DataSiswaSigapView({ showToast }) {
           </div>
         </div>
 
-        {/* 5 Tombol Aksi Kanan */}
-        <div className="sigap-page-actions">
+        {/* 5 Tombol Aksi Kanan (Pada Mobile Otomatis Icon Saja, 1 Baris & Efek Hover) */}
+        <div className="sigap-page-actions sigap-mobile-action-bar">
           {/* Kenaikan Kelas (Orange) */}
           <button 
             className="sigap-btn-orange" 
             onClick={() => showToast && showToast("Modul Kenaikan Kelas Tahun Ajaran Aktif")}
+            title="Kenaikan Kelas"
           >
-            <ArrowUpRight size={15} />
+            <ArrowUpRight size={17} />
             <span>Kenaikan Kelas</span>
           </button>
 
@@ -179,8 +185,9 @@ export default function DataSiswaSigapView({ showToast }) {
               });
               setShowAddModal(true);
             }}
+            title="Tambah Siswa Baru"
           >
-            <Plus size={15} />
+            <Plus size={17} />
             <span>+ Tambah Siswa</span>
           </button>
 
@@ -188,8 +195,9 @@ export default function DataSiswaSigapView({ showToast }) {
           <button 
             className="sigap-btn-blue"
             onClick={handleDownloadData}
+            title="Download Data Siswa"
           >
-            <Download size={15} />
+            <Download size={17} />
             <span>Download Data</span>
           </button>
 
@@ -197,23 +205,25 @@ export default function DataSiswaSigapView({ showToast }) {
           <button 
             className="sigap-btn-slate"
             onClick={() => showToast && showToast("Template Impor Siswa diunduh!")}
+            title="Download Template Excel"
           >
-            <FileText size={15} />
+            <FileText size={17} />
             <span>Template</span>
           </button>
 
           {/* Import Excel (Green) */}
           <button 
             className="sigap-btn-green"
-            onClick={() => showToast && showToast("Buka jendela import berkas Excel (.xlsx / .csv)")}
+            onClick={() => showToast && showToast("Buka jendela import data siswa Excel")}
+            title="Import Excel"
           >
-            <Upload size={15} />
+            <Upload size={17} />
             <span>Import Excel</span>
           </button>
         </div>
       </div>
 
-      {/* 2. SEARCH & FILTER BAR */}
+      {/* 2. SEARCH & FILTER BAR DENGAN CUSTOM SELECT PERSIS GAMBAR */}
       <div className="sigap-filter-bar">
         <div className="sigap-search-input-box">
           <Search size={16} className="sigap-search-icon" />
@@ -226,25 +236,33 @@ export default function DataSiswaSigapView({ showToast }) {
           />
         </div>
 
-        <div className="sigap-filter-controls">
-          <div className="sigap-select-box">
-            <Filter size={15} className="sigap-filter-icon" />
-            <select 
-              value={selectedPengampu} 
+        <div className="sigap-filter-controls" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {/* Filter Gender (Persis Gambar Referensi User) */}
+          <div style={{ minWidth: '160px', flex: '1 1 160px' }}>
+            <CustomSelect
+              value={selectedGender}
+              onChange={(e) => setSelectedGender(e.target.value)}
+              options={['Semua Gender', 'Perempuan', 'Laki-laki']}
+              triggerStyle={{ minHeight: '40px', padding: '0 14px', fontSize: '0.84rem' }}
+            />
+          </div>
+
+          {/* Filter Pengampu */}
+          <div style={{ minWidth: '190px', flex: '1 1 190px' }}>
+            <CustomSelect
+              value={selectedPengampu}
               onChange={(e) => setSelectedPengampu(e.target.value)}
-              className="sigap-select"
-            >
-              <option value="Semua Pengampu">Semua Pengampu</option>
-              {daftarPengampu.map(nama => (
-                <option key={nama} value={nama}>{nama}</option>
-              ))}
-            </select>
+              options={['Semua Pengampu', ...daftarPengampu]}
+              icon={<Filter size={14} />}
+              triggerStyle={{ minHeight: '40px', padding: '0 14px', fontSize: '0.84rem' }}
+            />
           </div>
 
           <button 
             className="sigap-btn-sort"
             onClick={() => setIsAscending(!isAscending)}
             title="Urutkan Abjad"
+            style={{ height: '40px' }}
           >
             <ArrowUpDown size={15} />
             <span>{isAscending ? 'A-Z' : 'Z-A'}</span>
@@ -396,14 +414,14 @@ export default function DataSiswaSigapView({ showToast }) {
 
                   <div className="form-group">
                     <label className="form-label">Jenis Kelamin (L/P) *</label>
-                    <select 
-                      className="form-input"
+                    <CustomSelect 
                       value={formData.lp}
                       onChange={(e) => setFormData({ ...formData, lp: e.target.value })}
-                    >
-                      <option value="L">L (Laki-laki)</option>
-                      <option value="P">P (Perempuan)</option>
-                    </select>
+                      options={[
+                        { value: 'L', label: 'Laki-laki (L)' },
+                        { value: 'P', label: 'Perempuan (P)' }
+                      ]}
+                    />
                   </div>
                 </div>
 
@@ -440,18 +458,15 @@ export default function DataSiswaSigapView({ showToast }) {
                       Terdaftar ({daftarPengampu.length} Guru/Pegawai)
                     </span>
                   </label>
-                  <select 
-                    className="form-input"
+                  <CustomSelect 
                     value={formData.pengampu}
                     onChange={(e) => setFormData({ ...formData, pengampu: e.target.value })}
-                  >
-                    <option value="">-- Pilih Guru / Ustadz Pengampu --</option>
-                    {daftarPengampu.map((nama) => (
-                      <option key={nama} value={nama}>
-                        {nama}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="-- Pilih Guru / Ustadz Pengampu --"
+                    options={[
+                      { value: '', label: '-- Pilih Guru / Ustadz Pengampu --' },
+                      ...daftarPengampu.map(nama => ({ value: nama, label: nama }))
+                    ]}
+                  />
                   <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
                     Data pengampu diambil otomatis dari daftar Guru & Pegawai yang terdaftar di sistem.
                   </small>

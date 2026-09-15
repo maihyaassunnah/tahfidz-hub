@@ -132,6 +132,45 @@ export default function PengaturanAdminView({
 
   const [editingSiswa, setEditingSiswa] = useState(null);
 
+  // State Template Rapor & Aspek Kualitas Tahfidz
+  const [raporTemplate, setRaporTemplate] = useState(() => storageService.getRaporTemplate());
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+
+  useEffect(() => {
+    const handleTemplateUpdate = (e) => {
+      if (e.detail) setRaporTemplate(e.detail);
+      else setRaporTemplate(storageService.getRaporTemplate());
+    };
+    window.addEventListener('simtah_rapor_template_updated', handleTemplateUpdate);
+    return () => window.removeEventListener('simtah_rapor_template_updated', handleTemplateUpdate);
+  }, []);
+
+  const handleSaveRaporTemplate = async (e) => {
+    if (e) e.preventDefault();
+    setIsSavingTemplate(true);
+    try {
+      storageService.saveRaporTemplate(raporTemplate);
+      notify("Template Rapor & format penilaian aspek berhasil disimpan ke Database!");
+    } catch (err) {
+      alert("Gagal menyimpan template: " + err.message);
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
+  const handleUpdateAspect = (index, field, value) => {
+    const currentAspects = [...(raporTemplate.aspekPenilaian || [
+      { no: 1, nama: 'Kelancaran & Daya Ingat (Al-Hifdz)', keterangan: 'Hafalan lancar, tartil, dan mutqin' },
+      { no: 2, nama: 'Ahkamut Tajwid (Hukum Tajwid)', keterangan: "Ghunnah, ikhfa', dan mad diterapkan dengan baik" },
+      { no: 3, nama: 'Makharijul Huruf & Shifat (Fashohah)', keterangan: 'Pengucapan huruf jelas dan fasih sesuai kaidah' },
+      { no: 4, nama: 'Adab Halaqah & Tilawah', keterangan: 'Menghormati mushaf, ustadz, dan teman halaqah' }
+    ])];
+    if (currentAspects[index]) {
+      currentAspects[index] = { ...currentAspects[index], [field]: value };
+      setRaporTemplate(prev => ({ ...prev, aspekPenilaian: currentAspects }));
+    }
+  };
+
   const notify = (msg) => {
     if (typeof showToast === 'function') {
       showToast(msg);
@@ -570,6 +609,15 @@ export default function PengaturanAdminView({
         >
           <GraduationCap size={16} />
           <span>Kelola Data Siswa Unit</span>
+        </button>
+
+        <button
+          className={`btn ${activeSubTab === 'template-rapor' ? 'btn-primary' : 'btn-outline'}`}
+          onClick={() => setActiveSubTab('template-rapor')}
+          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none' }}
+        >
+          <FileCheck size={16} />
+          <span>Template & Format Rapor</span>
         </button>
 
         <button
@@ -1426,6 +1474,352 @@ export default function PengaturanAdminView({
               <span>Pilih File Cadangan JSON</span>
               <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleFileRestore} />
             </label>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 4. TEMPLATE & FORMAT RAPOR (SUPER ADMIN) */}
+      {/* ========================================================= */}
+      {activeSubTab === 'template-rapor' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="card" style={{ background: '#ecfdf5', borderColor: '#a7f3d0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.2rem', color: '#064e3b' }}>
+                  Pengaturan Format & Template Rapor Tahfidz
+                </h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#047857' }}>
+                  Atur format resmi Kop Rapor, nama madrasah, kontak, semester, serta 4 aspek penilaian kualitas tahfidz. Perubahan langsung tersimpan ke database PostgreSQL dan tersinkron ke cetak rapor serta penilaian musyrif pengampu.
+                </p>
+              </div>
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                onClick={handleSaveRaporTemplate}
+                disabled={isSavingTemplate}
+                style={{ background: '#059669', borderColor: '#047857', padding: '10px 20px', fontWeight: 700 }}
+              >
+                <Save size={18} />
+                <span>{isSavingTemplate ? 'Menyimpan ke Database...' : 'Simpan Perubahan ke Database'}</span>
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(350px, 1.2fr) minmax(320px, 1fr)', gap: '24px', alignItems: 'start' }}>
+            {/* KOLOM KIRI: FORM PENGATURAN */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              
+              {/* Card 1: Kop Surat & Lembaga */}
+              <div className="card" style={{ borderLeft: '4px solid #059669' }}>
+                <h4 style={{ margin: '0 0 14px 0', fontWeight: 800, color: '#064e3b', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Building2 size={18} color="#059669" />
+                  <span>Kop Surat & Identitas Lembaga</span>
+                </h4>
+
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Nama Yayasan *</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={raporTemplate.namaYayasan || ''} 
+                    onChange={(e) => setRaporTemplate(prev => ({ ...prev, namaYayasan: e.target.value }))}
+                    placeholder="Contoh: YAYASAN IHYA AS SUNNAH TASIKMALAYA"
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Nama Madrasah / Satuan Pendidikan *</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={raporTemplate.namaMadrasah || ''} 
+                    onChange={(e) => setRaporTemplate(prev => ({ ...prev, namaMadrasah: e.target.value }))}
+                    placeholder="Contoh: MADRASAH ALIYAH IHYA AS SUNNAH"
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Alamat Lengkap Lembaga *</label>
+                  <textarea 
+                    className="form-textarea" 
+                    rows={2}
+                    value={raporTemplate.alamat || ''} 
+                    onChange={(e) => setRaporTemplate(prev => ({ ...prev, alamat: e.target.value }))}
+                    placeholder="Alamat lengkap kampus/madrasah..."
+                  />
+                </div>
+
+                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Website</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={raporTemplate.website || ''} 
+                      onChange={(e) => setRaporTemplate(prev => ({ ...prev, website: e.target.value }))}
+                      placeholder="www.ma-ihyaassunnah.sch.id"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Email</label>
+                    <input 
+                      type="email" 
+                      className="form-input" 
+                      value={raporTemplate.email || ''} 
+                      onChange={(e) => setRaporTemplate(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="tahfidz@ma-ihyaassunnah.sch.id"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Judul Dokumen Rapor *</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={raporTemplate.judulRapor || ''} 
+                    onChange={(e) => setRaporTemplate(prev => ({ ...prev, judulRapor: e.target.value }))}
+                    placeholder="LEMBAR EVALUASI & RAPOR TAHFIDZ AL-QUR'AN"
+                  />
+                </div>
+              </div>
+
+              {/* Card 2: Periode, Pejabat & Tanda Tangan */}
+              <div className="card" style={{ borderLeft: '4px solid #0284c7' }}>
+                <h4 style={{ margin: '0 0 14px 0', fontWeight: 800, color: '#0369a1', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Clock size={18} color="#0284c7" />
+                  <span>Periode, Tanda Tangan & Pejabat Rapor</span>
+                </h4>
+
+                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Semester & Tahun Ajaran</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={raporTemplate.semester || ''} 
+                      onChange={(e) => setRaporTemplate(prev => ({ ...prev, semester: e.target.value }))}
+                      placeholder="Ganjil 2026/2027"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Kota Penerbitan Rapor</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={raporTemplate.tempatTanggal || ''} 
+                      onChange={(e) => setRaporTemplate(prev => ({ ...prev, tempatTanggal: e.target.value }))}
+                      placeholder="Tasikmalaya"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Koordinator Tahfidz / Mudir</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={raporTemplate.namaMudir || ''} 
+                      onChange={(e) => setRaporTemplate(prev => ({ ...prev, namaMudir: e.target.value }))}
+                      placeholder="Ust. Hafizhul Qur'an, Al-Hafizh"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>NIP / NBM Koordinator</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={raporTemplate.nipMudir || ''} 
+                      onChange={(e) => setRaporTemplate(prev => ({ ...prev, nipMudir: e.target.value }))}
+                      placeholder="19850712 201001 1 004"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: 4 Aspek Penilaian Kualitas Tahfidz */}
+              <div className="card" style={{ borderLeft: '4px solid #d97706' }}>
+                <h4 style={{ margin: '0 0 14px 0', fontWeight: 800, color: '#92400e', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <BookOpen size={18} color="#d97706" />
+                  <span>Pengaturan 4 Aspek Kualitas Tahfidz (Gambar 2)</span>
+                </h4>
+                <p style={{ margin: '0 0 14px 0', fontSize: '0.8rem', color: '#64748b' }}>
+                  Tentukan judul aspek dan template deskripsi evaluasi default untuk form penilaian musyrif:
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {(raporTemplate.aspekPenilaian || [
+                    { no: 1, nama: 'Kelancaran & Daya Ingat (Al-Hifdz)', keterangan: 'Hafalan lancar, tartil, dan mutqin' },
+                    { no: 2, nama: 'Ahkamut Tajwid (Hukum Tajwid)', keterangan: "Ghunnah, ikhfa', dan mad diterapkan dengan baik" },
+                    { no: 3, nama: 'Makharijul Huruf & Shifat (Fashohah)', keterangan: 'Pengucapan huruf jelas dan fasih sesuai kaidah' },
+                    { no: 4, nama: 'Adab Halaqah & Tilawah', keterangan: 'Menghormati mushaf, ustadz, dan teman halaqah' }
+                  ]).map((aspek, idx) => (
+                    <div key={idx} style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#047857', color: '#fff', fontSize: '0.75rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {idx + 1}
+                        </span>
+                        <strong style={{ fontSize: '0.85rem', color: '#0f172a' }}>Aspek #{idx + 1}</strong>
+                      </div>
+                      <div className="form-group" style={{ marginBottom: '8px' }}>
+                        <label className="form-label" style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: '4px' }}>Nama Aspek Penilaian</label>
+                        <input 
+                          type="text" 
+                          className="form-input"
+                          style={{ height: '36px', fontSize: '0.85rem', fontWeight: 600 }}
+                          value={aspek.nama || ''}
+                          onChange={(e) => handleUpdateAspect(idx, 'nama', e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label" style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: '4px' }}>Template Evaluasi / Keterangan Default</label>
+                        <input 
+                          type="text" 
+                          className="form-input"
+                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          value={aspek.keterangan || ''}
+                          onChange={(e) => handleUpdateAspect(idx, 'keterangan', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tombol Simpan Footer */}
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                onClick={handleSaveRaporTemplate}
+                disabled={isSavingTemplate}
+                style={{ background: '#059669', borderColor: '#047857', padding: '12px 24px', fontWeight: 800, fontSize: '0.95rem' }}
+              >
+                <Save size={18} />
+                <span>{isSavingTemplate ? 'Sedang Menyimpan ke Database...' : '💾 Simpan Seluruh Perubahan Template ke Database'}</span>
+              </button>
+            </div>
+
+            {/* KOLOM KANAN: LIVE PRATINJAU RAPOR (PERSIS GAMBAR 1 & 2) */}
+            <div style={{ position: 'sticky', top: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#064e3b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <FileCheck size={16} /> Pratinjau Langsung Rapor Cetak
+                </span>
+                <span style={{ fontSize: '0.75rem', color: '#64748b', background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>
+                  Realtime Preview
+                </span>
+              </div>
+
+              <div 
+                style={{ 
+                  background: '#ffffff', 
+                  borderRadius: '12px', 
+                  border: '1px solid #cbd5e1', 
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.06)', 
+                  padding: '24px 28px',
+                  color: '#0f172a',
+                  fontSize: '0.82rem'
+                }}
+              >
+                {/* KOP RAPOR PERSIS GAMBAR 1 */}
+                <div style={{ textAlign: 'center', borderBottom: '3px double #064e3b', paddingBottom: '14px', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.08em', color: '#047857', textTransform: 'uppercase' }}>
+                    {raporTemplate.namaYayasan || "YAYASAN IHYA AS SUNNAH TASIKMALAYA"}
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '4px 0', color: '#064e3b', letterSpacing: '-0.01em' }}>
+                    {raporTemplate.namaMadrasah || "MADRASAH ALIYAH IHYA AS SUNNAH"}
+                  </h3>
+                  <div style={{ fontSize: '0.72rem', color: '#475569', lineHeight: 1.4 }}>
+                    {raporTemplate.alamat || "Kompleks Islamic Center PPIAS, Jl. Paseh No. 12, Tasikmalaya, Jawa Barat"}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#475569', marginTop: '2px' }}>
+                    Website: {raporTemplate.website || "www.ma-ihyaassunnah.sch.id"} • Email: {raporTemplate.email || "tahfidz@ma-ihyaassunnah.sch.id"}
+                  </div>
+
+                  <div style={{
+                    display: 'inline-block',
+                    marginTop: '10px',
+                    padding: '4px 16px',
+                    background: '#ecfdf5',
+                    border: '1px solid #10b981',
+                    borderRadius: '4px',
+                    fontWeight: 800,
+                    fontSize: '0.82rem',
+                    color: '#064e3b',
+                    letterSpacing: '0.03em'
+                  }}>
+                    {raporTemplate.judulRapor || "LEMBAR EVALUASI & RAPOR TAHFIDZ AL-QUR'AN"}
+                  </div>
+                </div>
+
+                {/* Bagian B: Tabel Aspek Kualitas (Persis Gambar 2) */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#064e3b', borderBottom: '2px solid #059669', paddingBottom: '3px', marginBottom: '8px' }}>
+                    B. PENILAIAN ASPEK KUALITAS TAHFIDZ
+                  </div>
+
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ background: '#ecfdf5', color: '#064e3b' }}>
+                        <th style={{ border: '1px solid #cbd5e1', padding: '6px 8px', width: '28px', textAlign: 'center' }}>No</th>
+                        <th style={{ border: '1px solid #cbd5e1', padding: '6px 8px' }}>Aspek Penilaian</th>
+                        <th style={{ border: '1px solid #cbd5e1', padding: '6px 6px', width: '55px', textAlign: 'center' }}>Nilai</th>
+                        <th style={{ border: '1px solid #cbd5e1', padding: '6px 8px', width: '110px' }}>Predikat</th>
+                        <th style={{ border: '1px solid #cbd5e1', padding: '6px 8px' }}>Keterangan / Evaluasi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(raporTemplate.aspekPenilaian || [
+                        { no: 1, nama: 'Kelancaran & Daya Ingat (Al-Hifdz)', keterangan: 'Hafalan lancar, tartil, dan mutqin' },
+                        { no: 2, nama: 'Ahkamut Tajwid (Hukum Tajwid)', keterangan: "Ghunnah, ikhfa', dan mad diterapkan dengan baik" },
+                        { no: 3, nama: 'Makharijul Huruf & Shifat (Fashohah)', keterangan: 'Pengucapan huruf jelas dan fasih sesuai kaidah' },
+                        { no: 4, nama: 'Adab Halaqah & Tilawah', keterangan: 'Menghormati mushaf, ustadz, dan teman halaqah' }
+                      ]).map((aspek, idx) => {
+                        const contohNilai = [90, 91, 89, 95][idx] || 90;
+                        const contohPredikat = ['Mumtaz (Istimewa)', 'Mumtaz (Istimewa)', 'Jayyid Jiddan (Sangat Baik)', 'Mumtaz (Istimewa)'][idx] || 'Mumtaz';
+                        return (
+                          <tr key={idx}>
+                            <td style={{ border: '1px solid #cbd5e1', padding: '6px 8px', textAlign: 'center' }}>{idx + 1}</td>
+                            <td style={{ border: '1px solid #cbd5e1', padding: '6px 8px', fontWeight: 700 }}>{aspek.nama}</td>
+                            <td style={{ border: '1px solid #cbd5e1', padding: '6px 6px', textAlign: 'center', fontWeight: 800 }}>{contohNilai}</td>
+                            <td style={{ border: '1px solid #cbd5e1', padding: '6px 8px', fontWeight: 600 }}>{contohPredikat}</td>
+                            <td style={{ border: '1px solid #cbd5e1', padding: '6px 8px', fontSize: '0.72rem', color: '#334155' }}>{aspek.keterangan}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Footer Tanda Tangan */}
+                <div style={{ marginTop: '20px', fontSize: '0.75rem' }}>
+                  <div style={{ textAlign: 'right', marginBottom: '12px', color: '#475569' }}>
+                    {raporTemplate.tempatTanggal || 'Tasikmalaya'}, 2026
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', gap: '8px' }}>
+                    <div>
+                      <div style={{ color: '#64748b' }}>Wali Santri</div>
+                      <div style={{ height: '40px' }}></div>
+                      <div style={{ fontWeight: 700, borderBottom: '1px solid #000', display: 'inline-block', minWidth: '90px' }}>( ............... )</div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#64748b' }}>Musyrif</div>
+                      <div style={{ height: '40px' }}></div>
+                      <div style={{ fontWeight: 700, borderBottom: '1px solid #000', display: 'inline-block', minWidth: '90px' }}>( Musyrif )</div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#64748b' }}>Koordinator</div>
+                      <div style={{ height: '40px' }}></div>
+                      <div style={{ fontWeight: 700, borderBottom: '1px solid #000', display: 'inline-block', minWidth: '90px' }}>
+                        ( {raporTemplate.namaMudir ? raporTemplate.namaMudir.split(',')[0] : 'Ust. Hafizhul'} )
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

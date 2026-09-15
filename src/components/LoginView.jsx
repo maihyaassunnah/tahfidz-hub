@@ -17,7 +17,8 @@ import {
   ChevronDown,
   ChevronUp,
   Globe,
-  Sparkles
+  Sparkles,
+  HeartHandshake
 } from 'lucide-react';
 import TahfidzHubLogo from './TahfidzHubLogo';
 import { storageService } from '../services/storage';
@@ -274,11 +275,32 @@ export default function LoginView({ onLoginSuccess, isDarkMode }) {
             </div>
           )}
 
+          {/* Banner Petunjuk Khusus Wali Santri */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            background: isDarkMode ? 'rgba(16, 185, 129, 0.12)' : '#f0fdf4',
+            border: isDarkMode ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid #bbf7d0',
+            color: isDarkMode ? '#6ee7b7' : '#166534',
+            padding: '10px 14px',
+            borderRadius: '12px',
+            fontSize: '0.80rem',
+            marginBottom: '18px',
+            lineHeight: 1.45
+          }}>
+            <HeartHandshake size={18} color={isDarkMode ? '#34d399' : '#16a34a'} style={{ flexShrink: 0 }} />
+            <div>
+              <strong style={{ display: 'block', fontWeight: 700 }}>Akses Orang Tua / Wali:</strong>
+              <span>Gunakan <strong>Nama Lengkap Santri</strong> pada Username &amp; <strong>NIS Santri</strong> pada Kata Sandi.</span>
+            </div>
+          </div>
+
           <form onSubmit={handleStandardLogin}>
             {/* Input Username / Email */}
             <div className="login-field-group">
               <label className="login-field-label" htmlFor="login-username">
-                Username atau Email
+                Nama Lengkap Santri / Username / Email
               </label>
               <div className="login-input-container">
                 <div className="login-input-icon">
@@ -288,7 +310,7 @@ export default function LoginView({ onLoginSuccess, isDarkMode }) {
                   id="login-username"
                   type="text"
                   className="login-input"
-                  placeholder="Contoh: admin.ma atau ustadz.wahyudin"
+                  placeholder="Contoh: Adilla atau admin.ma"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   autoComplete="username"
@@ -300,7 +322,7 @@ export default function LoginView({ onLoginSuccess, isDarkMode }) {
             {/* Input Password */}
             <div className="login-field-group">
               <label className="login-field-label" htmlFor="login-password">
-                Kata Sandi
+                NIS Santri / Kata Sandi
               </label>
               <div className="login-input-container">
                 <div className="login-input-icon">
@@ -310,7 +332,7 @@ export default function LoginView({ onLoginSuccess, isDarkMode }) {
                   id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   className="login-input"
-                  placeholder="Masukkan kata sandi akun"
+                  placeholder="Masukkan NIS Santri (Contoh: 39938383)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
@@ -471,11 +493,23 @@ export default function LoginView({ onLoginSuccess, isDarkMode }) {
                 <button
                   type="button"
                   className="quick-chip"
-                  onClick={() => handleQuickLogin('orangtua', 'bismillah123')}
-                  title="Masuk sebagai Orang Tua / Wali"
+                  onClick={() => handleQuickLogin('Adilla', '39938383')}
+                  title="Masuk sebagai Wali Santri (Ananda Adilla - NIS 39938383)"
+                  style={{ borderColor: '#d8b4fe', background: '#faf5ff' }}
                 >
-                  <User size={13} color="#7c3aed" />
-                  <span>Orang Tua</span>
+                  <HeartHandshake size={13} color="#7c3aed" />
+                  <span>Wali Adilla (39938383)</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="quick-chip"
+                  onClick={() => handleQuickLogin('Zaidan Al-Farisi', '20260901')}
+                  title="Masuk sebagai Wali Santri (Ananda Zaidan - NIS 20260901)"
+                  style={{ borderColor: '#d8b4fe', background: '#faf5ff' }}
+                >
+                  <HeartHandshake size={13} color="#7c3aed" />
+                  <span>Wali Zaidan (20260901)</span>
                 </button>
               </div>
             )}

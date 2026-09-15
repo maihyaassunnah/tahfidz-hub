@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Check, BookOpen, Award, Sparkles } from 'lucide-react';
 import { QURAN_SURAH } from '../data/quranData';
 import confetti from 'canvas-confetti';
+import CustomSelect from './common/CustomSelect';
 
 const TAJWID_TAGS = [
   "Tartil & Mutqin",
@@ -138,10 +139,12 @@ export default function SetoranModal({ isOpen, onClose, onSave, santriList, hala
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Pilih Santri *</label>
-                <select 
-                  className="form-select" 
+                <CustomSelect 
                   value={santriId} 
                   onChange={(e) => setSantriId(e.target.value)}
+                  placeholder="-- Pilih Santri --"
+                  searchable={true}
+                  searchPlaceholder="Cari nama santri..."
                   required
                 >
                   <option value="">-- Pilih Santri --</option>
@@ -153,7 +156,7 @@ export default function SetoranModal({ isOpen, onClose, onSave, santriList, hala
                       </option>
                     );
                   })}
-                </select>
+                </CustomSelect>
               </div>
 
               <div className="form-group">
@@ -194,8 +197,7 @@ export default function SetoranModal({ isOpen, onClose, onSave, santriList, hala
                     Juz {selectedSurah.juz} ({selectedSurah.revelation})
                   </span>
                 </div>
-                <select 
-                  className="form-select" 
+                <CustomSelect 
                   value={surahId} 
                   onChange={(e) => {
                     const id = parseInt(e.target.value);
@@ -206,6 +208,8 @@ export default function SetoranModal({ isOpen, onClose, onSave, santriList, hala
                       setAyatAkhir(Math.min(10, s.versesCount));
                     }
                   }}
+                  searchable={true}
+                  searchPlaceholder="Cari nama surah atau nomor..."
                   required
                 >
                   {QURAN_SURAH.map(s => (
@@ -213,7 +217,7 @@ export default function SetoranModal({ isOpen, onClose, onSave, santriList, hala
                       {s.id}. {s.name} ({s.arabic}) - {s.versesCount} Ayat
                     </option>
                   ))}
-                </select>
+                </CustomSelect>
               </div>
             </div>
 
@@ -339,15 +343,14 @@ export default function SetoranModal({ isOpen, onClose, onSave, santriList, hala
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Status Evaluasi</label>
-                <select 
-                  className="form-select"
+                <CustomSelect 
                   value={statusLanjut}
                   onChange={(e) => setStatusLanjut(e.target.value)}
                 >
                   <option value="Lanjut Ayat Baru">Lanjut Ayat Baru (Tuntas)</option>
                   <option value="Ulangi Setoran">Perlu Diulang (Belum Lancar)</option>
                   <option value="Lanjut Juz Baru">Lanjut Juz Baru (Naik Tingkat)</option>
-                </select>
+                </CustomSelect>
               </div>
 
               <div className="form-group">

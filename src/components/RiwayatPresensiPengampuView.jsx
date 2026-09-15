@@ -26,6 +26,7 @@ import {
   Moon
 } from 'lucide-react';
 import { storageService } from '../services/storage';
+import CustomSelect from './common/CustomSelect';
 
 export default function RiwayatPresensiPengampuView({ 
   currentRole = 'pengampu', 
@@ -726,17 +727,17 @@ export default function RiwayatPresensiPengampuView({
             <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
               Filter Sesi:
             </label>
-            <select 
-              className="form-select" 
+            <CustomSelect 
+              style={{ minWidth: '180px' }}
+              triggerStyle={{ minHeight: '38px', borderRadius: '12px', fontSize: '0.82rem' }}
               value={selectedSesiFilter}
               onChange={(e) => setSelectedSesiFilter(e.target.value)}
-              style={{ fontSize: '0.82rem', height: '38px' }}
             >
               <option value="ALL">Semua Sesi Halaqoh</option>
               {masterSesiList.map(s => (
                 <option key={s.id} value={s.nama}>{s.nama} ({s.mulai} - {s.selesai})</option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           {/* Status Filter */}
@@ -744,17 +745,17 @@ export default function RiwayatPresensiPengampuView({
             <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
               Filter Status:
             </label>
-            <select 
-              className="form-select" 
+            <CustomSelect 
+              style={{ minWidth: '150px' }}
+              triggerStyle={{ minHeight: '38px', borderRadius: '12px', fontSize: '0.82rem' }}
               value={selectedStatusFilter}
               onChange={(e) => setSelectedStatusFilter(e.target.value)}
-              style={{ fontSize: '0.82rem', height: '38px' }}
             >
               <option value="ALL">Semua Status</option>
               <option value="TEPAT_WAKTU">Tepat Waktu</option>
               <option value="TERLAMBAT">Terlambat</option>
               <option value="IZIN">Izin Resmi</option>
-            </select>
+            </CustomSelect>
           </div>
 
           {/* Search Box */}

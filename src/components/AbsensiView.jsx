@@ -43,6 +43,7 @@ export default function AbsensiView({
   setActiveTab,
   authUser
 }) {
+  const isOrangTua = currentRole === 'orangtua';
   const [presensiCategory, setPresensiCategory] = useState(activeCategory || 'santri');
 
   useEffect(() => {
@@ -413,84 +414,68 @@ export default function AbsensiView({
         }
       `}</style>
 
-      {/* ─── 0. SWITCHER: RIWAYAT PRESENSI SANTRI VS RIWAYAT PRESENSI PENGAMPU ─── */}
-      <div style={{
-        display: 'flex',
-        gap: '8px',
-        background: '#f1f5f9',
-        padding: '5px',
-        borderRadius: '12px',
-        marginBottom: '20px',
-        width: 'fit-content',
-        maxWidth: '100%',
-        boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06)'
-      }}>
-        <button
-          type="button"
-          onClick={() => handleCategorySwitch('santri')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '9px 18px',
-            borderRadius: '9px',
-            fontWeight: 800,
-            fontSize: '0.86rem',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            background: presensiCategory === 'santri' ? '#ffffff' : 'transparent',
-            color: presensiCategory === 'santri' ? '#0f766e' : '#64748b',
-            boxShadow: presensiCategory === 'santri' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none'
-          }}
-        >
-          <Users size={17} color={presensiCategory === 'santri' ? '#0d9488' : '#64748b'} />
-          <span>Riwayat Presensi Santri</span>
-          <span style={{
-            background: presensiCategory === 'santri' ? '#ccfbf1' : '#e2e8f0',
-            color: presensiCategory === 'santri' ? '#0f766e' : '#64748b',
-            fontSize: '0.7rem',
-            padding: '2px 8px',
-            borderRadius: '8px',
-            fontWeight: 800
-          }}>
-            Halaqah
-          </span>
-        </button>
+      {/* ─── 0. SWITCHER: RIWAYAT PRESENSI VS RIWAYAT PRESENSI PENGAMPU ─── */}
+      {currentRole !== 'orangtua' && (
+        <div style={{
+          display: 'inline-flex',
+          gap: '6px',
+          background: '#f1f5f9',
+          padding: '4px',
+          borderRadius: '12px',
+          marginBottom: '18px',
+          maxWidth: '100%',
+          overflowX: 'auto',
+          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)'
+        }}>
+          <button
+            type="button"
+            onClick={() => handleCategorySwitch('santri')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 14px',
+              borderRadius: '9px',
+              fontWeight: presensiCategory === 'santri' ? 600 : 500,
+              fontSize: '0.84rem',
+              border: 'none',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.15s ease',
+              background: presensiCategory === 'santri' ? '#ffffff' : 'transparent',
+              color: presensiCategory === 'santri' ? '#0f766e' : '#64748b',
+              boxShadow: presensiCategory === 'santri' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'
+            }}
+          >
+            <Users size={16} color={presensiCategory === 'santri' ? '#0d9488' : '#64748b'} />
+            <span>Riwayat Presensi</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => handleCategorySwitch('pengampu')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '9px 18px',
-            borderRadius: '9px',
-            fontWeight: 800,
-            fontSize: '0.86rem',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            background: presensiCategory === 'pengampu' ? '#ffffff' : 'transparent',
-            color: presensiCategory === 'pengampu' ? '#0f766e' : '#64748b',
-            boxShadow: presensiCategory === 'pengampu' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none'
-          }}
-        >
-          <UserCheck size={17} color={presensiCategory === 'pengampu' ? '#0d9488' : '#64748b'} />
-          <span>Riwayat Presensi Pengampu</span>
-          <span style={{
-            background: presensiCategory === 'pengampu' ? '#ccfbf1' : '#e2e8f0',
-            color: presensiCategory === 'pengampu' ? '#0f766e' : '#64748b',
-            fontSize: '0.7rem',
-            padding: '2px 8px',
-            borderRadius: '8px',
-            fontWeight: 800
-          }}>
-            Asatidzah
-          </span>
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => handleCategorySwitch('pengampu')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 14px',
+              borderRadius: '9px',
+              fontWeight: presensiCategory === 'pengampu' ? 600 : 500,
+              fontSize: '0.84rem',
+              border: 'none',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.15s ease',
+              background: presensiCategory === 'pengampu' ? '#ffffff' : 'transparent',
+              color: presensiCategory === 'pengampu' ? '#0f766e' : '#64748b',
+              boxShadow: presensiCategory === 'pengampu' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'
+            }}
+          >
+            <UserCheck size={16} color={presensiCategory === 'pengampu' ? '#0d9488' : '#64748b'} />
+            <span>Riwayat Presensi Pengampu</span>
+          </button>
+        </div>
+      )}
 
       {presensiCategory === 'pengampu' ? (
         <RiwayatPresensiPengampuView 
@@ -537,49 +522,67 @@ export default function AbsensiView({
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={handleMarkAllPresent}
-            style={{
-              ...btnBase,
-              background: '#f0fdf4',
-              border: '1.5px solid #86efac',
-              color: '#15803d',
-              borderRadius: '10px',
-              padding: '9px 16px',
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <CheckCircle2 size={16} />
-            <span>Tandai Semua Hadir</span>
-          </button>
-          
-          <button 
-            type="button"
-            onClick={handleSave}
-            style={{ 
-              ...btnBase,
-              background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
-              color: '#ffffff',
-              borderRadius: '10px',
-              padding: '9px 20px',
-              fontWeight: 800,
-              fontSize: '0.84rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 12px rgba(22,163,74,0.3)'
-            }}
-          >
-            <Save size={16} />
-            <span>Simpan Presensi</span>
-          </button>
-        </div>
+        {currentRole !== 'orangtua' ? (
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={handleMarkAllPresent}
+              style={{
+                ...btnBase,
+                background: '#f0fdf4',
+                border: '1.5px solid #86efac',
+                color: '#15803d',
+                borderRadius: '10px',
+                padding: '9px 16px',
+                fontWeight: 800,
+                fontSize: '0.82rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <CheckCircle2 size={16} />
+              <span>Tandai Semua Hadir</span>
+            </button>
+            
+            <button 
+              type="button"
+              onClick={handleSave}
+              style={{ 
+                ...btnBase,
+                background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
+                color: '#ffffff',
+                borderRadius: '10px',
+                padding: '9px 20px',
+                fontWeight: 800,
+                fontSize: '0.84rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 12px rgba(22,163,74,0.3)'
+              }}
+            >
+              <Save size={16} />
+              <span>Simpan Presensi</span>
+            </button>
+          </div>
+        ) : (
+          <div style={{
+            background: '#ecfdf5',
+            border: '1px solid #a7f3d0',
+            color: '#065f46',
+            padding: '8px 16px',
+            borderRadius: '12px',
+            fontSize: '0.80rem',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <Eye size={16} color="#059669" />
+            <span>Mode Pantau Wali Santri (Read-Only)</span>
+          </div>
+        )}
       </div>
 
       {/* ══════════ 2. SELECTOR HALAQAH & TANGGAL BAR ══════════ */}
@@ -1680,95 +1683,130 @@ export default function AbsensiView({
                         </div>
                       </td>
 
-                      {/* PILIHAN 4 STATUS KEHADIRAN SEBELUMNYA (HADIR / IZIN / SAKIT / ALPA) */}
+                      {/* PILIHAN 4 STATUS KEHADIRAN (READ-ONLY UNTUK ORANG TUA) */}
                       <td style={{ textAlign: 'center', padding: '12px 14px' }}>
-                        <div className="attendance-status-container">
-                          {/* HADIR (H) */}
-                          <button
-                            type="button"
-                            className={`att-status-btn att-hadir ${currentStatus === 'H' ? 'active' : ''}`}
-                            onClick={() => handleStatusChange(s.id, 'H')}
-                            title="Tandai Hadir"
-                          >
-                            <Check size={13} strokeWidth={3} />
-                            <span>Hadir</span>
-                          </button>
+                        {currentRole !== 'orangtua' ? (
+                          <div className="attendance-status-container">
+                            {/* HADIR (H) */}
+                            <button
+                              type="button"
+                              className={`att-status-btn att-hadir ${currentStatus === 'H' ? 'active' : ''}`}
+                              onClick={() => handleStatusChange(s.id, 'H')}
+                              title="Tandai Hadir"
+                            >
+                              <Check size={13} strokeWidth={3} />
+                              <span>Hadir</span>
+                            </button>
 
-                          {/* IZIN (I) */}
-                          <button
-                            type="button"
-                            className={`att-status-btn att-izin ${currentStatus === 'I' ? 'active' : ''}`}
-                            onClick={() => handleStatusChange(s.id, 'I')}
-                            title="Tandai Izin"
-                          >
-                            <Info size={13} strokeWidth={2.5} />
-                            <span>Izin</span>
-                          </button>
+                            {/* IZIN (I) */}
+                            <button
+                              type="button"
+                              className={`att-status-btn att-izin ${currentStatus === 'I' ? 'active' : ''}`}
+                              onClick={() => handleStatusChange(s.id, 'I')}
+                              title="Tandai Izin"
+                            >
+                              <Info size={13} strokeWidth={2.5} />
+                              <span>Izin</span>
+                            </button>
 
-                          {/* SAKIT (S) */}
-                          <button
-                            type="button"
-                            className={`att-status-btn att-sakit ${currentStatus === 'S' ? 'active' : ''}`}
-                            onClick={() => handleStatusChange(s.id, 'S')}
-                            title="Tandai Sakit"
-                          >
-                            <HeartPulse size={13} strokeWidth={2.5} />
-                            <span>Sakit</span>
-                          </button>
+                            {/* SAKIT (S) */}
+                            <button
+                              type="button"
+                              className={`att-status-btn att-sakit ${currentStatus === 'S' ? 'active' : ''}`}
+                              onClick={() => handleStatusChange(s.id, 'S')}
+                              title="Tandai Sakit"
+                            >
+                              <HeartPulse size={13} strokeWidth={2.5} />
+                              <span>Sakit</span>
+                            </button>
 
-                          {/* ALPA (A) */}
-                          <button
-                            type="button"
-                            className={`att-status-btn att-alpa ${currentStatus === 'A' ? 'active' : ''}`}
-                            onClick={() => handleStatusChange(s.id, 'A')}
-                            title="Tandai Alpa"
-                          >
-                            <X size={13} strokeWidth={3} />
-                            <span>Alpa</span>
-                          </button>
-                        </div>
+                            {/* ALPA (A) */}
+                            <button
+                              type="button"
+                              className={`att-status-btn att-alpa ${currentStatus === 'A' ? 'active' : ''}`}
+                              onClick={() => handleStatusChange(s.id, 'A')}
+                              title="Tandai Alpa"
+                            >
+                              <X size={13} strokeWidth={3} />
+                              <span>Alpa</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <div>
+                            {currentStatus === 'H' && (
+                              <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', padding: '6px 14px', borderRadius: '8px', fontWeight: 800, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <Check size={14} strokeWidth={3} />
+                                <span>HADIR (H)</span>
+                              </span>
+                            )}
+                            {currentStatus === 'I' && (
+                              <span style={{ background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', padding: '6px 14px', borderRadius: '8px', fontWeight: 800, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <Info size={14} />
+                                <span>IZIN (I)</span>
+                              </span>
+                            )}
+                            {currentStatus === 'S' && (
+                              <span style={{ background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', padding: '6px 14px', borderRadius: '8px', fontWeight: 800, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <HeartPulse size={14} />
+                                <span>SAKIT (S)</span>
+                              </span>
+                            )}
+                            {currentStatus === 'A' && (
+                              <span style={{ background: '#ffe4e6', color: '#be123c', border: '1px solid #fecdd3', padding: '6px 14px', borderRadius: '8px', fontWeight: 800, fontSize: '0.82rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <X size={14} strokeWidth={3} />
+                                <span>ALPA (A)</span>
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* INPUT KETERANGAN & QUICK PRESET CHIPS */}
                       <td style={{ padding: '12px 14px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <input 
-                            type="text" 
-                            className="form-input" 
-                            placeholder={currentStatus === 'H' ? 'Catatan (misal "Tepat Waktu")' : 'Alasan ketidakhadiran santri...'}
-                            value={currentCatatan}
-                            onChange={(e) => handleCatatanChange(s.id, e.target.value)}
-                            style={{ 
-                              padding: '6px 10px', 
-                              fontSize: '0.82rem',
-                              borderColor: currentStatus === 'H' ? '#a7f3d0' : currentStatus === 'I' ? '#bae6fd' : currentStatus === 'S' ? '#fde68a' : '#fecdd3'
-                            }}
-                          />
+                        {currentRole !== 'orangtua' ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <input 
+                              type="text" 
+                              className="form-input" 
+                              placeholder={currentStatus === 'H' ? 'Catatan (misal "Tepat Waktu")' : 'Alasan ketidakhadiran santri...'}
+                              value={currentCatatan}
+                              onChange={(e) => handleCatatanChange(s.id, e.target.value)}
+                              style={{ 
+                                padding: '6px 10px', 
+                                fontSize: '0.82rem',
+                                borderColor: currentStatus === 'H' ? '#a7f3d0' : currentStatus === 'I' ? '#bae6fd' : currentStatus === 'S' ? '#fde68a' : '#fecdd3'
+                              }}
+                            />
 
-                          {/* Quick Presets */}
-                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                            {(quickPresets[currentStatus] || []).map((tag, tagIdx) => (
-                              <button
-                                key={tagIdx}
-                                type="button"
-                                onClick={() => handleCatatanChange(s.id, tag)}
-                                style={{
-                                  background: currentCatatan === tag ? '#047857' : '#f1f5f9',
-                                  color: currentCatatan === tag ? '#ffffff' : '#475569',
-                                  border: '1px solid #e2e8f0',
-                                  borderRadius: '6px',
-                                  padding: '1px 6px',
-                                  fontSize: '10.5px',
-                                  fontWeight: 600,
-                                  cursor: 'pointer',
-                                  transition: 'all 0.12s'
-                                }}
-                              >
-                                {tag}
-                              </button>
-                            ))}
+                            {/* Quick Presets */}
+                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                              {(quickPresets[currentStatus] || []).map((tag, tagIdx) => (
+                                <button
+                                  key={tagIdx}
+                                  type="button"
+                                  onClick={() => handleCatatanChange(s.id, tag)}
+                                  style={{
+                                    background: currentCatatan === tag ? '#047857' : '#f1f5f9',
+                                    color: currentCatatan === tag ? '#ffffff' : '#475569',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '6px',
+                                    padding: '1px 6px',
+                                    fontSize: '10.5px',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.12s'
+                                  }}
+                                >
+                                  {tag}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div style={{ color: '#475569', fontSize: '0.84rem', fontStyle: currentCatatan ? 'normal' : 'italic' }}>
+                            {currentCatatan || 'Tepat Waktu'}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
@@ -1905,34 +1943,59 @@ export default function AbsensiView({
                       </div>
                     </div>
 
-                    {/* Sisi Kanan: 🌟 MODEL TEKAN AJA 🌟 */}
-                    <button
-                      type="button"
-                      onClick={() => handleToggleNextStatus(s.id)}
-                      title="Tekan untuk berganti status: Hadir ➔ Izin ➔ Alpa ➔ Sakit"
-                      style={{
-                        ...btnBase,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        background: meta.bg,
-                        color: meta.color,
-                        border: `2px solid ${meta.border}`,
-                        borderRadius: '12px',
-                        padding: '8px 14px',
-                        fontSize: '0.84rem',
-                        fontWeight: 900,
-                        minWidth: '94px',
-                        height: '38px',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.04)',
-                        userSelect: 'none',
-                        flexShrink: 0
-                      }}
-                    >
-                      {meta.icon}
-                      <span>{meta.label}</span>
-                    </button>
+                    {/* Sisi Kanan: 🌟 MODEL TEKAN AJA ATAU BADGE BACA SAJA 🌟 */}
+                    {isOrangTua ? (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          background: meta.bg,
+                          color: meta.color,
+                          border: `2px solid ${meta.border}`,
+                          borderRadius: '12px',
+                          padding: '8px 14px',
+                          fontSize: '0.84rem',
+                          fontWeight: 900,
+                          minWidth: '94px',
+                          height: '38px',
+                          flexShrink: 0,
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.04)'
+                        }}
+                      >
+                        {meta.icon}
+                        <span>{meta.label}</span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleNextStatus(s.id)}
+                        title="Tekan untuk berganti status: Hadir ➔ Izin ➔ Alpa ➔ Sakit"
+                        style={{
+                          ...btnBase,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          background: meta.bg,
+                          color: meta.color,
+                          border: `2px solid ${meta.border}`,
+                          borderRadius: '12px',
+                          padding: '8px 14px',
+                          fontSize: '0.84rem',
+                          fontWeight: 900,
+                          minWidth: '94px',
+                          height: '38px',
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.04)',
+                          userSelect: 'none',
+                          flexShrink: 0
+                        }}
+                      >
+                        {meta.icon}
+                        <span>{meta.label}</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Input Catatan jika Izin / Alpa / Sakit */}
@@ -1948,44 +2011,52 @@ export default function AbsensiView({
                       <span style={{ fontSize: '0.70rem', fontWeight: 700, color: meta.color }}>
                         Alasan {meta.label}:
                       </span>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        placeholder={`Keterangan ${meta.label.toLowerCase()}...`}
-                        value={currentCatatan}
-                        onChange={(e) => handleCatatanChange(s.id, e.target.value)}
-                        style={{ 
-                          height: '28px',
-                          padding: '2px 10px', 
-                          fontSize: '0.76rem',
-                          maxWidth: '220px',
-                          borderRadius: '6px',
-                          borderColor: meta.border,
-                          background: '#ffffff'
-                        }}
-                      />
-
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                        {(quickPresets[currentStatus] || []).map((tag, tagIdx) => (
-                          <button
-                            key={tagIdx}
-                            type="button"
-                            onClick={() => handleCatatanChange(s.id, tag)}
-                            style={{
-                              ...btnBase,
-                              background: currentCatatan === tag ? meta.color : '#ffffff',
-                              color: currentCatatan === tag ? '#ffffff' : '#475569',
-                              border: `1px solid ${currentCatatan === tag ? meta.color : '#cbd5e1'}`,
+                      {isOrangTua ? (
+                        <span style={{ fontSize: '0.76rem', color: '#334155', fontStyle: currentCatatan ? 'normal' : 'italic' }}>
+                          {currentCatatan || 'Tidak ada catatan'}
+                        </span>
+                      ) : (
+                        <>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder={`Keterangan ${meta.label.toLowerCase()}...`}
+                            value={currentCatatan}
+                            onChange={(e) => handleCatatanChange(s.id, e.target.value)}
+                            style={{ 
+                              height: '28px',
+                              padding: '2px 10px', 
+                              fontSize: '0.76rem',
+                              maxWidth: '220px',
                               borderRadius: '6px',
-                              padding: '1px 7px',
-                              fontSize: '10px',
-                              fontWeight: 600
+                              borderColor: meta.border,
+                              background: '#ffffff'
                             }}
-                          >
-                            {tag}
-                          </button>
-                        ))}
-                      </div>
+                          />
+
+                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                            {(quickPresets[currentStatus] || []).map((tag, tagIdx) => (
+                              <button
+                                key={tagIdx}
+                                type="button"
+                                onClick={() => handleCatatanChange(s.id, tag)}
+                                style={{
+                                  ...btnBase,
+                                  background: currentCatatan === tag ? meta.color : '#ffffff',
+                                  color: currentCatatan === tag ? '#ffffff' : '#475569',
+                                  border: `1px solid ${currentCatatan === tag ? meta.color : '#cbd5e1'}`,
+                                  borderRadius: '6px',
+                                  padding: '1px 7px',
+                                  fontSize: '10px',
+                                  fontWeight: 600
+                                }}
+                              >
+                                {tag}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1996,147 +2067,168 @@ export default function AbsensiView({
       </div>
 
       {/* ══════════ 5. CATATAN SESI & TOMBOL SIMPAN ══════════ */}
-      <div style={{
-        background: '#ffffff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '16px',
-        padding: '18px 20px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
-      }}>
-        <label style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: '8px' }}>
-          Catatan Evaluasi Musyrif untuk Sesi {selectedSesiObj?.nama || "Halaqah"} Hari Ini:
-        </label>
-        <textarea 
-          className="form-textarea" 
-          rows="2"
-          placeholder="Tuliskan catatan singkat jalannya halaqah, adab santri, evaluasi tajwid, dll..."
-          value={catatanHalaqah}
-          onChange={(e) => setCatatanHalaqah(e.target.value)}
-          style={{
-            marginBottom: '14px',
-            fontSize: '0.82rem',
-            borderRadius: '10px',
-            borderColor: '#e2e8f0'
-          }}
-        />
-
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '12px'
-        }}>
-          <div style={{ fontSize: '0.76rem', color: '#64748b' }}>
-            💡 <em>Data tersinkron otomatis ke laporan wali santri &amp; rekap Super Admin.</em>
+      {isOrangTua ? (
+        catatanHalaqah ? (
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+          }}>
+            <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a', marginBottom: '6px' }}>
+              Catatan Musyrif untuk Sesi {selectedSesiObj?.nama || "Halaqah"}:
+            </div>
+            <div style={{ fontSize: '0.82rem', color: '#475569', background: '#f8fafc', padding: '10px 14px', borderRadius: '10px', border: '1px solid #f1f5f9' }}>
+              {catatanHalaqah}
+            </div>
           </div>
+        ) : null
+      ) : (
+        <div style={{
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: '16px',
+          padding: '18px 20px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+        }}>
+          <label style={{ fontSize: '0.86rem', fontWeight: 800, color: '#0f172a', display: 'block', marginBottom: '8px' }}>
+            Catatan Evaluasi Musyrif untuk Sesi {selectedSesiObj?.nama || "Halaqah"} Hari Ini:
+          </label>
+          <textarea 
+            className="form-textarea" 
+            rows="2"
+            placeholder="Tuliskan catatan singkat jalannya halaqah, adab santri, evaluasi tajwid, dll..."
+            value={catatanHalaqah}
+            onChange={(e) => setCatatanHalaqah(e.target.value)}
+            style={{
+              marginBottom: '14px',
+              fontSize: '0.82rem',
+              borderRadius: '10px',
+              borderColor: '#e2e8f0'
+            }}
+          />
 
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <div style={{ fontSize: '0.76rem', color: '#64748b' }}>
+              💡 <em>Data tersinkron otomatis ke laporan wali santri &amp; rekap Super Admin.</em>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={handleMarkAllPresent}
+                style={{
+                  ...btnBase,
+                  background: '#f8fafc',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '10px',
+                  padding: '9px 16px',
+                  fontSize: '0.80rem',
+                  fontWeight: 700,
+                  color: '#334155'
+                }}
+              >
+                Semua Hadir
+              </button>
+              <button 
+                type="button"
+                onClick={handleSave}
+                style={{ 
+                  ...btnBase,
+                  background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
+                  color: '#ffffff',
+                  borderRadius: '10px',
+                  padding: '9px 22px',
+                  fontWeight: 800,
+                  fontSize: '0.84rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 12px rgba(22,163,74,0.3)'
+                }}
+              >
+                <Save size={16} />
+                <span>Simpan Presensi</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating mobile save bar when editing daily attendance - HIDDEN for Orang Tua */}
+      {!isOrangTua && (
+        <div 
+          className="mobile-save-bar"
+          style={{
+            position: 'fixed',
+            bottom: '68px',
+            left: 0,
+            right: 0,
+            background: 'rgba(255, 255, 255, 0.96)',
+            backdropFilter: 'blur(10px)',
+            borderTop: '1px solid #e2e8f0',
+            padding: '10px 16px',
+            display: 'none',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            zIndex: 90,
+            boxShadow: '0 -4px 16px rgba(0,0,0,0.08)'
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600 }}>Kehadiran {selectedSesiObj?.nama}</div>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#15803d' }}>
+              {countH}/{total} Hadir ({persenHadir}%)
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="button"
               onClick={handleMarkAllPresent}
               style={{
-                ...btnBase,
-                background: '#f8fafc',
-                border: '1px solid #cbd5e1',
+                background: '#f0fdf4',
+                border: '1px solid #86efac',
+                color: '#15803d',
+                padding: '8px 12px',
                 borderRadius: '10px',
-                padding: '9px 16px',
-                fontSize: '0.80rem',
-                fontWeight: 700,
-                color: '#334155'
+                fontWeight: 800,
+                fontSize: '0.76rem',
+                cursor: 'pointer'
               }}
             >
-              Semua Hadir
+              Semua H
             </button>
-            <button 
+            <button
               type="button"
               onClick={handleSave}
-              style={{ 
-                ...btnBase,
-                background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
+              style={{
+                background: '#15803d',
+                border: 'none',
                 color: '#ffffff',
+                padding: '8px 16px',
                 borderRadius: '10px',
-                padding: '9px 22px',
                 fontWeight: 800,
-                fontSize: '0.84rem',
+                fontSize: '0.80rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 12px rgba(22,163,74,0.3)'
+                gap: '6px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(21,128,61,0.3)'
               }}
             >
-              <Save size={16} />
-              <span>Simpan Presensi</span>
+              <Save size={14} />
+              <span>Simpan</span>
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Floating mobile save bar when editing daily attendance */}
-      <div 
-        className="mobile-save-bar"
-        style={{
-          position: 'fixed',
-          bottom: '68px',
-          left: 0,
-          right: 0,
-          background: 'rgba(255, 255, 255, 0.96)',
-          backdropFilter: 'blur(10px)',
-          borderTop: '1px solid #e2e8f0',
-          padding: '10px 16px',
-          display: 'none',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          zIndex: 90,
-          boxShadow: '0 -4px 16px rgba(0,0,0,0.08)'
-        }}
-      >
-        <div>
-          <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600 }}>Kehadiran {selectedSesiObj?.nama}</div>
-          <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#15803d' }}>
-            {countH}/{total} Hadir ({persenHadir}%)
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            type="button"
-            onClick={handleMarkAllPresent}
-            style={{
-              background: '#f0fdf4',
-              border: '1px solid #86efac',
-              color: '#15803d',
-              padding: '8px 12px',
-              borderRadius: '10px',
-              fontWeight: 800,
-              fontSize: '0.76rem',
-              cursor: 'pointer'
-            }}
-          >
-            Semua H
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            style={{
-              background: '#15803d',
-              border: 'none',
-              color: '#ffffff',
-              padding: '8px 16px',
-              borderRadius: '10px',
-              fontWeight: 800,
-              fontSize: '0.80rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(21,128,61,0.3)'
-            }}
-          >
-            <Save size={14} />
-            <span>Simpan</span>
-          </button>
-        </div>
-      </div>
+      )}
       </>
       )}
       </>

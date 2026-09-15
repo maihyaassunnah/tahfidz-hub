@@ -12,7 +12,8 @@ export default function Header({
   onToggleDarkMode,
   activeBranchId,
   onSwitchBranch,
-  cabangList = []
+  cabangList = [],
+  onSwitchRole
 }) {
   const getTabTitle = () => {
     if (currentRole === 'owner') {
@@ -56,15 +57,66 @@ export default function Header({
 
   return (
     <header className="simtah-header no-print">
-      <div className="page-title">
+      <div className="page-title header-desktop-title">
         {getTabTitle()}
       </div>
 
+      <div className="header-mobile-brand">
+        Tahfidz Hub
+      </div>
+
       <div className="header-right-actions">
+        {/* Role Quick Switcher */}
+        {onSwitchRole && (
+          <div 
+            className="header-role-pill header-desktop-only"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              background: isDarkMode ? '#1e293b' : '#faf5ff',
+              border: '1px solid #d8b4fe',
+              borderRadius: '20px',
+              padding: '0.25rem 0.65rem',
+              fontSize: '0.775rem',
+              fontWeight: '600'
+            }}
+          >
+            <User size={13} color="#7c3aed" />
+            <select
+              value={currentRole}
+              onChange={(e) => onSwitchRole(e.target.value)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                fontSize: '0.775rem',
+                fontWeight: '700',
+                color: isDarkMode ? '#f8fafc' : '#6b21a8',
+                cursor: 'pointer'
+              }}
+              title="Ganti Peran / Role Akses"
+            >
+              <option value="orangtua" style={{ background: isDarkMode ? '#1e293b' : '#fff', color: isDarkMode ? '#fff' : '#000' }}>
+                👤 Wali Santri (Adilla)
+              </option>
+              <option value="pengampu" style={{ background: isDarkMode ? '#1e293b' : '#fff', color: isDarkMode ? '#fff' : '#000' }}>
+                🏅 Pengampu (Ustadz Wahyudin)
+              </option>
+              <option value="superadmin" style={{ background: isDarkMode ? '#1e293b' : '#fff', color: isDarkMode ? '#fff' : '#000' }}>
+                🛡️ Super Admin (SIGAP)
+              </option>
+              <option value="owner" style={{ background: isDarkMode ? '#1e293b' : '#fff', color: isDarkMode ? '#fff' : '#000' }}>
+                👑 Owner Yayasan
+              </option>
+            </select>
+          </div>
+        )}
+
         {/* Branch Selector Dropdown */}
         {cabangList && cabangList.length > 0 && (
           <div 
-            className="header-branch-pill"
+            className="header-branch-pill header-desktop-only"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -105,7 +157,7 @@ export default function Header({
         {/* Authenticated User Profile Pill */}
         {authUser && (
           <div 
-            className="header-user-profile" 
+            className="header-user-profile header-desktop-only" 
             title={`Login sebagai: ${authUser.nama} (${authUser.roleLabel || currentRole})`}
           >
             <div className="header-user-avatar">
@@ -157,7 +209,7 @@ export default function Header({
 
         {/* Tahfidz HUB Brand Emblem */}
         <div 
-          className="header-icon-btn" 
+          className="header-icon-btn header-desktop-only" 
           title="Tahfidz HUB - Platform Manajemen Terpadu"
           style={{ background: '#ecfdf5', color: '#166534', borderColor: '#bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
@@ -166,9 +218,10 @@ export default function Header({
 
         {/* Dark Mode Toggle */}
         <button 
-          className="header-icon-btn" 
+          className="header-icon-btn header-darkmode-toggle" 
           onClick={onToggleDarkMode}
           title={isDarkMode ? "Mode Terang" : "Mode Gelap"}
+          aria-label={isDarkMode ? "Ganti ke Mode Terang" : "Ganti ke Mode Gelap"}
         >
           {isDarkMode ? <Sun size={17} /> : <Moon size={17} />}
         </button>

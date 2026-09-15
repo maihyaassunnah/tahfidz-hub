@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { storageService } from '../../services/storage';
 import TahfidzHubLogo from '../TahfidzHubLogo';
+import CustomSelect from '../common/CustomSelect';
 import './SPPView.css';
 
 export default function SPPView({ showToast, activeBranchId }) {
@@ -364,30 +365,33 @@ export default function SPPView({ showToast, activeBranchId }) {
       <div className="spp-toolbar-card no-print">
         <div className="spp-filter-group">
           {/* Filter Bulan */}
-          <select 
-            className="spp-select" 
+          <CustomSelect 
+            style={{ width: '160px' }}
+            triggerStyle={{ minHeight: '38px', borderRadius: '12px' }}
             value={selectedBulan} 
             onChange={(e) => setSelectedBulan(e.target.value === 'Semua Bulan' ? 'all' : e.target.value)}
           >
             {bulanList.map(b => (
               <option key={b} value={b === 'Semua Bulan' ? 'all' : b}>{b}</option>
             ))}
-          </select>
+          </CustomSelect>
 
           {/* Filter Status */}
-          <select 
-            className="spp-select" 
+          <CustomSelect 
+            style={{ width: '160px' }}
+            triggerStyle={{ minHeight: '38px', borderRadius: '12px' }}
             value={selectedStatus} 
             onChange={(e) => setSelectedStatus(e.target.value)}
           >
             <option value="all">Semua Status</option>
             <option value="Lunas">Lunas</option>
             <option value="Belum Lunas">Belum Lunas</option>
-          </select>
+          </CustomSelect>
 
           {/* Filter Cabang */}
-          <select 
-            className="spp-select" 
+          <CustomSelect 
+            style={{ width: '210px' }}
+            triggerStyle={{ minHeight: '38px', borderRadius: '12px' }}
             value={selectedCabang} 
             onChange={(e) => setSelectedCabang(e.target.value)}
           >
@@ -395,11 +399,12 @@ export default function SPPView({ showToast, activeBranchId }) {
             {allCabang.map(c => (
               <option key={c.id} value={c.id}>{c.nama}</option>
             ))}
-          </select>
+          </CustomSelect>
 
           {/* Filter Kelas */}
-          <select 
-            className="spp-select" 
+          <CustomSelect 
+            style={{ width: '150px' }}
+            triggerStyle={{ minHeight: '38px', borderRadius: '12px' }}
             value={selectedKelas} 
             onChange={(e) => setSelectedKelas(e.target.value)}
           >
@@ -407,7 +412,7 @@ export default function SPPView({ showToast, activeBranchId }) {
             <option value="X-A">Kelas X-A</option>
             <option value="XI-A">Kelas XI-A</option>
             <option value="XII-A">Kelas XII-A</option>
-          </select>
+          </CustomSelect>
         </div>
 
         <div className="spp-search-box">
@@ -569,11 +574,12 @@ export default function SPPView({ showToast, activeBranchId }) {
                   <label style={{ display: 'block', fontSize: '0.775rem', fontWeight: 700, marginBottom: '0.3rem' }}>
                     Pilih Santri *
                   </label>
-                  <select 
-                    className="form-input" 
-                    style={{ width: '100%' }}
+                  <CustomSelect 
+                    triggerStyle={{ minHeight: '42px', borderRadius: '12px' }}
                     value={formData.santriId}
                     onChange={(e) => handleSelectSantriChange(e.target.value)}
+                    searchable={true}
+                    searchPlaceholder="Ketik nama atau NIS santri..."
                     required
                   >
                     {allSantri.map(s => (
@@ -581,7 +587,7 @@ export default function SPPView({ showToast, activeBranchId }) {
                         {s.nama} ({s.nis}) — Kelas {s.kelas}
                       </option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.85rem' }}>
@@ -589,16 +595,15 @@ export default function SPPView({ showToast, activeBranchId }) {
                     <label style={{ display: 'block', fontSize: '0.775rem', fontWeight: 700, marginBottom: '0.3rem' }}>
                       Bulan Tagihan *
                     </label>
-                    <select 
-                      className="form-input" 
-                      style={{ width: '100%' }}
+                    <CustomSelect 
+                      triggerStyle={{ minHeight: '42px', borderRadius: '12px' }}
                       value={formData.bulan}
                       onChange={(e) => setFormData({ ...formData, bulan: e.target.value })}
                     >
                       {bulanList.filter(b => b !== 'Semua Bulan').map(b => (
                         <option key={b} value={b}>{b}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                   </div>
 
                   <div>
@@ -621,25 +626,23 @@ export default function SPPView({ showToast, activeBranchId }) {
                     <label style={{ display: 'block', fontSize: '0.775rem', fontWeight: 700, marginBottom: '0.3rem' }}>
                       Status Pembayaran *
                     </label>
-                    <select 
-                      className="form-input" 
-                      style={{ width: '100%' }}
+                    <CustomSelect 
+                      triggerStyle={{ minHeight: '42px', borderRadius: '12px' }}
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     >
                       <option value="Lunas">Lunas</option>
                       <option value="Belum Lunas">Belum Lunas</option>
                       <option value="Cicilan">Cicilan Sebagian</option>
-                    </select>
+                    </CustomSelect>
                   </div>
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.775rem', fontWeight: 700, marginBottom: '0.3rem' }}>
                       Metode Pembayaran
                     </label>
-                    <select 
-                      className="form-input" 
-                      style={{ width: '100%' }}
+                    <CustomSelect 
+                      triggerStyle={{ minHeight: '42px', borderRadius: '12px' }}
                       value={formData.metodeBayar}
                       onChange={(e) => setFormData({ ...formData, metodeBayar: e.target.value })}
                     >
@@ -647,7 +650,7 @@ export default function SPPView({ showToast, activeBranchId }) {
                       <option value="Tunai / Kas Loket">Tunai / Kas Loket</option>
                       <option value="QRIS Pesantren">QRIS Pesantren</option>
                       <option value="-">-</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                 </div>
 

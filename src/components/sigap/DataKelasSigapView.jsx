@@ -120,13 +120,14 @@ export default function DataKelasSigapView({ showToast }) {
           </div>
         </div>
 
-        {/* Tombol Aksi Kanan */}
-        <div className="sigap-page-actions">
+        {/* Tombol Aksi Kanan (Mobile: Icon Saja, 1 Baris, Efek Hover) */}
+        <div className="sigap-page-actions sigap-mobile-action-bar">
           <button 
             className="sigap-btn-green"
             onClick={handleUnduhMasal}
+            title="Unduh Masal Agenda"
           >
-            <Download size={15} />
+            <Download size={17} />
             <span>Unduh Masal Agenda</span>
           </button>
 
@@ -142,8 +143,9 @@ export default function DataKelasSigapView({ showToast }) {
               });
               setShowAddModal(true);
             }}
+            title="Tambah Kelas Baru"
           >
-            <Plus size={15} />
+            <Plus size={17} />
             <span>+ Tambah Kelas</span>
           </button>
         </div>

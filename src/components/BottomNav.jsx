@@ -187,43 +187,35 @@ export default function BottomNav({
         }
       ];
     } else {
-      // Orang Tua / Wali
+      // Orang Tua / Wali: 4 Menu yang Diizinkan Saja
       return [
         {
           id: 'dashboard',
-          label: 'Home',
+          label: 'Dashboard',
           icon: Home,
           targetTab: 'dashboard',
           matches: ['dashboard']
         },
         {
-          id: 'mushaf',
-          label: 'Mushaf',
-          icon: BookOpen,
-          targetTab: 'mushaf',
-          matches: ['mushaf']
+          id: 'riwayat-presensi-santri',
+          label: 'Presensi',
+          icon: ClipboardCheck,
+          targetTab: 'riwayat-presensi-santri',
+          matches: ['riwayat-presensi', 'riwayat-presensi-santri']
         },
         {
-          id: 'progres',
-          label: 'Progres',
+          id: 'santri',
+          label: 'Progress',
           icon: GraduationCap,
           targetTab: 'santri',
           matches: ['santri']
         },
         {
-          id: 'setoran',
-          label: 'Setoran',
-          icon: FileText,
-          targetTab: 'setoran',
-          matches: ['setoran']
-        },
-        {
-          id: 'more',
-          label: 'Lainnya',
-          icon: LayoutGrid,
-          targetTab: 'more',
-          isMoreTrigger: true,
-          matches: ['more', 'rapor', 'izin', 'riwayat-presensi', 'riwayat-presensi-santri', 'riwayat-presensi-pengampu']
+          id: 'rapor',
+          label: 'Raport',
+          icon: FileCheck2,
+          targetTab: 'rapor',
+          matches: ['rapor']
         }
       ];
     }
@@ -302,16 +294,18 @@ export default function BottomNav({
         ]
       };
     } else {
+      const auth = storageService.getAuthUser();
+      const childName = auth?.namaSantri || auth?.username || 'Ananda';
       return {
-        name: 'H. Akbar Sasmita',
+        name: auth?.nama || ('Wali dari ' + childName),
         role: 'WALI SANTRI',
-        subRole: 'Orang Tua Jamiatul Akbar',
+        subRole: auth?.nis ? `NIS: ${auth.nis}` : 'Orang Tua Santri',
         avatarBg: '#059669',
-        avatarText: 'AS',
+        avatarText: (childName || 'W').slice(0, 2).toUpperCase(),
         stats: [
-          { value: 'Juz 30', label: 'Hafalan' },
-          { value: '98%', label: 'Presensi' },
-          { value: 'Mumtaz', label: 'Predikat' }
+          { value: 'Tahfidz', label: 'Program' },
+          { value: childName, label: 'Santri' },
+          { value: 'Aktif', label: 'Status' }
         ]
       };
     }
@@ -330,6 +324,7 @@ export default function BottomNav({
           <div 
             className="bottom-nav-sliding-bubble-track" 
             style={{ 
+              width: `${100 / tabs.length}%`,
               transform: `translateX(${activeIndex * 100}%)`,
               '--active-theme-color': bubbleThemeColor
             }}
@@ -741,16 +736,18 @@ export default function BottomNav({
 
                   <div className="sidebar-drawer-category">AL-QUR'AN</div>
 
-                  <div 
-                    className={`sidebar-drawer-menu-item ${activeTab === 'mushaf' ? 'active' : ''}`}
-                    onClick={() => handleNavigateFromDrawer('mushaf')}
-                  >
-                    <div className="menu-active-indicator" />
-                    <div className="menu-icon-box" style={{ background: '#f0fdf4', color: '#059669' }}>
-                      <BookOpen size={18} />
+                  {currentRole !== 'orangtua' && (
+                    <div 
+                      className={`sidebar-drawer-menu-item ${activeTab === 'mushaf' ? 'active' : ''}`}
+                      onClick={() => handleNavigateFromDrawer('mushaf')}
+                    >
+                      <div className="menu-active-indicator" />
+                      <div className="menu-icon-box" style={{ background: '#f0fdf4', color: '#059669' }}>
+                        <BookOpen size={18} />
+                      </div>
+                      <span className="menu-text">Mushaf Al-Qur'an</span>
                     </div>
-                    <span className="menu-text">Mushaf Al-Qur'an</span>
-                  </div>
+                  )}
 
                   <div className="sidebar-drawer-category">PRESENSI & KEHADIRAN</div>
 
@@ -778,27 +775,31 @@ export default function BottomNav({
                     <span className="menu-text">Riwayat Presensi Santri</span>
                   </div>
 
-                  <div 
-                    className={`sidebar-drawer-menu-item ${activeTab === 'riwayat-presensi-pengampu' ? 'active' : ''}`}
-                    onClick={() => handleNavigateFromDrawer('riwayat-presensi-pengampu')}
-                  >
-                    <div className="menu-active-indicator" />
-                    <div className="menu-icon-box" style={{ background: '#f0fdf4', color: '#0d9488' }}>
-                      <UserCheck size={18} />
-                    </div>
-                    <span className="menu-text">Riwayat Presensi Pengampu</span>
-                  </div>
+                  {currentRole !== 'orangtua' && (
+                    <>
+                      <div 
+                        className={`sidebar-drawer-menu-item ${activeTab === 'riwayat-presensi-pengampu' ? 'active' : ''}`}
+                        onClick={() => handleNavigateFromDrawer('riwayat-presensi-pengampu')}
+                      >
+                        <div className="menu-active-indicator" />
+                        <div className="menu-icon-box" style={{ background: '#f0fdf4', color: '#0d9488' }}>
+                          <UserCheck size={18} />
+                        </div>
+                        <span className="menu-text">Riwayat Presensi Pengampu</span>
+                      </div>
 
-                  <div 
-                    className={`sidebar-drawer-menu-item ${activeTab === 'izin' ? 'active' : ''}`}
-                    onClick={() => handleNavigateFromDrawer('izin')}
-                  >
-                    <div className="menu-active-indicator" />
-                    <div className="menu-icon-box" style={{ background: '#fefce8', color: '#ca8a04' }}>
-                      <FileText size={18} />
-                    </div>
-                    <span className="menu-text">Permohonan Izin</span>
-                  </div>
+                      <div 
+                        className={`sidebar-drawer-menu-item ${activeTab === 'izin' ? 'active' : ''}`}
+                        onClick={() => handleNavigateFromDrawer('izin')}
+                      >
+                        <div className="menu-active-indicator" />
+                        <div className="menu-icon-box" style={{ background: '#fefce8', color: '#ca8a04' }}>
+                          <FileText size={18} />
+                        </div>
+                        <span className="menu-text">Permohonan Izin</span>
+                      </div>
+                    </>
+                  )}
 
                   <div className="sidebar-drawer-category">AKADEMIK</div>
 
@@ -810,32 +811,34 @@ export default function BottomNav({
                     <div className="menu-icon-box" style={{ background: '#f0fdf4', color: '#16a34a' }}>
                       <GraduationCap size={18} />
                     </div>
-                    <span className="menu-text">{currentRole === 'orangtua' ? 'Progres Ananda' : 'Daftar Santri'}</span>
+                    <span className="menu-text">{currentRole === 'orangtua' ? 'Progress Ananda' : 'Daftar Santri'}</span>
                   </div>
 
                   {currentRole !== 'orangtua' && (
-                    <div 
-                      className={`sidebar-drawer-menu-item ${activeTab === 'presensi-santri' ? 'active' : ''}`}
-                      onClick={() => handleNavigateFromDrawer('presensi-santri')}
-                    >
-                      <div className="menu-active-indicator" />
-                      <div className="menu-icon-box" style={{ background: '#ecfdf5', color: '#0d9488' }}>
-                        <ClipboardCheck size={18} />
+                    <>
+                      <div 
+                        className={`sidebar-drawer-menu-item ${activeTab === 'presensi-santri' ? 'active' : ''}`}
+                        onClick={() => handleNavigateFromDrawer('presensi-santri')}
+                      >
+                        <div className="menu-active-indicator" />
+                        <div className="menu-icon-box" style={{ background: '#ecfdf5', color: '#0d9488' }}>
+                          <ClipboardCheck size={18} />
+                        </div>
+                        <span className="menu-text">Presensi Santri</span>
                       </div>
-                      <span className="menu-text">Presensi Santri</span>
-                    </div>
-                  )}
 
-                  <div 
-                    className={`sidebar-drawer-menu-item ${activeTab === 'setoran' ? 'active' : ''}`}
-                    onClick={() => handleNavigateFromDrawer('setoran')}
-                  >
-                    <div className="menu-active-indicator" />
-                    <div className="menu-icon-box" style={{ background: '#ecfeff', color: '#0284c7' }}>
-                      <BookOpen size={18} />
-                    </div>
-                    <span className="menu-text">Catatan Setoran</span>
-                  </div>
+                      <div 
+                        className={`sidebar-drawer-menu-item ${activeTab === 'setoran' ? 'active' : ''}`}
+                        onClick={() => handleNavigateFromDrawer('setoran')}
+                      >
+                        <div className="menu-active-indicator" />
+                        <div className="menu-icon-box" style={{ background: '#ecfeff', color: '#0284c7' }}>
+                          <BookOpen size={18} />
+                        </div>
+                        <span className="menu-text">Catatan Setoran</span>
+                      </div>
+                    </>
+                  )}
 
                   <div className="sidebar-drawer-category">LAPORAN</div>
 
@@ -847,7 +850,7 @@ export default function BottomNav({
                     <div className="menu-icon-box" style={{ background: '#fffbeb', color: '#d97706' }}>
                       <FileCheck2 size={18} />
                     </div>
-                    <span className="menu-text">Laporan & Rapor</span>
+                    <span className="menu-text">Laporan dan Raport</span>
                   </div>
                 </>
               )}

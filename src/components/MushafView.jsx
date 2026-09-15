@@ -15,6 +15,7 @@ import {
 import { getMadinahMushafPage } from '../services/quranService';
 import { QURAN_SURAH } from '../data/quranData';
 import { getSurahPageBounds } from '../data/quranSurahPages';
+import CustomSelect from './common/CustomSelect';
 
 const ARABIC_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
 
@@ -96,7 +97,7 @@ export default function MushafView() {
   // Inisialisasi halaman dari bookmark tersimpan atau halaman 1
   const [currentPage, setCurrentPage] = useState(() => {
     try {
-      const saved = localStorage.getItem('mushaf_last_read_page');
+      const saved = sessionStorage.getItem('mushaf_last_read_page');
       const p = parseInt(saved);
       if (p >= 1 && p <= 604) return p;
     } catch {
@@ -113,7 +114,7 @@ export default function MushafView() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [bookmarkedPage, setBookmarkedPage] = useState(() => {
     try {
-      return parseInt(localStorage.getItem('mushaf_last_read_page')) || null;
+      return parseInt(sessionStorage.getItem('mushaf_last_read_page')) || null;
     } catch {
       return null;
     }
@@ -184,7 +185,7 @@ export default function MushafView() {
 
   const handleToggleBookmark = () => {
     try {
-      localStorage.setItem('mushaf_last_read_page', String(currentPage));
+      sessionStorage.setItem('mushaf_last_read_page', String(currentPage));
       setBookmarkedPage(currentPage);
     } catch {
       // ignore
@@ -321,50 +322,34 @@ export default function MushafView() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             {/* Dropdown Surah */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <select
-                className="form-select"
+              <CustomSelect
                 value={currentSurah?.id || 1}
                 onChange={(e) => handleSelectSurah(e.target.value)}
-                style={{
-                  height: '36px',
-                  fontSize: '0.80rem',
-                  fontWeight: 700,
-                  borderRadius: '9px',
-                  borderColor: '#cbd5e1',
-                  background: '#f8fafc',
-                  maxWidth: '180px'
-                }}
+                style={{ width: '190px' }}
+                triggerStyle={{ minHeight: '36px', borderRadius: '12px', fontSize: '0.80rem', fontWeight: 700 }}
+                searchable={true}
+                searchPlaceholder="Cari surat..."
               >
                 {QURAN_SURAH.map(s => (
                   <option key={s.id} value={s.id}>
                     {s.id}. {s.name} ({s.arabic})
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             {/* Dropdown Juz */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <select
-                className="form-select"
+              <CustomSelect
                 value={juzNumber}
                 onChange={(e) => handleSelectJuz(e.target.value)}
-                style={{
-                  height: '36px',
-                  fontSize: '0.80rem',
-                  fontWeight: 700,
-                  borderRadius: '9px',
-                  borderColor: '#cbd5e1',
-                  background: '#f8fafc',
-                  width: '105px'
-                }}
+                style={{ width: '115px' }}
+                triggerStyle={{ minHeight: '36px', borderRadius: '12px', fontSize: '0.80rem', fontWeight: 700 }}
               >
                 {Array.from({ length: 30 }, (_, i) => i + 1).map(j => (
-                  <option key={j} value={j}>
-                    Juz {j}
-                  </option>
+                  <option key={j} value={j}>Juz {j}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             {/* Navigasi Halaman Cepat */}
