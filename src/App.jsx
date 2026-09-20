@@ -9,6 +9,7 @@ import SetoranView from './components/SetoranView';
 import AbsensiView from './components/AbsensiView';
 import SantriTrackerView from './components/SantriTrackerView';
 import RaporView from './components/RaporView';
+import HafalanSantriOrtuView from './components/HafalanSantriOrtuView';
 import DataMasterView from './components/DataMasterView';
 import PengaturanAdminView from './components/PengaturanAdminView';
 import AdminEmptyMenuView from './components/AdminEmptyMenuView';
@@ -16,7 +17,6 @@ import DashboardSigapView from './components/sigap/DashboardSigapView';
 import DataSiswaSigapView from './components/sigap/DataSiswaSigapView';
 import DataGuruSigapView from './components/sigap/DataGuruSigapView';
 import DataAlumniSigapView from './components/sigap/DataAlumniSigapView';
-import DataKelasSigapView from './components/sigap/DataKelasSigapView';
 import JadwalSigapView from './components/sigap/JadwalSigapView';
 import LokasiQRSigapView from './components/sigap/LokasiQRSigapView';
 import MonitoringSigapView from './components/sigap/MonitoringSigapView';
@@ -93,6 +93,18 @@ export default function App() {
     };
   }, []);
 
+  // Pastikan cabang akun Super Admin selalu terkunci pada cabangnya sendiri
+  useEffect(() => {
+    if (currentRole === 'superadmin') {
+      const u = authUser || storageService.getAuthUser();
+      const lockedBranch = u?.cabangId || 'cabang-pusat';
+      if (activeBranchId !== lockedBranch) {
+        storageService.setActiveBranchId(lockedBranch);
+        setActiveBranchId(lockedBranch);
+      }
+    }
+  }, [currentRole, authUser, activeBranchId]);
+
   const showToast = (message) => {
     setToastMessage(message);
     setTimeout(() => {
@@ -120,28 +132,59 @@ export default function App() {
   };
 
   const handleSwitchBranch = (branchId) => {
+    if (currentRole === 'superadmin') {
+      showToast('Akses dibatasi: Akun Super Admin terkunci pada cabang ini dan tidak dapat beralih.');
+      return;
+    }
     storageService.setActiveBranchId(branchId);
     setActiveBranchId(branchId);
     loadData();
-    const matched = storageService.getCabang().find(c => c.id === branchId);
-    showToast(`Cabang aktif: ${matched ? matched.nama : branchId}`);
+    if (branchId === 'ALL') {
+      if (currentRole === 'owner') {
+        setActiveTab('owner-dashboard');
+      }
+      showToast(`Menampilkan seluruh cabang yayasan (Semua Cabang)`);
+    } else {
+      if (currentRole === 'owner') {
+        if (
+          activeTab === 'owner-dashboard' || 
+          activeTab === 'owner-cabang' || 
+          activeTab === 'owner-rekap' || 
+          activeTab === 'dashboard' || 
+          activeTab === 'owner'
+        ) {
+          setActiveTab('sigap-dashboard');
+        }
+      }
+      const matched = storageService.getCabang().find(c => c.id === branchId);
+      showToast(`Membuka panel manajemen cabang: ${matched ? matched.nama : branchId}`);
+    }
   };
 
-  const handleSwitchRole = (newRole) => {
+  const handleSwitchRole = (newRoleInput, targetBranchId) => {
+    let newRole = newRoleInput;
+    let chosenBranchId = targetBranchId;
+
+    if (typeof newRoleInput === 'string' && newRoleInput.startsWith('superadmin:')) {
+      newRole = 'superadmin';
+      chosenBranchId = newRoleInput.replace('superadmin:', '');
+    }
+
     setCurrentRole(newRole);
     storageService.setCurrentRole(newRole);
+
     if (newRole === 'orangtua') {
       const allSantri = storageService.getAllSantriRaw();
-      const s = allSantri[0] || { id: 'ss-1789300033909', nama: 'Adilla', nis: '39938383' };
+      const s = allSantri[0] || { id: 's-1', nama: 'Muhammad Rayhan Al-Fatih', nis: '2026001', cabangId: 'cabang-pusat' };
       const ortuUser = {
-        id: 'ortu-' + s.id,
-        santriId: s.id,
-        nis: s.nis || '39938383',
+        id: 'wali-' + s.id,
+        nama: 'Wali Santri (' + (s.nama ? s.nama.split(' ')[0] : 'Adilla') + ')',
         namaSantri: s.nama,
-        nama: 'Wali dari ' + s.nama,
-        username: s.nama,
+        nis: s.nis,
+        username: 'ortu.' + (s.nis || '2026001'),
+        email: 'ortu@ihya.sch.id',
         role: 'orangtua',
-        roleLabel: 'Wali Santri - ' + s.nama,
+        roleLabel: 'Wali Santri',
         cabangId: s.cabangId || 'cabang-pusat',
         halaqahId: s.halaqahId || s.halaqah_id || 'hq-1'
       };
@@ -175,26 +218,39 @@ export default function App() {
       };
       setAuthUser(ownerUser);
       storageService.setAuthUser(ownerUser);
+      storageService.setActiveBranchId('ALL');
+      setActiveBranchId('ALL');
       setActiveTab('owner-dashboard');
     } else if (newRole === 'superadmin') {
+      const branches = storageService.getCabang();
+      const branchId = chosenBranchId || (activeBranchId && activeBranchId !== 'ALL' ? activeBranchId : 'cabang-pusat');
+      const matchedBranch = branches.find(c => c.id === branchId) || branches[0] || {};
+      const saAccounts = storageService.getSuperAdminAccounts();
+      const matchedSA = saAccounts.find(s => s.cabangId === branchId);
+
+      const isSmp = branchId === 'cabang-smp';
       const saUser = {
-        id: 'sa-pusat',
-        nama: 'Admin MA Ihya As-Sunnah',
-        username: 'admin.ma',
+        id: matchedSA?.id || `sa-${branchId}`,
+        nama: matchedSA?.nama || (isSmp ? 'Admin Raudhotul Huffaz' : 'Admin MA Ihya As-Sunnah'),
+        username: matchedSA?.username || (isSmp ? 'admin_rdthfz' : 'admin.ma'),
         role: 'superadmin',
         roleLabel: 'Super Admin Cabang',
-        cabangId: 'cabang-pusat'
+        cabangId: branchId,
+        cabangNama: matchedBranch.nama || (isSmp ? 'Raudhotul Huffaz' : 'MA Ihya As-Sunnah')
       };
       setAuthUser(saUser);
       storageService.setAuthUser(saUser);
+      storageService.setActiveBranchId(branchId);
+      setActiveBranchId(branchId);
       setActiveTab('sigap-dashboard');
     } else {
       setActiveTab('dashboard');
     }
     loadData();
+    const branchLabel = (chosenBranchId === 'cabang-smp' || (!chosenBranchId && activeBranchId === 'cabang-smp')) ? 'Raudhotul Huffaz' : 'MA Ihya As-Sunnah';
     const roleLabels = {
       owner: '👑 Owner (Yayasan & Multi-Cabang)',
-      superadmin: '🛡️ Super Admin (SIGAP Cabang)',
+      superadmin: `🛡️ Super Admin (${branchLabel})`,
       pengampu: '🏅 Pengampu (Wahyudin Hafiz)',
       orangtua: '👤 Orang Tua (Wali Santri Adilla)'
     };
@@ -281,10 +337,10 @@ export default function App() {
     }
   }
 
-  // Proteksi Menu Khusus Orang Tua / Wali (Hanya 4 Menu yang Diizinkan)
+  // Proteksi Menu Khusus Orang Tua / Wali
   useEffect(() => {
     if (currentRole === 'orangtua') {
-      const allowedOrtuTabs = ['dashboard', 'riwayat-presensi-santri', 'riwayat-presensi', 'santri', 'rapor'];
+      const allowedOrtuTabs = ['dashboard', 'hafalan-santri', 'riwayat-presensi-santri', 'riwayat-presensi', 'santri', 'rapor'];
       if (!allowedOrtuTabs.includes(activeTab)) {
         setActiveTab('dashboard');
       }
@@ -387,8 +443,8 @@ export default function App() {
               ========================================================= */}
           {currentRole === 'owner' && (
             <>
-              {/* PORTAL OWNER TABS */}
-              {(activeTab?.startsWith('owner-') || activeTab === 'dashboard' || activeTab === 'owner') && (
+              {/* PORTAL OWNER TABS (Selalu render OwnerView jika tab diawali owner- atau dashboard konsolidasi global) */}
+              {(activeTab?.startsWith('owner-') || activeTab === 'owner' || (activeTab === 'dashboard' && (!activeBranchId || activeBranchId === 'ALL'))) && (
                 <OwnerView 
                   activeBranchId={activeBranchId}
                   onSwitchBranch={handleSwitchBranch}
@@ -399,41 +455,56 @@ export default function App() {
                 />
               )}
 
-              {/* INSPEKSI DATA CABANG LANGSUNG DARI OWNER */}
+              {/* DASHBOARD CABANG KETIKA MEMILIH SATU CABANG */}
+              {(activeTab === 'sigap-dashboard' || (activeTab === 'dashboard' && activeBranchId && activeBranchId !== 'ALL')) && (
+                <DashboardSigapView 
+                  setActiveTab={setActiveTab} 
+                  showToast={showToast} 
+                  activeBranchId={activeBranchId}
+                />
+              )}
+
+              {/* MENU-MENU SUPER ADMIN UNTUK CABANG TERPILIH */}
               {activeTab === 'sigap-siswa' && (
                 <DataSiswaSigapView 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
               {activeTab === 'sigap-guru' && (
                 <DataGuruSigapView 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
               {activeTab === 'sigap-alumni' && (
                 <DataAlumniSigapView 
                   showToast={showToast} 
-                />
-              )}
-              {activeTab === 'sigap-kelas' && (
-                <DataKelasSigapView 
-                  showToast={showToast} 
-                  setActiveTab={setActiveTab}
+                  activeBranchId={activeBranchId}
                 />
               )}
               {activeTab === 'sigap-jadwal' && (
                 <JadwalSigapView 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
               {activeTab === 'sigap-lokasi-qr' && (
                 <LokasiQRSigapView 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
               {activeTab === 'sigap-monitoring' && (
                 <MonitoringSigapView 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
+                />
+              )}
+              {activeTab === 'sigap-izin' && (
+                <PersetujuanIzinSigapView 
+                  showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
               {activeTab === 'sigap-spp' && (
@@ -446,6 +517,24 @@ export default function App() {
                 <PrismaStudioView 
                   showToast={showToast} 
                   activeBranchId={activeBranchId} 
+                />
+              )}
+
+              {/* KONFIGURASI UNIT UNTUK ROLE OWNER */}
+              {(activeTab === 'sigap-konfigurasi' || activeTab === 'owner-konfigurasi') && (
+                <PengaturanAdminView 
+                  settings={settings}
+                  halaqahList={halaqahList}
+                  santriList={santriList}
+                  onSaveSettings={(newSettings) => {
+                    storageService.saveSettings(newSettings);
+                    loadData();
+                    showToast("Pengaturan sistem berhasil diperbarui!");
+                  }}
+                  onReload={loadData}
+                  showToast={showToast}
+                  currentRole="owner"
+                  isOwner={true}
                 />
               )}
             </>
@@ -475,6 +564,7 @@ export default function App() {
               {activeTab === 'sigap-guru' && (
                 <DataGuruSigapView 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
 
@@ -482,21 +572,16 @@ export default function App() {
               {activeTab === 'sigap-alumni' && (
                 <DataAlumniSigapView 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
 
-              {/* GAMBAR 1: DATA KELAS & WALI */}
-              {activeTab === 'sigap-kelas' && (
-                <DataKelasSigapView 
-                  showToast={showToast} 
-                  setActiveTab={setActiveTab}
-                />
-              )}
 
               {/* GAMBAR 2: ATUR JADWAL PELAJARAN */}
               {activeTab === 'sigap-jadwal' && (
                 <JadwalSigapView 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
 
@@ -504,6 +589,7 @@ export default function App() {
               {activeTab === 'sigap-lokasi-qr' && (
                 <LokasiQRSigapView 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
 
@@ -511,6 +597,7 @@ export default function App() {
               {activeTab === 'sigap-monitoring' && (
                 <MonitoringSigapView 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
 
@@ -550,6 +637,8 @@ export default function App() {
                   }}
                   onReload={loadData}
                   showToast={showToast}
+                  currentRole="superadmin"
+                  isOwner={false}
                 />
               )}
 
@@ -560,7 +649,6 @@ export default function App() {
                 'sigap-siswa', 
                 'sigap-guru', 
                 'sigap-alumni',
-                'sigap-kelas',
                 'sigap-jadwal',
                 'sigap-lokasi-qr',
                 'sigap-monitoring',
@@ -588,6 +676,8 @@ export default function App() {
                     setActiveTab={setActiveTab}
                     onSelectSantri={(id) => { setSelectedSantriId(id); setActiveTab('santri'); }}
                     authUser={authUser}
+                    onReload={loadData}
+                    showToast={showToast}
                   />
                 )}
 
@@ -663,6 +753,16 @@ export default function App() {
                       currentRole={currentRole}
                     />
                   </div>
+                )}
+
+                {activeTab === 'hafalan-santri' && (
+                  <HafalanSantriOrtuView 
+                    santriList={effectiveSantriList}
+                    setoranList={setoranList}
+                    halaqahList={effectiveHalaqahList}
+                    authUser={authUser}
+                    showToast={showToast}
+                  />
                 )}
 
                 {activeTab === 'setoran' && (
@@ -787,6 +887,9 @@ export default function App() {
         isDarkMode={isDarkMode}
         onToggleDarkMode={handleToggleDarkMode}
         showToast={showToast}
+        onSwitchRole={handleSwitchRole}
+        activeBranchId={activeBranchId}
+        onSwitchBranch={handleSwitchBranch}
       />
     </div>
   );

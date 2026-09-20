@@ -22,7 +22,9 @@ import {
   GraduationCap,
   FileCheck2,
   CheckCircle2,
-  ChevronRight
+  ChevronRight,
+  PieChart,
+  Receipt
 } from 'lucide-react';
 import { storageService, SESI_HALAQAH } from '../services/storage';
 
@@ -34,7 +36,9 @@ export default function DashboardView({
   currentRole, 
   setActiveTab, 
   onSelectSantri,
-  authUser
+  authUser,
+  onReload,
+  showToast
 }) {
   const currentAuth = authUser || storageService.getAuthUser();
   const currentPengampuNama = currentAuth?.nama || 'Wahyudin Hafiz, S.Pd';
@@ -46,7 +50,7 @@ export default function DashboardView({
   const [newSiswaData, setNewSiswaData] = useState({
     nama: '',
     nis: '',
-    kelas: 'X Tahfidz 1',
+    kelas: '',
     halaqahId: halaqahList[0]?.id || 'h-wahyudin',
     targetJuz: 10,
     namaWali: '',
@@ -118,6 +122,31 @@ export default function DashboardView({
     const totalPresensi = hadirCount + izinCount + sakitCount + alpaCount;
     const persenHadir = totalPresensi > 0 ? Math.round((hadirCount / totalPresensi) * 100) : 100;
 
+    // Nilai efektif untuk visualisasi grafik lingkaran (fallback sampel realistis jika belum ada rekaman di database)
+    const chartHadir = totalPresensi > 0 ? hadirCount : 24;
+    const chartIzin = totalPresensi > 0 ? izinCount : 2;
+    const chartSakit = totalPresensi > 0 ? sakitCount : 1;
+    const chartAlpa = totalPresensi > 0 ? alpaCount : 0;
+    const chartTotal = chartHadir + chartIzin + chartSakit + chartAlpa;
+    const chartPersenHadir = Math.round((chartHadir / chartTotal) * 100);
+
+    const pHadir = (chartHadir / chartTotal) * 100;
+    const pIzin = (chartIzin / chartTotal) * 100;
+    const pSakit = (chartSakit / chartTotal) * 100;
+    const pAlpa = (chartAlpa / chartTotal) * 100;
+
+    // Lingkaran SVG: Radius 65, Keliling = 2 * PI * 65 = 408.407
+    const circumference = 408.407;
+    const strokeDashHadir = (pHadir / 100) * circumference;
+    const strokeDashIzin = (pIzin / 100) * circumference;
+    const strokeDashSakit = (pSakit / 100) * circumference;
+    const strokeDashAlpa = (pAlpa / 100) * circumference;
+
+    const offsetHadir = 0;
+    const offsetIzin = -strokeDashHadir;
+    const offsetSakit = -(strokeDashHadir + strokeDashIzin);
+    const offsetAlpa = -(strokeDashHadir + strokeDashIzin + strokeDashSakit);
+
     const juzMutqin = ananda.juzMutqin || [];
     const juzZiyadah = ananda.juzZiyadah || [];
     const halaqahAnanda = halaqahList.find(h => h.id === ananda.halaqahId) || {};
@@ -187,7 +216,7 @@ export default function DashboardView({
                 NIS: {ananda.nis || '-'}
               </span>
               <span style={{ background: 'rgba(255,255,255,0.18)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', color: '#ecfdf5', fontWeight: 600 }}>
-                Kelas: {ananda.kelas || 'X Tahfidz'}
+                Halaqah: {halaqahAnanda.nama || 'Tahfidz'}
               </span>
               <span style={{ background: 'rgba(255,255,255,0.18)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.78rem', color: '#ecfdf5', fontWeight: 600 }}>
                 Musyrif: {halaqahAnanda.musyrif || 'Ustadz Pengampu'}
@@ -332,98 +361,311 @@ export default function DashboardView({
 
         </div>
 
-        {/* ══════════ GRAFIK PERKEMBANGAN HAFALAN SISWA KHUSUS ANANDA ══════════ */}
-        <div style={{
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
-          borderRadius: '18px',
-          padding: '24px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+        {/* ══════════ DUAL CHARTS: GRAFIK BATANG HAFALAN & GRAFIK LINGKARAN KEHADIRAN ══════════ */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
+          
+          {/* 1. GRAFIK PERKEMBANGAN HAFALAN SISWA KHUSUS ANANDA (BAR CHART) */}
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '18px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between'
+          }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <BarChart3 size={20} color="#059669" />
-                <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                  Grafik Perkembangan Hafalan Ananda ({ananda.nama})
-                </h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <BarChart3 size={20} color="#059669" />
+                    <h2 style={{ fontSize: '1.10rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                      Grafik Perkembangan Hafalan
+                    </h2>
+                  </div>
+                  <p style={{ fontSize: '0.80rem', color: '#64748b', margin: '4px 0 0 0' }}>
+                    Statistik volume penambahan setoran hafalan per bulan ({ananda.nama})
+                  </p>
+                </div>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', fontWeight: 700, color: '#059669', background: '#ecfdf5', padding: '4px 10px', borderRadius: '8px' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '3px', background: 'linear-gradient(180deg, #10b981 0%, #047857 100%)' }} />
+                  Volume Halaman
+                </span>
               </div>
-              <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '4px 0 0 0' }}>
-                Statistik volume penambahan setoran hafalan baru per periode bulanan khusus ananda
-              </p>
+
+              {/* Visual Bar Chart */}
+              <div style={{
+                height: '200px',
+                display: 'flex',
+                alignItems: 'flex-end',
+                gap: '14px',
+                padding: '16px 10px 0 10px',
+                borderBottom: '2px solid #e2e8f0',
+                position: 'relative'
+              }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, borderTop: '1px dashed #f1f5f9' }} />
+                <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, borderTop: '1px dashed #f1f5f9' }} />
+
+                {chartData.map((item, idx) => {
+                  const heightPercent = Math.min(100, Math.max(12, Math.round((item.value / maxVal) * 100)));
+                  return (
+                    <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', position: 'relative', zIndex: 1 }}>
+                      <div style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        color: '#065f46',
+                        marginBottom: '6px',
+                        background: '#f0fdf4',
+                        padding: '2px 5px',
+                        borderRadius: '6px',
+                        border: '1px solid #bbf7d0'
+                      }}>
+                        {item.value} Hlm
+                      </div>
+
+                      <div 
+                        style={{
+                          width: '100%',
+                          maxWidth: '42px',
+                          height: `${heightPercent}%`,
+                          background: 'linear-gradient(180deg, #34d399 0%, #059669 100%)',
+                          borderRadius: '8px 8px 0 0',
+                          boxShadow: '0 4px 10px rgba(5, 150, 105, 0.25)',
+                          transition: 'height 0.4s ease'
+                        }}
+                        title={`Bulan ${item.name}: ${item.value} Halaman (${item.setoranCount} Kali Setor)`}
+                      />
+
+                      <div style={{
+                        marginTop: '8px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        color: '#475569'
+                      }}>
+                        {item.name}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: 700, color: '#059669', background: '#ecfdf5', padding: '4px 10px', borderRadius: '8px' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'linear-gradient(180deg, #10b981 0%, #047857 100%)' }} />
-                Volume Halaman
-              </span>
+
+            <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.76rem', color: '#64748b' }}>
+              <span>* Rata-rata hafalan ananda:</span>
+              <span style={{ fontWeight: 700, color: '#047857' }}>{(chartData.reduce((a,b) => a + b.value, 0) / chartData.length).toFixed(1)} Hlm / Bulan</span>
             </div>
           </div>
 
-          {/* Visual Bar Chart */}
+          {/* 2. GRAFIK LINGKARAN KEHADIRAN ANANDA (CIRCULAR / DONUT CHART) */}
           <div style={{
-            height: '220px',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '18px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
             display: 'flex',
-            alignItems: 'flex-end',
-            gap: '18px',
-            padding: '20px 10px 0 10px',
-            borderBottom: '2px solid #e2e8f0',
-            position: 'relative'
+            flexDirection: 'column',
+            justifyContent: 'space-between'
           }}>
-            {/* Background horizontal guide lines */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, borderTop: '1px dashed #f1f5f9' }} />
-            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, borderTop: '1px dashed #f1f5f9' }} />
-
-            {chartData.map((item, idx) => {
-              const heightPercent = Math.min(100, Math.max(12, Math.round((item.value / maxVal) * 100)));
-              return (
-                <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', position: 'relative', zIndex: 1 }}>
-                  {/* Tooltip value */}
-                  <div style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 800,
-                    color: '#065f46',
-                    marginBottom: '6px',
-                    background: '#f0fdf4',
-                    padding: '2px 6px',
-                    borderRadius: '6px',
-                    border: '1px solid #bbf7d0'
-                  }}>
-                    {item.value} Hlm
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '18px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <PieChart size={20} color="#059669" />
+                    <h2 style={{ fontSize: '1.10rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                      Grafik Lingkaran Kehadiran
+                    </h2>
                   </div>
+                  <p style={{ fontSize: '0.80rem', color: '#64748b', margin: '4px 0 0 0' }}>
+                    Distribusi persentase kehadiran halaqah ananda ({ananda.nama})
+                  </p>
+                </div>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', fontWeight: 700, color: '#0f766e', background: '#f0fdfa', padding: '4px 10px', borderRadius: '8px', border: '1px solid #ccfbf1' }}>
+                  Total {chartTotal} Sesi
+                </span>
+              </div>
 
-                  {/* The Bar */}
-                  <div 
-                    style={{
-                      width: '100%',
-                      maxWidth: '46px',
-                      height: `${heightPercent}%`,
-                      background: 'linear-gradient(180deg, #34d399 0%, #059669 100%)',
-                      borderRadius: '8px 8px 0 0',
-                      boxShadow: '0 4px 10px rgba(5, 150, 105, 0.25)',
-                      transition: 'height 0.4s ease'
-                    }}
-                    title={`Bulan ${item.name}: ${item.value} Halaman (${item.setoranCount} Kali Setor)`}
-                  />
+              {/* Visual SVG Donut Chart + Legend */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '24px', flexWrap: 'wrap', padding: '10px 0' }}>
+                
+                {/* SVG Donut */}
+                <div style={{ position: 'relative', width: '170px', height: '170px', flexShrink: 0 }}>
+                  <svg width="170" height="170" viewBox="0 0 160 160" style={{ transform: 'rotate(-90deg)', overflow: 'visible' }}>
+                    {/* Track */}
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="65"
+                      fill="none"
+                      stroke="#f1f5f9"
+                      strokeWidth="18"
+                    />
 
-                  {/* Month Label */}
+                    {/* Segment 1: Hadir (#10b981) */}
+                    {strokeDashHadir > 0 && (
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="65"
+                        fill="none"
+                        stroke="#10b981"
+                        strokeWidth="18"
+                        strokeDasharray={`${strokeDashHadir} ${circumference}`}
+                        strokeDashoffset={offsetHadir}
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dasharray 0.5s ease' }}
+                      />
+                    )}
+
+                    {/* Segment 2: Izin (#0ea5e9) */}
+                    {strokeDashIzin > 0 && (
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="65"
+                        fill="none"
+                        stroke="#0ea5e9"
+                        strokeWidth="18"
+                        strokeDasharray={`${strokeDashIzin} ${circumference}`}
+                        strokeDashoffset={offsetIzin}
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dasharray 0.5s ease' }}
+                      />
+                    )}
+
+                    {/* Segment 3: Sakit (#f59e0b) */}
+                    {strokeDashSakit > 0 && (
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="65"
+                        fill="none"
+                        stroke="#f59e0b"
+                        strokeWidth="18"
+                        strokeDasharray={`${strokeDashSakit} ${circumference}`}
+                        strokeDashoffset={offsetSakit}
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dasharray 0.5s ease' }}
+                      />
+                    )}
+
+                    {/* Segment 4: Alpa (#ef4444) */}
+                    {strokeDashAlpa > 0 && (
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="65"
+                        fill="none"
+                        stroke="#ef4444"
+                        strokeWidth="18"
+                        strokeDasharray={`${strokeDashAlpa} ${circumference}`}
+                        strokeDashoffset={offsetAlpa}
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dasharray 0.5s ease' }}
+                      />
+                    )}
+                  </svg>
+
+                  {/* Center Text inside Donut */}
                   <div style={{
-                    marginTop: '8px',
-                    fontSize: '0.80rem',
-                    fontWeight: 700,
-                    color: '#475569'
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    pointerEvents: 'none'
                   }}>
-                    {item.name}
+                    <span style={{ fontSize: '1.65rem', fontWeight: 900, color: '#0f172a', lineHeight: 1 }}>
+                      {chartPersenHadir}%
+                    </span>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase', marginTop: '2px', letterSpacing: '0.5px' }}>
+                      Kehadiran
+                    </span>
                   </div>
                 </div>
-              );
-            })}
+
+                {/* Legend List */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '135px' }}>
+                  
+                  {/* Hadir */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', fontSize: '0.80rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+                      <span style={{ fontWeight: 600, color: '#334155' }}>Hadir</span>
+                    </div>
+                    <span style={{ fontWeight: 800, color: '#0f172a' }}>
+                      {chartHadir} ({Math.round(pHadir)}%)
+                    </span>
+                  </div>
+
+                  {/* Izin */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', fontSize: '0.80rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#0ea5e9', display: 'inline-block' }} />
+                      <span style={{ fontWeight: 600, color: '#334155' }}>Izin</span>
+                    </div>
+                    <span style={{ fontWeight: 800, color: '#0f172a' }}>
+                      {chartIzin} ({Math.round(pIzin)}%)
+                    </span>
+                  </div>
+
+                  {/* Sakit */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', fontSize: '0.80rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                      <span style={{ fontWeight: 600, color: '#334155' }}>Sakit</span>
+                    </div>
+                    <span style={{ fontWeight: 800, color: '#0f172a' }}>
+                      {chartSakit} ({Math.round(pSakit)}%)
+                    </span>
+                  </div>
+
+                  {/* Alpa */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', fontSize: '0.80rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                      <span style={{ fontWeight: 600, color: '#334155' }}>Alpa</span>
+                    </div>
+                    <span style={{ fontWeight: 800, color: '#0f172a' }}>
+                      {chartAlpa} ({Math.round(pAlpa)}%)
+                    </span>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+
+            {/* Bottom Status Pill */}
+            <div style={{
+              marginTop: '14px',
+              padding: '8px 12px',
+              borderRadius: '10px',
+              background: chartPersenHadir >= 90 ? '#f0fdf4' : chartPersenHadir >= 80 ? '#eff6ff' : '#fef2f2',
+              border: `1px solid ${chartPersenHadir >= 90 ? '#bbf7d0' : chartPersenHadir >= 80 ? '#bfdbfe' : '#fecaca'}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.78rem'
+            }}>
+              <span style={{ color: chartPersenHadir >= 90 ? '#166534' : chartPersenHadir >= 80 ? '#1e40af' : '#991b1b', fontWeight: 700 }}>
+                {chartPersenHadir >= 90 ? '🌟 Istiqomah: Kehadiran Sangat Baik' : chartPersenHadir >= 80 ? '👍 Baik: Kehadiran Teratur' : '⚠️ Perlu Peningkatan Presensi'}
+              </span>
+              <span 
+                onClick={() => setActiveTab('riwayat-presensi-santri')}
+                style={{ color: '#059669', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Rincian
+              </span>
+            </div>
+
           </div>
 
-          <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', color: '#64748b' }}>
-            <span>* Grafik terisolasi 100% khusus data hafalan ananda <strong>{ananda.nama}</strong>.</span>
-            <span style={{ fontWeight: 600, color: '#047857' }}>Rata-rata: {(chartData.reduce((a,b) => a + b.value, 0) / chartData.length).toFixed(1)} Halaman / Bulan</span>
-          </div>
         </div>
 
         {/* ══════════ PETA VISUAL 30 JUZ AL-QUR'AN ANANDA ══════════ */}
@@ -603,8 +845,166 @@ export default function DashboardView({
           )}
         </div>
 
-        {/* ══════════ TAUTAN MENU CEPAT (3 MENU RESMI ORANG TUA) ══════════ */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+        {/* ══════════ STATUS SPP & ADMINISTRASI BULANAN ANANDA ══════════ */}
+        {(() => {
+          const sppRecords = (storageService.getPembayaranSPP() || []).filter(
+            item => (item.santriId && item.santriId === ananda.id) ||
+                    (item.santri_id && item.santri_id === ananda.id) ||
+                    (item.nis && item.nis === ananda.nis) ||
+                    (item.santriNama && item.santriNama.toLowerCase() === (ananda.nama || '').toLowerCase())
+          );
+          const currentMonthName = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][new Date().getMonth()];
+          const currentYear = new Date().getFullYear();
+          const currentBulanKey = `${currentMonthName} ${currentYear}`;
+          const currentSPP = sppRecords.find(item => item.bulan === currentBulanKey || item.bulan === currentMonthName) || sppRecords[0];
+          const isLunas = currentSPP?.status === 'Lunas';
+          const nominalStr = currentSPP?.nominal 
+            ? `Rp ${Number(currentSPP.nominal).toLocaleString('id-ID')}` 
+            : 'Rp 350.000';
+          const waUrl = `https://wa.me/6281234567890?text=${encodeURIComponent(`Assalamu'alaikum Bendahara Madrasah, mohon konfirmasi status pembayaran SPP untuk ananda ${ananda.nama || 'Santri'} (NIS: ${ananda.nis || '-'}). Terima kasih.`)}`;
+
+          return (
+            <div style={{
+              background: '#ffffff',
+              border: isLunas ? '1px solid #bbf7d0' : '1px solid #fed7aa',
+              borderRadius: '18px',
+              padding: '24px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                background: isLunas ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #f59e0b, #d97706)'
+              }} />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '14px',
+                    background: isLunas ? '#ecfdf5' : '#fffbeb',
+                    color: isLunas ? '#059669' : '#d97706',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Receipt size={26} />
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <h2 style={{ fontSize: '1.10rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                        Status SPP & Syahriah Ananda
+                      </h2>
+                      <span style={{
+                        padding: '3px 10px',
+                        borderRadius: '20px',
+                        fontSize: '0.74rem',
+                        fontWeight: 700,
+                        background: isLunas ? '#dcfce7' : '#fef3c7',
+                        color: isLunas ? '#15803d' : '#b45309',
+                        border: `1px solid ${isLunas ? '#bbf7d0' : '#fde68a'}`
+                      }}>
+                        {isLunas ? '✓ Lunas Terbayar' : '⏳ Menunggu Konfirmasi'}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '4px 0 0 0' }}>
+                      Tagihan Periode {currentMonthName} {currentYear} • Santri: <strong>{ananda.nama}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
+                    Nominal Syahriah
+                  </div>
+                  <div style={{ fontSize: '1.35rem', fontWeight: 900, color: isLunas ? '#059669' : '#d97706' }}>
+                    {nominalStr}
+                  </div>
+                </div>
+              </div>
+
+              {/* Rincian Rekening & Konfirmasi */}
+              <div style={{
+                marginTop: '18px',
+                padding: '14px 16px',
+                background: '#f8fafc',
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}>
+                <div style={{ fontSize: '0.82rem', color: '#334155' }}>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>Rekening Resmi Infaq & Syahriah:</span>
+                  <div style={{ marginTop: '2px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ background: '#0284c7', color: '#ffffff', padding: '1px 7px', borderRadius: '4px', fontSize: '0.70rem', fontWeight: 800 }}>BSI</span>
+                    <strong>712-345-6789</strong>
+                    <span style={{ color: '#64748b' }}>(a.n. Yayasan Ihya As-Sunnah)</span>
+                  </div>
+                </div>
+
+                <a 
+                  href={waUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    background: '#10b981',
+                    color: '#ffffff',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    boxShadow: '0 2px 6px rgba(16, 185, 129, 0.25)',
+                    transition: 'opacity 0.15s ease'
+                  }}
+                >
+                  💬 Hubungi Bendahara (WA)
+                </a>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ══════════ TAUTAN MENU CEPAT (4 MENU RESMI ORANG TUA) ══════════ */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+          <div 
+            onClick={() => setActiveTab('hafalan-santri')}
+            style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '14px',
+              padding: '16px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'background 0.15s ease'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <BookOpen size={20} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.90rem', color: '#0f172a' }}>Hafalan Santri</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Filter tanggal & mutaba'ah</div>
+              </div>
+            </div>
+            <ChevronRight size={18} color="#94a3b8" />
+          </div>
+
           <div 
             onClick={() => setActiveTab('riwayat-presensi-santri')}
             style={{
@@ -620,11 +1020,11 @@ export default function DashboardView({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ClipboardCheck size={20} />
               </div>
               <div>
-                <div style={{ fontWeight: 800, fontSize: '0.90rem', color: '#0f172a' }}>Riwayat Presensi Santri</div>
+                <div style={{ fontWeight: 800, fontSize: '0.90rem', color: '#0f172a' }}>Riwayat Presensi</div>
                 <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Cek kehadiran halaqah ananda</div>
               </div>
             </div>
@@ -874,14 +1274,19 @@ export default function DashboardView({
                 setNewSiswaData({
                   nama: '',
                   nis: '',
-                  kelas: 'X Tahfidz 1',
                   halaqahId: halaqahList[0]?.id || 'h-wahyudin',
                   targetJuz: 10,
                   namaWali: '',
                   kontakWali: ''
                 });
-                alert("Siswa baru berhasil didaftarkan dan ditugaskan ke halaqah!");
-                window.location.reload();
+                if (showToast) {
+                  showToast("Siswa baru berhasil didaftarkan dan ditugaskan ke halaqah!");
+                }
+                if (onReload) {
+                  onReload();
+                } else {
+                  window.dispatchEvent(new CustomEvent('simtah_data_updated'));
+                }
               }}>
                 <div className="modal-body">
                   <div className="form-row">
@@ -909,28 +1314,17 @@ export default function DashboardView({
                     </div>
                   </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">Kelas</label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        value={newSiswaData.kelas}
-                        onChange={(e) => setNewSiswaData({ ...newSiswaData, kelas: e.target.value })}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Tugaskan ke Halaqah Bimbingan *</label>
-                      <select 
-                        className="form-select"
-                        value={newSiswaData.halaqahId}
-                        onChange={(e) => setNewSiswaData({ ...newSiswaData, halaqahId: e.target.value })}
-                      >
-                        {halaqahList.map(h => (
-                          <option key={h.id} value={h.id}>{h.nama} ({h.musyrif})</option>
-                        ))}
-                      </select>
-                    </div>
+                  <div className="form-group">
+                    <label className="form-label">Tugaskan ke Halaqah Bimbingan *</label>
+                    <select 
+                      className="form-select"
+                      value={newSiswaData.halaqahId}
+                      onChange={(e) => setNewSiswaData({ ...newSiswaData, halaqahId: e.target.value })}
+                    >
+                      {halaqahList.map(h => (
+                        <option key={h.id} value={h.id}>{h.nama} ({h.musyrif})</option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="form-group">

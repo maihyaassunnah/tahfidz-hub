@@ -31,6 +31,7 @@ import {
   Database,
   Receipt
 } from 'lucide-react';
+import { storageService } from '../services/storage';
 
 export default function BottomNav({
   activeTab,
@@ -40,9 +41,19 @@ export default function BottomNav({
   onOpenPasswordModal,
   isDarkMode,
   onToggleDarkMode,
-  showToast
+  showToast,
+  onSwitchRole,
+  activeBranchId,
+  onSwitchBranch
 }) {
   const [showDrawer, setShowDrawer] = useState(false);
+  const [photoTrigger, setPhotoTrigger] = useState(0);
+
+  useEffect(() => {
+    const handlePhotoUpdate = () => setPhotoTrigger(prev => prev + 1);
+    window.addEventListener('tahfidz_foto_profil_updated', handlePhotoUpdate);
+    return () => window.removeEventListener('tahfidz_foto_profil_updated', handlePhotoUpdate);
+  }, []);
 
   // Close drawer on ESC key
   useEffect(() => {
@@ -73,8 +84,8 @@ export default function BottomNav({
       return [
         {
           id: 'dashboard',
-          label: 'Home',
-          icon: Home,
+          label: 'Yayasan',
+          icon: Layers,
           targetTab: 'owner-dashboard',
           matches: ['owner-dashboard', 'dashboard']
         },
@@ -86,18 +97,18 @@ export default function BottomNav({
           matches: ['owner-cabang']
         },
         {
-          id: 'superadmin',
-          label: 'Admin',
-          icon: Shield,
-          targetTab: 'owner-superadmin',
-          matches: ['owner-superadmin']
-        },
-        {
           id: 'rekap',
-          label: 'Rekap',
-          icon: ClipboardCheck,
+          label: 'Konsolidasi',
+          icon: FileText,
           targetTab: 'owner-rekap',
           matches: ['owner-rekap']
+        },
+        {
+          id: 'konfigurasi',
+          label: 'Pengaturan',
+          icon: Settings,
+          targetTab: 'sigap-konfigurasi',
+          matches: ['sigap-konfigurasi', 'owner-konfigurasi']
         },
         {
           id: 'more',
@@ -105,7 +116,19 @@ export default function BottomNav({
           icon: LayoutGrid,
           targetTab: 'more',
           isMoreTrigger: true,
-          matches: ['more', 'sigap-siswa', 'sigap-guru', 'sigap-kelas', 'sigap-lokasi-qr', 'sigap-monitoring']
+          matches: [
+            'more',
+            'sigap-siswa',
+            'sigap-guru',
+            'sigap-alumni',
+            'sigap-jadwal',
+            'sigap-lokasi-qr',
+            'sigap-monitoring',
+            'sigap-izin',
+            'sigap-spp',
+            'owner-superadmin',
+            'sigap-prisma-studio'
+          ]
         }
       ];
     } else if (currentRole === 'superadmin') {
@@ -187,14 +210,21 @@ export default function BottomNav({
         }
       ];
     } else {
-      // Orang Tua / Wali: 4 Menu yang Diizinkan Saja
+      // Orang Tua / Wali: 5 Menu Lengkap
       return [
         {
           id: 'dashboard',
-          label: 'Dashboard',
+          label: 'Home',
           icon: Home,
           targetTab: 'dashboard',
           matches: ['dashboard']
+        },
+        {
+          id: 'hafalan-santri',
+          label: 'Hafalan',
+          icon: BookOpen,
+          targetTab: 'hafalan-santri',
+          matches: ['hafalan-santri']
         },
         {
           id: 'riwayat-presensi-santri',
@@ -239,12 +269,22 @@ export default function BottomNav({
     if (tab.isMoreTrigger) {
       setShowDrawer(prev => !prev);
     } else {
+      if (currentRole === 'owner') {
+        if (onSwitchBranch && activeBranchId && activeBranchId !== 'ALL') {
+          onSwitchBranch('ALL');
+        }
+      }
       setActiveTab(tab.targetTab);
       setShowDrawer(false);
     }
   };
 
   const handleNavigateFromDrawer = (targetTab) => {
+    if (currentRole === 'owner' && (targetTab?.startsWith('owner-') || targetTab === 'dashboard')) {
+      if (onSwitchBranch && activeBranchId && activeBranchId !== 'ALL') {
+        onSwitchBranch('ALL');
+      }
+    }
     setActiveTab(targetTab);
     setShowDrawer(false);
   };
@@ -252,9 +292,16 @@ export default function BottomNav({
   // Color theme
   const bubbleThemeColor = currentRole === 'owner' ? '#d97706' : currentRole === 'superadmin' ? '#0d9488' : '#10b981';
 
-  // Get user profile details
+  // Get user profile details with REAL data from database
   const getProfileData = () => {
+    const auth = storageService.getAuthUser();
+    const effectiveBranchId = auth?.cabangId || 'cabang-pusat';
+    const currentBranch = (storageService.getCabang ? storageService.getCabang() : []).find(c => c.id === effectiveBranchId) || storageService.getActiveBranch() || {};
+
     if (currentRole === 'owner') {
+      const cList = storageService.getCabang ? storageService.getCabang() : [];
+      const allGurus = storageService.getAllSigapGuruRaw ? storageService.getAllSigapGuruRaw() : [];
+      const allSiswa = storageService.getAllSigapSiswaRaw ? storageService.getAllSigapSiswaRaw() : [];
       return {
         name: 'Pimpinan Yayasan',
         role: 'EXECUTIVE OWNER',
@@ -262,39 +309,45 @@ export default function BottomNav({
         avatarBg: '#d97706',
         avatarText: '👑',
         stats: [
-          { value: '3', label: 'Cabang' },
-          { value: '3', label: 'Super Admin' },
-          { value: 'Multi', label: 'Tenant' }
+          { value: String(cList.length || 3), label: 'Cabang' },
+          { value: String(allGurus.length || 0), label: 'Guru & TU' },
+          { value: String(allSiswa.length || 0), label: 'Total Siswa' }
         ]
       };
     } else if (currentRole === 'superadmin') {
+      const realGurus = storageService.getSigapGuru ? storageService.getSigapGuru(effectiveBranchId) : [];
+      const realSiswa = storageService.getSigapSiswa ? storageService.getSigapSiswa(effectiveBranchId) : [];
+      const realKelas = storageService.getSigapKelas ? storageService.getSigapKelas(effectiveBranchId) : [];
+
       return {
-        name: 'Admin MA',
-        role: 'ADMIN JENJANG',
+        name: currentBranch.nama || auth?.nama || 'Admin MA',
+        role: currentBranch.kode ? `CABANG ${currentBranch.kode}` : 'ADMIN JENJANG',
         subRole: 'Sistem Guru & Admin (SIGAP)',
         avatarBg: '#0284c7',
-        avatarText: 'MA',
+        avatarText: currentBranch.kode || 'MA',
         stats: [
-          { value: '15', label: 'Guru & TU' },
-          { value: '20', label: 'Siswa MA' },
-          { value: '6', label: 'Rombel' }
+          { value: String(realGurus.length), label: 'Guru & TU' },
+          { value: String(realSiswa.length), label: currentBranch.kode ? `Siswa ${currentBranch.kode}` : 'Siswa' },
+          { value: String(realKelas.length), label: 'Rombel' }
         ]
       };
     } else if (currentRole === 'pengampu') {
+      const allSantri = storageService.getSantri ? storageService.getSantri(effectiveBranchId) : [];
+      const mySantri = allSantri.filter(s => s.halaqahId === auth?.halaqahId || s.pengampuId === auth?.id);
+      const setoranCount = (storageService.getSetoran ? storageService.getSetoran(effectiveBranchId) : []).length;
       return {
-        name: 'Wahyudin Hafiz, S.Pd',
+        name: auth?.nama || 'Wahyudin Hafiz, S.Pd',
         role: 'PENGAMPU TAHFIDZ',
-        subRole: 'Koordinator & Musyrif X A',
+        subRole: auth?.jabatan || 'Koordinator Tahfidz',
         avatarBg: '#10b981',
-        avatarText: 'WH',
+        avatarText: (auth?.nama || 'WH').slice(0, 2).toUpperCase(),
         stats: [
-          { value: '10', label: 'Santri' },
-          { value: '386', label: 'Setoran' },
+          { value: String(mySantri.length || allSantri.length), label: 'Santri' },
+          { value: String(setoranCount), label: 'Setoran' },
           { value: '1', label: 'Halaqah' }
         ]
       };
     } else {
-      const auth = storageService.getAuthUser();
       const childName = auth?.namaSantri || auth?.username || 'Ananda';
       return {
         name: auth?.nama || ('Wali dari ' + childName),
@@ -312,6 +365,17 @@ export default function BottomNav({
   };
 
   const profile = getProfileData();
+  const currentAuth = storageService.getAuthUser();
+  const effectiveBranchId = currentAuth?.cabangId || 'cabang-pusat';
+  const currentBranch = (storageService.getCabang ? storageService.getCabang() : []).find(c => c.id === effectiveBranchId) || storageService.getActiveBranch() || {};
+  const profilePhoto = storageService.getPhotoForUser({
+    userId: currentAuth?.id || currentAuth?.nip || currentBranch.id || 'admin-ma',
+    userType: currentRole,
+    username: currentAuth?.username || (currentRole === 'superadmin' ? 'ma' : currentRole === 'owner' ? 'owner' : ''),
+    nip: currentAuth?.nip,
+    nama: currentAuth?.nama || currentBranch.nama,
+    cabangId: effectiveBranchId
+  });
 
   return (
     <>
@@ -426,9 +490,13 @@ export default function BottomNav({
               <div className="sidebar-drawer-profile-header">
                 <div 
                   className="sidebar-drawer-avatar"
-                  style={{ background: profile.avatarBg }}
+                  style={{ background: profile.avatarBg, overflow: 'hidden', padding: 0 }}
                 >
-                  <span>{profile.avatarText}</span>
+                  {profilePhoto ? (
+                    <img src={profilePhoto} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span>{profile.avatarText}</span>
+                  )}
                 </div>
 
                 <div className="sidebar-drawer-user-info">
@@ -444,6 +512,19 @@ export default function BottomNav({
                   >
                     Ubah Password
                   </button>
+                  {onSwitchRole && currentRole === 'orangtua' && (
+                    <button 
+                      type="button" 
+                      className="user-link-sub" 
+                      onClick={() => {
+                        setShowDrawer(false);
+                        onSwitchRole('superadmin');
+                      }}
+                      style={{ color: '#059669', fontWeight: 800, marginTop: '4px' }}
+                    >
+                      🛡️ Kembali ke Admin
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -460,10 +541,156 @@ export default function BottomNav({
 
             {/* 3. MENU LIST (SEMUA MENU SIDEBAR NAVIGATION SESUAI APLIKASI & WARNA BRANDING) */}
             <div className="sidebar-drawer-menu-scroll">
+              {/* QUICK MOBILE ROLE SWITCHER (TOUCH-FRIENDLY) */}
+              {onSwitchRole && (
+                <div style={{
+                  background: isDarkMode ? '#1e293b' : '#f8fafc',
+                  border: '1px solid ' + (isDarkMode ? '#334155' : '#e2e8f0'),
+                  borderRadius: '12px',
+                  padding: '10px 12px',
+                  marginBottom: '14px'
+                }}>
+                  <div style={{ fontSize: '0.70rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>Beralih Peran (Mobile)</span>
+                    <span style={{ fontSize: '0.66rem', color: '#059669', fontWeight: 700 }}>Aktif: {currentRole}</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: currentRole === 'owner' ? '1fr 1fr' : '1fr', gap: '6px' }}>
+                    {currentRole === 'owner' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowDrawer(false);
+                          onSwitchRole('owner');
+                        }}
+                        style={{
+                          padding: '6px 8px',
+                          borderRadius: '8px',
+                          border: currentRole === 'owner' ? '2px solid #d97706' : '1px solid #cbd5e1',
+                          background: currentRole === 'owner' ? '#fef3c7' : (isDarkMode ? '#0f172a' : '#ffffff'),
+                          color: currentRole === 'owner' ? '#92400e' : (isDarkMode ? '#f8fafc' : '#334155'),
+                          fontSize: '0.74rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <span>👑</span>
+                        <span>Owner</span>
+                      </button>
+                    )}
+
+                    {(currentRole === 'owner' || currentRole === 'superadmin') && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowDrawer(false);
+                            onSwitchRole('superadmin:cabang-pusat');
+                          }}
+                          style={{
+                            padding: '6px 8px',
+                            borderRadius: '8px',
+                            border: (currentRole === 'superadmin' && effectiveBranchId === 'cabang-pusat') ? '2px solid #059669' : '1px solid #cbd5e1',
+                            background: (currentRole === 'superadmin' && effectiveBranchId === 'cabang-pusat') ? '#ecfdf5' : (isDarkMode ? '#0f172a' : '#ffffff'),
+                            color: (currentRole === 'superadmin' && effectiveBranchId === 'cabang-pusat') ? '#065f46' : (isDarkMode ? '#f8fafc' : '#334155'),
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}
+                        >
+                          <span>🛡️</span>
+                          <span>Admin MA</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowDrawer(false);
+                            onSwitchRole('superadmin:cabang-smp');
+                          }}
+                          style={{
+                            padding: '6px 8px',
+                            borderRadius: '8px',
+                            border: (currentRole === 'superadmin' && effectiveBranchId === 'cabang-smp') ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                            background: (currentRole === 'superadmin' && effectiveBranchId === 'cabang-smp') ? '#eff6ff' : (isDarkMode ? '#0f172a' : '#ffffff'),
+                            color: (currentRole === 'superadmin' && effectiveBranchId === 'cabang-smp') ? '#1d4ed8' : (isDarkMode ? '#f8fafc' : '#334155'),
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px'
+                          }}
+                        >
+                          <span>🛡️</span>
+                          <span>Admin Raudhotul Huffaz</span>
+                        </button>
+                      </>
+                    )}
+
+                    {(currentRole === 'owner' || currentRole === 'pengampu') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowDrawer(false);
+                          onSwitchRole('pengampu');
+                        }}
+                        style={{
+                          padding: '6px 8px',
+                          borderRadius: '8px',
+                          border: currentRole === 'pengampu' ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                          background: currentRole === 'pengampu' ? '#eff6ff' : (isDarkMode ? '#0f172a' : '#ffffff'),
+                          color: currentRole === 'pengampu' ? '#1e40af' : (isDarkMode ? '#f8fafc' : '#334155'),
+                          fontSize: '0.74rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <span>🏅</span>
+                        <span>Pengampu</span>
+                      </button>
+                    )}
+
+                    {currentRole === 'owner' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowDrawer(false);
+                          onSwitchRole('orangtua');
+                        }}
+                        style={{
+                          padding: '6px 8px',
+                          borderRadius: '8px',
+                          border: currentRole === 'orangtua' ? '2px solid #7c3aed' : '1px solid #cbd5e1',
+                          background: currentRole === 'orangtua' ? '#faf5ff' : (isDarkMode ? '#0f172a' : '#ffffff'),
+                          color: currentRole === 'orangtua' ? '#5b21b6' : (isDarkMode ? '#f8fafc' : '#334155'),
+                          fontSize: '0.74rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <span>👤</span>
+                        <span>Wali Santri</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {currentRole === 'owner' ? (
                 <>
                   {/* OWNER PORTAL */}
-                  <div className="sidebar-drawer-category">PORTAL UTAMA OWNER</div>
+                  <div className="sidebar-drawer-category">MENU UTAMA YAYASAN</div>
 
                   <div 
                     className={`sidebar-drawer-menu-item ${activeTab === 'owner-dashboard' || activeTab === 'dashboard' ? 'active' : ''}`}
@@ -473,7 +700,7 @@ export default function BottomNav({
                     <div className="menu-icon-box" style={{ background: '#fef3c7', color: '#d97706' }}>
                       <Layers size={18} />
                     </div>
-                    <span className="menu-text">Dashboard Multi-Cabang</span>
+                    <span className="menu-text">Dashboard Yayasan</span>
                   </div>
 
                   <div 
@@ -484,7 +711,7 @@ export default function BottomNav({
                     <div className="menu-icon-box" style={{ background: '#ecfdf5', color: '#0d9488' }}>
                       <Building2 size={18} />
                     </div>
-                    <span className="menu-text">Kelola Cabang Lembaga</span>
+                    <span className="menu-text">Analisis & Kelola Cabang</span>
                   </div>
 
                   <div 
@@ -492,10 +719,10 @@ export default function BottomNav({
                     onClick={() => handleNavigateFromDrawer('owner-superadmin')}
                   >
                     <div className="menu-active-indicator" />
-                    <div className="menu-icon-box" style={{ background: '#eff6ff', color: '#2563eb' }}>
+                    <div className="menu-icon-box" style={{ background: '#e0f2fe', color: '#0284c7' }}>
                       <ShieldCheck size={18} />
                     </div>
-                    <span className="menu-text">Akun Super Admin Cabang</span>
+                    <span className="menu-text">Akun Super Admin</span>
                   </div>
 
                   <div 
@@ -506,10 +733,11 @@ export default function BottomNav({
                     <div className="menu-icon-box" style={{ background: '#f5f3ff', color: '#7c3aed' }}>
                       <FileText size={18} />
                     </div>
-                    <span className="menu-text">Konsolidasi Data</span>
+                    <span className="menu-text">Konsolidasi Seluruh Cabang</span>
                   </div>
 
-                  <div className="sidebar-drawer-category">INSPEKSI DATA CABANG</div>
+                  {/* CIVITAS AKADEMIKA */}
+                  <div className="sidebar-drawer-category">CIVITAS AKADEMIKA</div>
 
                   <div 
                     className={`sidebar-drawer-menu-item ${activeTab === 'sigap-siswa' ? 'active' : ''}`}
@@ -519,7 +747,7 @@ export default function BottomNav({
                     <div className="menu-icon-box" style={{ background: '#f0fdf4', color: '#16a34a' }}>
                       <GraduationCap size={18} />
                     </div>
-                    <span className="menu-text">Data Siswa Cabang</span>
+                    <span className="menu-text">Data Siswa (Semua Cabang)</span>
                   </div>
 
                   <div 
@@ -530,18 +758,32 @@ export default function BottomNav({
                     <div className="menu-icon-box" style={{ background: '#eff6ff', color: '#0284c7' }}>
                       <Users size={18} />
                     </div>
-                    <span className="menu-text">Data Guru Cabang</span>
+                    <span className="menu-text">Data Guru & Pegawai</span>
                   </div>
 
                   <div 
-                    className={`sidebar-drawer-menu-item ${activeTab === 'sigap-kelas' ? 'active' : ''}`}
-                    onClick={() => handleNavigateFromDrawer('sigap-kelas')}
+                    className={`sidebar-drawer-menu-item ${activeTab === 'sigap-alumni' ? 'active' : ''}`}
+                    onClick={() => handleNavigateFromDrawer('sigap-alumni')}
                   >
                     <div className="menu-active-indicator" />
-                    <div className="menu-icon-box" style={{ background: '#fefce8', color: '#ca8a04' }}>
-                      <Building2 size={18} />
+                    <div className="menu-icon-box" style={{ background: '#f5f3ff', color: '#7c3aed' }}>
+                      <Award size={18} />
                     </div>
-                    <span className="menu-text">Data Kelas Cabang</span>
+                    <span className="menu-text">Data Alumni</span>
+                  </div>
+
+                  {/* MANAJEMEN KBM */}
+                  <div className="sidebar-drawer-category">MANAJEMEN KBM</div>
+
+                  <div 
+                    className={`sidebar-drawer-menu-item ${activeTab === 'sigap-jadwal' ? 'active' : ''}`}
+                    onClick={() => handleNavigateFromDrawer('sigap-jadwal')}
+                  >
+                    <div className="menu-active-indicator" />
+                    <div className="menu-icon-box" style={{ background: '#eff6ff', color: '#2563eb' }}>
+                      <Calendar size={18} />
+                    </div>
+                    <span className="menu-text">Jadwal</span>
                   </div>
 
                   <div 
@@ -549,21 +791,74 @@ export default function BottomNav({
                     onClick={() => handleNavigateFromDrawer('sigap-lokasi-qr')}
                   >
                     <div className="menu-active-indicator" />
-                    <div className="menu-icon-box" style={{ background: '#fef2f2', color: '#e11d48' }}>
+                    <div className="menu-icon-box" style={{ background: '#ecfdf5', color: '#059669' }}>
                       <MapPin size={18} />
                     </div>
                     <span className="menu-text">Lokasi & QR Presensi</span>
                   </div>
+
+                  {/* REKAP & PERIZINAN */}
+                  <div className="sidebar-drawer-category">REKAP & PERIZINAN</div>
 
                   <div 
                     className={`sidebar-drawer-menu-item ${activeTab === 'sigap-monitoring' ? 'active' : ''}`}
                     onClick={() => handleNavigateFromDrawer('sigap-monitoring')}
                   >
                     <div className="menu-active-indicator" />
-                    <div className="menu-icon-box" style={{ background: '#ecfdf5', color: '#047857' }}>
+                    <div className="menu-icon-box" style={{ background: '#ecfdf5', color: '#059669' }}>
                       <ClipboardCheck size={18} />
                     </div>
-                    <span className="menu-text">Rekap Monitoring</span>
+                    <span className="menu-text">Monitoring & Rekap</span>
+                  </div>
+
+                  <div 
+                    className={`sidebar-drawer-menu-item ${activeTab === 'sigap-izin' ? 'active' : ''}`}
+                    onClick={() => handleNavigateFromDrawer('sigap-izin')}
+                  >
+                    <div className="menu-active-indicator" />
+                    <div className="menu-icon-box" style={{ background: '#fff1f2', color: '#e11d48' }}>
+                      <CheckSquare size={18} />
+                    </div>
+                    <span className="menu-text">Persetujuan Izin</span>
+                  </div>
+
+                  {/* KEUANGAN & SPP */}
+                  <div className="sidebar-drawer-category">KEUANGAN & SPP</div>
+
+                  <div 
+                    className={`sidebar-drawer-menu-item ${activeTab === 'sigap-spp' ? 'active' : ''}`}
+                    onClick={() => handleNavigateFromDrawer('sigap-spp')}
+                  >
+                    <div className="menu-active-indicator" />
+                    <div className="menu-icon-box" style={{ background: '#fef3c7', color: '#d97706' }}>
+                      <Receipt size={18} />
+                    </div>
+                    <span className="menu-text">Pembayaran SPP</span>
+                  </div>
+
+                  {/* SISTEM & DATABASE */}
+                  <div className="sidebar-drawer-category">SISTEM & DATABASE</div>
+
+                  <div 
+                    className={`sidebar-drawer-menu-item ${activeTab === 'sigap-prisma-studio' ? 'active' : ''}`}
+                    onClick={() => handleNavigateFromDrawer('sigap-prisma-studio')}
+                  >
+                    <div className="menu-active-indicator" />
+                    <div className="menu-icon-box" style={{ background: '#ecfdf5', color: '#0d9488' }}>
+                      <Database size={18} />
+                    </div>
+                    <span className="menu-text">Prisma Studio (PostgreSQL)</span>
+                  </div>
+
+                  <div 
+                    className={`sidebar-drawer-menu-item ${activeTab === 'sigap-konfigurasi' || activeTab === 'owner-konfigurasi' ? 'active' : ''}`}
+                    onClick={() => handleNavigateFromDrawer('sigap-konfigurasi')}
+                  >
+                    <div className="menu-active-indicator" />
+                    <div className="menu-icon-box" style={{ background: '#eff6ff', color: '#2563eb' }}>
+                      <Settings size={18} />
+                    </div>
+                    <span className="menu-text">Konfigurasi Unit & Akun</span>
                   </div>
                 </>
               ) : currentRole === 'superadmin' ? (
@@ -638,7 +933,7 @@ export default function BottomNav({
                     <div className="menu-icon-box" style={{ background: '#fefce8', color: '#ca8a04' }}>
                       <MapPin size={18} />
                     </div>
-                    <span className="menu-text">Lokasi & QR Kelas</span>
+                    <span className="menu-text">Lokasi & QR Presensi</span>
                   </div>
 
                   {/* REKAP & PERIZINAN */}
@@ -802,6 +1097,19 @@ export default function BottomNav({
                   )}
 
                   <div className="sidebar-drawer-category">AKADEMIK</div>
+
+                  {currentRole === 'orangtua' && (
+                    <div 
+                      className={`sidebar-drawer-menu-item ${activeTab === 'hafalan-santri' ? 'active' : ''}`}
+                      onClick={() => handleNavigateFromDrawer('hafalan-santri')}
+                    >
+                      <div className="menu-active-indicator" />
+                      <div className="menu-icon-box" style={{ background: '#ecfdf5', color: '#059669' }}>
+                        <BookOpen size={18} />
+                      </div>
+                      <span className="menu-text">Hafalan Santri</span>
+                    </div>
+                  )}
 
                   <div 
                     className={`sidebar-drawer-menu-item ${activeTab === 'santri' ? 'active' : ''}`}

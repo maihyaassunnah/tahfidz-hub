@@ -969,6 +969,152 @@ app.delete('/api/nilai-rapor/:id', async (req, res) => {
   }
 });
 
+// =========================================================
+// 7b. FOTO PROFIL ENDPOINTS (SUPER ADMIN, ADMIN CABANG, PENGAMPU)
+// =========================================================
+app.get('/api/foto-profil', async (req, res) => {
+  try {
+    const { cabangId, userType, userId } = req.query;
+    let sql = 'SELECT * FROM foto_profil';
+    const params = [];
+    const conditions = [];
+
+    if (cabangId) {
+      params.push(cabangId);
+      conditions.push(`(cabang_id = $${params.length} OR cabang_id IS NULL)`);
+    }
+    if (userType) {
+      params.push(userType);
+      conditions.push(`user_type = $${params.length}`);
+    }
+    if (userId) {
+      params.push(userId);
+      conditions.push(`user_id = $${params.length}`);
+    }
+
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
+    }
+    sql += ' ORDER BY updated_at DESC';
+
+    const result = await query(sql, params);
+    const mapped = result.rows.map(r => ({
+      id: r.id,
+      userId: r.user_id,
+      userType: r.user_type,
+      nama: r.nama,
+      username: r.username,
+      nip: r.nip,
+      role: r.role,
+      cabangId: r.cabang_id,
+      fotoUrl: r.foto_url,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at
+    }));
+    res.json(mapped);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/foto-profil', async (req, res) => {
+  const { id, userId, user_id, userType, user_type, nama, username, nip, role, cabangId, cabang_id, fotoUrl, foto_url } = req.body;
+  const targetId = id || `fp-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+  const targetUserId = String(userId || user_id || username || nip || targetId);
+  const targetUserType = userType || user_type || 'superadmin';
+  const targetFotoUrl = fotoUrl || foto_url || '';
+  const targetCabangId = cabangId || cabang_id || null;
+
+  try {
+    const sql = `
+      INSERT INTO foto_profil (id, user_id, user_type, nama, username, nip, role, cabang_id, foto_url, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP)
+      ON CONFLICT (user_id, user_type) DO UPDATE SET
+        nama = EXCLUDED.nama,
+        username = EXCLUDED.username,
+        nip = EXCLUDED.nip,
+        role = EXCLUDED.role,
+        cabang_id = EXCLUDED.cabang_id,
+        foto_url = EXCLUDED.foto_url,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *;
+    `;
+    const result = await query(sql, [
+      targetId, targetUserId, targetUserType, nama || '', username || null,
+      nip || null, role || null, targetCabangId, targetFotoUrl
+    ]);
+
+    // Also sync to superadmin_accounts if applicable
+    if (targetUserType === 'superadmin' || targetUserType === 'admin_cabang') {
+      try {
+        await query(`
+          UPDATE superadmin_accounts 
+          SET foto = $1 
+          WHERE id = $2 OR username = $3
+        `, [targetFotoUrl, targetUserId, username || targetUserId]);
+      } catch (e) {
+        console.warn("[API] Sync superadmin foto warning:", e.message);
+      }
+    }
+
+    // Also sync to pengampu if applicable
+    if (targetUserType === 'pengampu') {
+      try {
+        await query(`
+          UPDATE pengampu 
+          SET foto = $1 
+          WHERE id = $2 OR nip = $3 OR nama ILIKE $4
+        `, [targetFotoUrl, targetUserId, nip || targetUserId, `%${nama}%`]);
+      } catch (e) {
+        console.warn("[API] Sync pengampu foto warning:", e.message);
+      }
+    }
+
+    const r = result.rows[0];
+    res.json({
+      id: r.id,
+      userId: r.user_id,
+      userType: r.user_type,
+      nama: r.nama,
+      username: r.username,
+      nip: r.nip,
+      role: r.role,
+      cabangId: r.cabang_id,
+      fotoUrl: r.foto_url,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/foto-profil/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { userType } = req.query;
+  try {
+    let sql = 'DELETE FROM foto_profil WHERE user_id = $1 OR id = $1';
+    const params = [userId];
+    if (userType) {
+      sql += ' AND user_type = $2';
+      params.push(userType);
+    }
+    await query(sql, params);
+
+    // Clear photo from accounts
+    try {
+      await query('UPDATE superadmin_accounts SET foto = NULL WHERE id = $1 OR username = $1', [userId]);
+      await query('UPDATE pengampu SET foto = NULL WHERE id = $1 OR nip = $1', [userId]);
+    } catch (e) {
+      console.warn("[API] Clear account foto warning:", e.message);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 8. 1-CLICK SYNC-ALL: MENGIRIM DARI BROWSER LOCALSTORAGE KE POSTGRESQL
 app.post('/api/sync-all', async (req, res) => {
   const { santri, pengampu, sesi, cabang, halaqah, spp, monitoring, superadmin, absensi, setoran, izin } = req.body;
@@ -1174,7 +1320,7 @@ app.post('/api/sync-all', async (req, res) => {
 // 9. PULL-ALL: MENGAMBIL SELURUH DATA DARI POSTGRESQL UNTUK SYNC KE PERANGKAT/BROWSER
 app.get('/api/pull-all', async (req, res) => {
   try {
-    const [cabang, superadmin, pengampu, santri, halaqah, sesi, absensi, setoran, izin, spp, monitoring, kelas, alumni, lokasiQr, settings] = await Promise.all([
+    const [cabang, superadmin, pengampu, santri, halaqah, sesi, absensi, setoran, izin, spp, monitoring, kelas, alumni, lokasiQr, settings, fotoProfil] = await Promise.all([
       query('SELECT * FROM cabang ORDER BY created_at ASC'),
       query('SELECT * FROM superadmin_accounts ORDER BY created_at ASC'),
       query('SELECT * FROM pengampu ORDER BY nama ASC'),
@@ -1189,7 +1335,8 @@ app.get('/api/pull-all', async (req, res) => {
       query('SELECT * FROM kelas ORDER BY nama ASC'),
       query('SELECT * FROM alumni ORDER BY created_at DESC LIMIT 200'),
       query('SELECT * FROM lokasi_qr ORDER BY created_at ASC'),
-      query('SELECT * FROM settings')
+      query('SELECT * FROM settings'),
+      query('SELECT * FROM foto_profil ORDER BY updated_at DESC')
     ]);
 
     res.json({
@@ -1209,7 +1356,20 @@ app.get('/api/pull-all', async (req, res) => {
         kelas: kelas.rows,
         alumni: alumni.rows,
         lokasi_qr: lokasiQr.rows,
-        settings: settings.rows
+        settings: settings.rows,
+        foto_profil: (fotoProfil?.rows || []).map(r => ({
+          id: r.id,
+          userId: r.user_id,
+          userType: r.user_type,
+          nama: r.nama,
+          username: r.username,
+          nip: r.nip,
+          role: r.role,
+          cabangId: r.cabang_id,
+          fotoUrl: r.foto_url,
+          createdAt: r.created_at,
+          updatedAt: r.updated_at
+        }))
       }
     });
   } catch (err) {

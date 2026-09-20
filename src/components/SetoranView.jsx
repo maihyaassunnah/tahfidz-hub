@@ -72,7 +72,7 @@ export default function SetoranView({
   const selectedSantri = santriList.find(s => s.id === selectedSantriId) || {
     id: 's-azmi',
     nama: 'Muhammad Azmi Soleh',
-    kelas: 'X Tahfidz 1'
+    kelas: ''
   };
 
   // 2. Date state (Default: 2026-09-12 sesuai screenshot "Sabtu, 12-09-2026")
@@ -486,7 +486,7 @@ export default function SetoranView({
                 onChange={(e) => handleSantriChange(e.target.value)}
                 options={santriList.map(santri => ({
                   value: santri.id,
-                  label: `${santri.nama} ${santri.kelas ? `(${santri.kelas})` : ''}`
+                  label: `${santri.nama}${santri.nis ? ` (NIS: ${santri.nis})` : ''}`
                 }))}
                 searchable={true}
                 searchPlaceholder="Cari nama santri..."

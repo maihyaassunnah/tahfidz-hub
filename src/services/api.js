@@ -710,6 +710,49 @@ class ApiService {
       throw err;
     }
   }
+
+  // 17. Foto Profil Akun (Super Admin, Admin Cabang, Pengampu)
+  async getFotoProfil(params = {}) {
+    try {
+      const query = new URLSearchParams(params).toString();
+      const url = `${this.baseUrl}/foto-profil${query ? `?${query}` : ''}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.warn('[API] Failed to fetch foto-profil:', err.message);
+      return [];
+    }
+  }
+
+  async saveFotoProfil(data) {
+    try {
+      const res = await fetch(`${this.baseUrl}/foto-profil`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to save foto-profil:', err);
+      throw err;
+    }
+  }
+
+  async deleteFotoProfil(userId, userType = '') {
+    try {
+      const query = userType ? `?userType=${encodeURIComponent(userType)}` : '';
+      const res = await fetch(`${this.baseUrl}/foto-profil/${encodeURIComponent(userId)}${query}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      console.error('[API] Failed to delete foto-profil:', err);
+      throw err;
+    }
+  }
 }
 
 export const apiService = new ApiService();

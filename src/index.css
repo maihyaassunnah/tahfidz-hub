@@ -1677,15 +1677,15 @@ body.dark-mode .sigap-sidebar {
 }
 
 .sigap-brand {
-  padding: 22px 20px 14px 20px;
+  padding: 18px 16px 12px 16px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .sigap-logo-box {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
   border-radius: 12px;
   display: flex;
@@ -1696,11 +1696,15 @@ body.dark-mode .sigap-sidebar {
 }
 
 .sigap-brand-title {
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 900;
   color: #0f172a;
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.2;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 body.dark-mode .sigap-brand-title {
@@ -1708,10 +1712,11 @@ body.dark-mode .sigap-brand-title {
 }
 
 .sigap-brand-subtitle {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   color: #94a3b8;
   font-weight: 600;
   margin-top: 2px;
+  white-space: nowrap;
 }
 
 /* User Card Admin MA */
@@ -1947,36 +1952,116 @@ body.dark-mode .sigap-nav-item.active .sigap-nav-icon {
   color: #34d399;
 }
 
-/* Owner Role Sidebar Enhancements */
-.sigap-sidebar-owner .sigap-nav-item.active {
-  background: #fffbeb;
-  color: #b45309;
-  font-weight: 700;
-  border-left: 3.5px solid #d97706;
+/* Owner Role Sidebar — Modern Coral & Soft Pastel Theme (Sesuai Referensi Gambar) */
+.sigap-sidebar-owner {
+  background: #ffffff;
+  border-right: 1px solid #f1f3f9;
 }
 
-.sigap-sidebar-owner .sigap-nav-item.active .sigap-nav-icon {
-  color: #d97706;
-}
-
-body.dark-mode .sigap-sidebar-owner .sigap-nav-item.active {
-  background: rgba(245, 158, 11, 0.12);
-  color: #fbbf24;
-  border-left: 3.5px solid #f59e0b;
-}
-
-body.dark-mode .sigap-sidebar-owner .sigap-nav-item.active .sigap-nav-icon {
-  color: #f59e0b;
+.sigap-sidebar-owner .sigap-nav-item {
+  border-radius: 14px;
+  margin: 3px 14px;
+  padding: 10px 14px;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.88rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-left: none !important;
 }
 
 .sigap-sidebar-owner .sigap-nav-item:hover {
-  background: #fffdf5;
-  color: #92400e;
+  background: #fff7f5;
+  color: #ff5b35;
+}
+
+.sigap-sidebar-owner .sigap-nav-item.active {
+  background: #ffffff;
+  color: #ff5b35;
+  font-weight: 800;
+  border-left: none !important;
+  box-shadow: 0 6px 20px rgba(255, 91, 53, 0.16), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.sigap-sidebar-owner .sigap-nav-item.active .sigap-nav-icon {
+  color: #ff5b35;
+}
+
+.sigap-sidebar-owner .sigap-section-title {
+  color: #94a3b8;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+.sigap-sidebar-owner .sigap-section-line {
+  background: #f1f3f9;
+}
+
+body.dark-mode .sigap-sidebar-owner {
+  background: #0f172a;
+  border-right-color: #1e293b;
+}
+
+body.dark-mode .sigap-sidebar-owner .sigap-nav-item {
+  color: #94a3b8;
 }
 
 body.dark-mode .sigap-sidebar-owner .sigap-nav-item:hover {
-  background: #1f2937;
-  color: #fde68a;
+  background: rgba(255, 91, 53, 0.1);
+  color: #ff7b59;
+}
+
+body.dark-mode .sigap-sidebar-owner .sigap-nav-item.active {
+  background: #1e293b;
+  color: #ff7b59;
+  box-shadow: 0 6px 20px rgba(255, 91, 53, 0.22);
+}
+
+body.dark-mode .sigap-sidebar-owner .sigap-nav-item.active .sigap-nav-icon {
+  color: #ff7b59;
+}
+
+/* Owner Theme Helper Utilities */
+.owner-theme-coral-btn {
+  background: #ff5b35;
+  color: #ffffff;
+  border-radius: 24px;
+  padding: 8px 18px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(255, 91, 53, 0.25);
+}
+
+.owner-theme-coral-btn:hover {
+  background: #e04a25;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 91, 53, 0.35);
+}
+
+.owner-theme-peach-btn {
+  background: #fff0ec;
+  color: #ff5b35;
+  border-radius: 24px;
+  padding: 8px 18px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.owner-theme-peach-btn:hover {
+  background: #ffe4dd;
+  color: #e04a25;
 }
 
 /* Bottom Action Capsule */

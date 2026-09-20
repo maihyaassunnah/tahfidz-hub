@@ -362,7 +362,7 @@ export default function JadwalSigapView({ showToast }) {
     const item = {
       namaGuru: plottingForm.namaGuru,
       lokasiId: targetLokasi.id,
-      namaLokasi: `${targetLokasi.lokasi} (${targetLokasi.kelas})`,
+      namaLokasi: targetLokasi.lokasi || targetLokasi.nama || targetLokasi.kodeManual || 'Masjid Tahfidz',
       kodeQR: targetLokasi.kodeManual,
       sesi: plottingForm.sesi
     };
@@ -2374,13 +2374,13 @@ export default function JadwalSigapView({ showToast }) {
                     onChange={e => setPlottingForm({ ...plottingForm, lokasiId: e.target.value })}
                     searchable={true}
                     searchPlaceholder="Cari nama lokasi QR..."
-                    placeholder="-- Pilih Lokasi QR Kelas / Masjid --"
+                    placeholder="-- Pilih Titik Lokasi Presensi --"
                     required
                   >
-                    <option value="">-- Pilih Lokasi QR Kelas / Masjid --</option>
+                    <option value="">-- Pilih Titik Lokasi Presensi --</option>
                     {lokasiQRList.map(l => (
                       <option key={l.id} value={l.id}>
-                        {l.kelas} — {l.lokasi} ({l.kodeManual})
+                        {l.lokasi || l.kelas} ({l.kodeManual})
                       </option>
                     ))}
                   </CustomSelect>

@@ -152,7 +152,7 @@ export default function SetoranModal({ isOpen, onClose, onSave, santriList, hala
                     const h = halaqahList.find(item => item.id === s.halaqahId);
                     return (
                       <option key={s.id} value={s.id}>
-                        {s.nama} ({s.kelas} - {h ? h.nama.replace('Halaqah ', '') : ''})
+                        {s.nama} ({h ? h.nama : 'Halaqah'} - NIS: {s.nis})
                       </option>
                     );
                   })}
@@ -218,6 +218,46 @@ export default function SetoranModal({ isOpen, onClose, onSave, santriList, hala
                     </option>
                   ))}
                 </CustomSelect>
+
+                {/* Shortcut Surah Sering Disetor */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap', marginTop: '6px' }}>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--slate-500)' }}>
+                    Pintasan:
+                  </span>
+                  {[
+                    { id: 78, name: "An-Naba'" },
+                    { id: 67, name: "Al-Mulk" },
+                    { id: 18, name: "Al-Kahf" },
+                    { id: 36, name: "Yasin" },
+                    { id: 56, name: "Al-Waqi'ah" },
+                    { id: 2, name: "Al-Baqarah" }
+                  ].map(quick => (
+                    <button
+                      key={quick.id}
+                      type="button"
+                      onClick={() => {
+                        setSurahId(quick.id);
+                        const s = QURAN_SURAH.find(item => item.id === quick.id);
+                        if (s) {
+                          setAyatAwal(1);
+                          setAyatAkhir(Math.min(10, s.versesCount));
+                        }
+                      }}
+                      style={{
+                        background: surahId === quick.id ? '#ecfdf5' : '#f8fafc',
+                        border: surahId === quick.id ? '1px solid #10b981' : '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        padding: '2px 8px',
+                        fontSize: '0.68rem',
+                        fontWeight: surahId === quick.id ? 800 : 600,
+                        color: surahId === quick.id ? '#047857' : '#475569',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {quick.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

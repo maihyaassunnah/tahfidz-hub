@@ -15,11 +15,17 @@ import {
 import { storageService } from '../../services/storage';
 import CustomSelect from '../common/CustomSelect';
 
-export default function DataAlumniSigapView({ showToast }) {
-  const [alumniList, setAlumniList] = useState(storageService.getSigapAlumni());
+export default function DataAlumniSigapView({ showToast, activeBranchId }) {
+  const currentBranch = (storageService.getCabang() || []).find(c => c.id === activeBranchId) || storageService.getActiveBranch() || { nama: "MA Ihya As-Sunnah" };
+  const [alumniList, setAlumniList] = useState(() => storageService.getSigapAlumni(activeBranchId));
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTahun, setSelectedTahun] = useState('Semua Tahun');
   const [isAscending, setIsAscending] = useState(true);
+
+  // Sync saat activeBranchId berubah
+  React.useEffect(() => {
+    setAlumniList(storageService.getSigapAlumni(activeBranchId));
+  }, [activeBranchId]);
 
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -35,7 +41,7 @@ export default function DataAlumniSigapView({ showToast }) {
   });
 
   const reloadData = () => {
-    setAlumniList(storageService.getSigapAlumni());
+    setAlumniList(storageService.getSigapAlumni(activeBranchId));
   };
 
   const handleAddSubmit = (e) => {
@@ -116,7 +122,11 @@ export default function DataAlumniSigapView({ showToast }) {
           </div>
           <div>
             <h1 className="sigap-page-title">Data Alumni</h1>
-            <p className="sigap-page-subtitle">Kelola data alumni MA IHYA' AS-SUNNAH</p>
+            <p className="sigap-page-subtitle">
+              {(!activeBranchId || activeBranchId === 'ALL') 
+                ? "Kelola data alumni seluruh cabang yayasan (Konsolidasi Global)" 
+                : `Kelola data alumni cabang ${currentBranch.nama || "MA IHYA' AS-SUNNAH"}`}
+            </p>
           </div>
         </div>
 

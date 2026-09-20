@@ -20,15 +20,20 @@ import {
 import { storageService } from '../../services/storage';
 import CustomSelect from '../common/CustomSelect';
 
-export default function DataSiswaSigapView({ showToast }) {
-  const [siswaList, setSiswaList] = useState(storageService.getSigapSiswa());
+export default function DataSiswaSigapView({ showToast, activeBranchId }) {
+  const currentBranch = (storageService.getCabang() || []).find(c => c.id === activeBranchId) || storageService.getActiveBranch() || { nama: "MA Ihya As-Sunnah" };
+  const [siswaList, setSiswaList] = useState(() => storageService.getSigapSiswa(activeBranchId));
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGender, setSelectedGender] = useState('Semua Gender');
   const [selectedPengampu, setSelectedPengampu] = useState('Semua Pengampu');
   const [isAscending, setIsAscending] = useState(true);
 
+  React.useEffect(() => {
+    setSiswaList(storageService.getSigapSiswa(activeBranchId));
+  }, [activeBranchId]);
+
   // Ambil data guru & pegawai yang sudah terdaftar di sistem
-  const guruPegawaiList = storageService.getSigapGuru() || [];
+  const guruPegawaiList = storageService.getSigapGuru(activeBranchId) || [];
   const ustadzPengampuList = storageService.getPengampu() || [];
   const daftarPengampu = Array.from(
     new Set([
@@ -54,7 +59,7 @@ export default function DataSiswaSigapView({ showToast }) {
   });
 
   const reloadData = () => {
-    setSiswaList(storageService.getSigapSiswa());
+    setSiswaList(storageService.getSigapSiswa(activeBranchId));
   };
 
   const handleAddSubmit = (e) => {
@@ -96,14 +101,13 @@ export default function DataSiswaSigapView({ showToast }) {
   };
 
   const handleDownloadData = () => {
-    const headers = ["No", "Nama Siswa", "NIK", "L/P", "NISN/NISM", "Kelas", "Guru Pengampu", "Tanggal Lahir", "Wali Murid", "No Kontak"];
+    const headers = ["No", "Nama Siswa", "NIK", "L/P", "NISN/NISM", "Guru Pengampu", "Tanggal Lahir", "Wali Murid", "No Kontak"];
     const rows = siswaList.map((s, idx) => [
       idx + 1,
       `"${s.nama}"`,
       `"${s.nik || '-'}"`,
       `"${s.lp}"`,
       `"${s.nisn}"`,
-      `"${s.kelas}"`,
       `"${s.pengampu || '-'}"`,
       `"${s.tglLahir || '-'}"`,
       `"${s.wali || '-'}"`,
@@ -151,22 +155,16 @@ export default function DataSiswaSigapView({ showToast }) {
           </div>
           <div>
             <h1 className="sigap-page-title">Data Siswa</h1>
-            <p className="sigap-page-subtitle">Kelola data siswa jenjang MA IHYA' AS-SUNNAH</p>
+            <p className="sigap-page-subtitle">
+              {(!activeBranchId || activeBranchId === 'ALL') 
+                ? "Kelola data siswa seluruh cabang yayasan (Konsolidasi Global)" 
+                : `Kelola data siswa cabang ${currentBranch.nama || "MA IHYA' AS-SUNNAH"}`}
+            </p>
           </div>
         </div>
 
-        {/* 5 Tombol Aksi Kanan (Pada Mobile Otomatis Icon Saja, 1 Baris & Efek Hover) */}
+        {/* 4 Tombol Aksi Kanan (Pada Mobile Otomatis Icon Saja, 1 Baris & Efek Hover) */}
         <div className="sigap-page-actions sigap-mobile-action-bar">
-          {/* Kenaikan Kelas (Orange) */}
-          <button 
-            className="sigap-btn-orange" 
-            onClick={() => showToast && showToast("Modul Kenaikan Kelas Tahun Ajaran Aktif")}
-            title="Kenaikan Kelas"
-          >
-            <ArrowUpRight size={17} />
-            <span>Kenaikan Kelas</span>
-          </button>
-
           {/* + Tambah Siswa (Teal) */}
           <button 
             className="sigap-btn-teal" 
@@ -177,7 +175,7 @@ export default function DataSiswaSigapView({ showToast }) {
                 nik: '',
                 lp: 'L',
                 nisn: '',
-                kelas: 'X A',
+                kelas: '',
                 pengampu: '',
                 tglLahir: '',
                 wali: '',
@@ -275,39 +273,39 @@ export default function DataSiswaSigapView({ showToast }) {
         <table className="sigap-table">
           <thead>
             <tr>
-              <th style={{ width: '45px' }}>No</th>
-              <th>Nama Siswa</th>
-              <th style={{ width: '55px', textAlign: 'center' }}>L/P</th>
-              <th>NISN / NISM</th>
-              <th>Guru Pengampu</th>
-              <th>Tgl Lahir</th>
-              <th>Wali Murid</th>
-              <th style={{ width: '110px', textAlign: 'center' }}>Aksi</th>
+              <th style={{ width: '45px', textAlign: 'center' }}>No</th>
+              <th style={{ whiteSpace: 'nowrap' }}>Nama Siswa</th>
+              <th style={{ width: '55px', textAlign: 'center', whiteSpace: 'nowrap' }}>L/P</th>
+              <th style={{ whiteSpace: 'nowrap' }}>NISN / NISM</th>
+              <th style={{ whiteSpace: 'nowrap' }}>Guru Pengampu</th>
+              <th style={{ whiteSpace: 'nowrap' }}>Tgl Lahir</th>
+              <th style={{ whiteSpace: 'nowrap' }}>Wali Murid</th>
+              <th style={{ width: '110px', textAlign: 'center', whiteSpace: 'nowrap' }}>Aksi</th>
             </tr>
           </thead>
           <tbody>
             {filteredList.length > 0 ? (
               filteredList.map((item, index) => (
                 <tr key={item.id}>
-                  <td style={{ textAlign: 'center', color: '#64748b' }}>{index + 1}</td>
-                  <td>
+                  <td style={{ textAlign: 'center', color: '#64748b', padding: '8px 12px' }}>{index + 1}</td>
+                  <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
                     <div className="sigap-student-name">{item.nama}</div>
                     {item.nik && <div className="sigap-student-nik">NIK: {item.nik}</div>}
                   </td>
-                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#475569' }}>
+                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#475569', padding: '8px 12px', whiteSpace: 'nowrap' }}>
                     {item.lp}
                   </td>
-                  <td>
+                  <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
                     <span className="sigap-nisn-text">{item.nisn}</span>
                   </td>
-                  <td>
+                  <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
                     {item.pengampu ? (
                       <span style={{ 
-                        display: 'inline-flex', 
-                        alignItems: 'center', 
+                        display: 'inline-block', 
+                        whiteSpace: 'nowrap',
                         background: '#ecfdf5', 
                         color: '#065f46', 
-                        padding: '2px 8px', 
+                        padding: '3px 9px', 
                         borderRadius: '6px', 
                         fontSize: '12px', 
                         fontWeight: 700,
@@ -319,10 +317,10 @@ export default function DataSiswaSigapView({ showToast }) {
                       <span style={{ color: '#94a3b8', fontSize: '12px' }}>-</span>
                     )}
                   </td>
-                  <td style={{ color: '#475569', fontSize: '13px' }}>
+                  <td style={{ color: '#475569', fontSize: '13px', padding: '8px 12px', whiteSpace: 'nowrap' }}>
                     {item.tglLahir || '-'}
                   </td>
-                  <td>
+                  <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>
                     <div className="sigap-wali-name">{item.wali || '-'}</div>
                     {item.kontakWali && item.kontakWali !== '-' && (
                       <div className="sigap-wali-phone">

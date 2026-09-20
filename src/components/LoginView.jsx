@@ -279,6 +279,8 @@ export default function LoginView({ onLoginSuccess, isDarkMode }) {
           <div style={{
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
             gap: '10px',
             background: isDarkMode ? 'rgba(16, 185, 129, 0.12)' : '#f0fdf4',
             border: isDarkMode ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid #bbf7d0',
@@ -289,11 +291,36 @@ export default function LoginView({ onLoginSuccess, isDarkMode }) {
             marginBottom: '18px',
             lineHeight: 1.45
           }}>
-            <HeartHandshake size={18} color={isDarkMode ? '#34d399' : '#16a34a'} style={{ flexShrink: 0 }} />
-            <div>
-              <strong style={{ display: 'block', fontWeight: 700 }}>Akses Orang Tua / Wali:</strong>
-              <span>Gunakan <strong>Nama Lengkap Santri</strong> pada Username &amp; <strong>NIS Santri</strong> pada Kata Sandi.</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '220px' }}>
+              <HeartHandshake size={18} color={isDarkMode ? '#34d399' : '#16a34a'} style={{ flexShrink: 0 }} />
+              <div>
+                <strong style={{ display: 'block', fontWeight: 700 }}>Akses Orang Tua / Wali:</strong>
+                <span>Gunakan <strong>Nama Santri</strong> (Username) &amp; <strong>NIS</strong> (Kata Sandi).</span>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('Adilla', '39938383')}
+              style={{
+                background: '#059669',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)'
+              }}
+              title="1-Klik Buka Portal Wali Santri (Adilla)"
+            >
+              <span>Buka Portal Ortu</span>
+              <ExternalLink size={12} />
+            </button>
           </div>
 
           <form onSubmit={handleStandardLogin}>

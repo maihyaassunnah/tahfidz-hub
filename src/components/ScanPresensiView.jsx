@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  QrCode, 
-  CheckCircle2, 
-  Clock, 
-  Camera, 
-  Sparkles, 
-  Check, 
-  MapPin, 
-  AlertCircle, 
-  X, 
-  ArrowRight, 
-  Building2, 
-  Zap, 
+import {
+  QrCode,
+  CheckCircle2,
+  Clock,
+  Camera,
+  Sparkles,
+  Check,
+  MapPin,
+  AlertCircle,
+  X,
+  ArrowRight,
+  Building2,
+  Zap,
   RefreshCw,
   RotateCcw,
-  Volume2
+  Volume2,
+  KeyRound
 } from 'lucide-react';
 import { storageService } from '../services/storage';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -32,7 +33,7 @@ function playScanBeep(isSuccess = true) {
     const gain = ctx.createGain();
     osc.connect(gain);
     gain.connect(ctx.destination);
-    
+
     if (isSuccess) {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(784, ctx.currentTime); // G5
@@ -69,8 +70,8 @@ function calculateDistanceInMeters(lat1, lon1, lat2, lon2) {
   const dLon = ((pLon2 - pLon1) * Math.PI) / 180;
 
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1Rad) * Math.cos(lat2Rad) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return Math.round(R * c);
 }
@@ -93,7 +94,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
         const found = jadwalHalaqoh.sesiList.find(s => s.nama === stored || s.id === stored);
         if (found) return found.nama;
       }
-    } catch (e) {}
+    } catch (e) { }
     return null;
   })();
 
@@ -106,6 +107,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
   const [selectedLokasiId, setSelectedLokasiId] = useState(lokasiList[0]?.id || 'l-1789434655796');
   const [isScanningPengampu, setIsScanningPengampu] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [manualCodeInput, setManualCodeInput] = useState('');
 
   // State untuk Live Camera QR Scanner (html5-qrcode webcam)
   const [showLiveCamera, setShowLiveCamera] = useState(false);
@@ -139,8 +141,8 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
     if (pTgl && pTgl !== todayISO) return false;
     const cleanPGuru = storageService._cleanName(p.namaGuru || p.nama);
     const cleanMy = storageService._cleanName(currentPengampuNama);
-    return (cleanPGuru && cleanMy && (cleanPGuru === cleanMy || cleanPGuru.includes(cleanMy) || cleanMy.includes(cleanPGuru))) || 
-           (p.pengampuId && currentAuth?.id && p.pengampuId === currentAuth.id);
+    return (cleanPGuru && cleanMy && (cleanPGuru === cleanMy || cleanPGuru.includes(cleanMy) || cleanMy.includes(cleanPGuru))) ||
+      (p.pengampuId && currentAuth?.id && p.pengampuId === currentAuth.id);
   });
 
   // Otomatis buka kamera live jika sesi dikirimkan dari Dashboard
@@ -159,7 +161,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
             html5QrCodeRef.current.stop();
           }
           html5QrCodeRef.current.clear();
-        } catch (e) {}
+        } catch (e) { }
       }
     };
   }, []);
@@ -186,7 +188,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
   const startCameraScanner = async (targetSesiNama) => {
     const sesiNamaToUse = targetSesiNama || selectedSesiRef.current || selectedSesi;
     const sesiObjToUse = jadwalHalaqoh.sesiList.find(s => s.nama === sesiNamaToUse);
-    
+
     if (!sesiNamaToUse || !sesiObjToUse) {
       showToast && showToast('Silakan pilih sesi halaqah terlebih dahulu!');
       return;
@@ -205,7 +207,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
           await html5QrCodeRef.current.stop();
         }
         html5QrCodeRef.current.clear();
-      } catch (e) {}
+      } catch (e) { }
       html5QrCodeRef.current = null;
     }
 
@@ -267,7 +269,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
                 cam.id,
                 qrConfig,
                 onScanSuccessCallback,
-                () => {}
+                () => { }
               );
               started = true;
               setCameraLoading(false);
@@ -285,7 +287,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
               { facingMode: "environment" },
               qrConfig,
               onScanSuccessCallback,
-              () => {}
+              () => { }
             );
             started = true;
             setCameraLoading(false);
@@ -301,7 +303,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
               { facingMode: "user" },
               qrConfig,
               onScanSuccessCallback,
-              () => {}
+              () => { }
             );
             started = true;
             setCameraLoading(false);
@@ -357,7 +359,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
           await stopCameraScanner();
           handleProcessScannedCode(decodedText, selectedSesiRef.current || selectedSesi);
         },
-        () => {}
+        () => { }
       );
       setCameraLoading(false);
     } catch (e) {
@@ -381,9 +383,9 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
 
     setIsScanningPengampu(true);
     const res = storageService.scanPresensiPengampu(
-      currentPengampuNama, 
-      targetLokasi, 
-      sesiNamaToUse, 
+      currentPengampuNama,
+      targetLokasi,
+      sesiNamaToUse,
       sesiObjToUse?.id
     );
     setIsScanningPengampu(false);
@@ -392,7 +394,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
       playScanBeep(true);
       confetti({ particleCount: 65, spread: 70, origin: { y: 0.6 } });
-    } catch (e) {}
+    } catch (e) { }
 
     // BUKA POP-UP SUKSES DENGAN KETERANGAN LENGKAP
     setScanPopup({
@@ -407,7 +409,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
         jamScan: res.jamScan,
         status: res.status, // 'Tepat Waktu' | 'Terlambat'
         keterangan: res.keterangan || 'Tepat Waktu',
-        lokasi: `${targetLokasi.kelas} - ${targetLokasi.lokasi || ''}`,
+        lokasi: targetLokasi.lokasi || targetLokasi.kelas || targetLokasi.kodeManual || 'Titik Presensi',
         kodeQR: targetLokasi.kodeManual,
         gpsDetail: gpsDetail?.status || 'Lokasi Valid'
       }
@@ -416,6 +418,43 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
     showToast && showToast(`✓ Presensi Kehadiran ${sesiNamaToUse} Berhasil (${res.jamScan} WIB)!`);
     setRefreshTrigger(prev => prev + 1);
     onReload && onReload();
+  };
+
+  // Handle Presensi Manual dengan Mengetik Kode Lokasi
+  const handleManualCodeSubmit = (codeToUse, sesiToUse) => {
+    const code = (codeToUse || manualCodeInput || '').trim();
+    if (!code) {
+      showToast && showToast('Silakan masukkan kode manual lokasi presensi!');
+      return;
+    }
+
+    const sesiNamaToUse = sesiToUse || selectedSesiRef.current || selectedSesi || (jadwalHalaqoh?.sesiList?.[0]?.nama) || "Ba'da Subuh";
+    const allLocations = storageService.getSigapLokasiQR();
+
+    const matched = allLocations.find(l =>
+      (l.kodeManual && l.kodeManual.toLowerCase() === code.toLowerCase()) ||
+      (l.lokasi && l.lokasi.toLowerCase() === code.toLowerCase()) ||
+      (l.kelas && l.kelas.toLowerCase() === code.toLowerCase()) ||
+      (l.kodeManual && code.toLowerCase().includes(l.kodeManual.toLowerCase()))
+    );
+
+    if (!matched) {
+      playScanBeep(false);
+      showToast && showToast(`Kode "${code}" tidak ditemukan! Pastikan kode sesuai lokasi resmi.`);
+      return;
+    }
+
+    if (showLiveCamera) {
+      stopCameraScanner();
+    }
+
+    executePresensiPengampu(matched, {
+      status: 'Presensi Manual (Kode Resmi Valid)',
+      distance: 0,
+      maxRadius: matched.radiusMeter || 50,
+      accuracy: null
+    }, sesiNamaToUse);
+    setManualCodeInput('');
   };
 
   // Proses Validasi Kode QR yang discan
@@ -432,7 +471,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
     const allLocations = storageService.getSigapLokasiQR();
 
     // 1. Cari kecocokan lokasi berdasarkan kode manual, kelas, atau id
-    let matchedLokasi = allLocations.find(l => 
+    let matchedLokasi = allLocations.find(l =>
       (l.kodeManual && l.kodeManual.toLowerCase() === cleanCode.toLowerCase()) ||
       (l.kelas && l.kelas.toLowerCase() === cleanCode.toLowerCase()) ||
       (l.kodeManual && cleanCode.toLowerCase().includes(l.kodeManual.toLowerCase())) ||
@@ -443,7 +482,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
     // Jika kode QR berupa teks deskripsi ruangan
     if (!matchedLokasi && cleanCode) {
       const lower = cleanCode.toLowerCase();
-      matchedLokasi = allLocations.find(l => 
+      matchedLokasi = allLocations.find(l =>
         (l.lokasi && lower.includes(l.lokasi.toLowerCase())) ||
         (l.kelas && lower.includes(l.kelas.toLowerCase()))
       );
@@ -494,7 +533,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
                 userLng,
                 accuracy: userAcc,
                 sesiNama: sesiNamaToUse,
-                alasan: `Perangkat Anda terdeteksi berjarak ${distance} meter dari titik koordinat resmi ${matchedLokasi.kelas}.`,
+                alasan: `Perangkat Anda terdeteksi berjarak ${distance} meter dari titik koordinat resmi ${matchedLokasi.lokasi || matchedLokasi.kelas || 'presensi'}.`,
                 panduan: 'Jika Anda sudah berada di lokasi namun akurasi GPS indoor sedang lemah, Anda dapat menekan Konfirmasi di bawah untuk tetap mencatat kehadiran.'
               }
             });
@@ -639,11 +678,11 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
             const isSelected = selectedSesi === sesi.nama;
 
             return (
-              <div 
-                key={sesi.id} 
+              <div
+                key={sesi.id}
                 className={`sesi-chip ${isLibur ? 'libur-pink' : isSudah ? 'active-green' : 'belum-amber'} ${isSelected ? 'is-selected' : ''}`}
                 onClick={() => handleSessionClick(sesi)}
-                style={{ 
+                style={{
                   cursor: 'pointer',
                   border: isSelected ? '2.5px solid #059669' : undefined,
                   boxShadow: isSelected ? '0 0 0 3px rgba(5, 150, 105, 0.25)' : undefined,
@@ -656,8 +695,8 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
                 </span>
                 <div className="sesi-name">{sesi.nama}</div>
                 <div className="sesi-sub-info">
-                  {isSudah 
-                    ? `${presensi.jamScan} WIB` 
+                  {isSudah
+                    ? `${presensi.jamScan} WIB`
                     : `${sesi.mulai} - ${sesi.selesai}`}
                 </div>
               </div>
@@ -666,7 +705,128 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
         </div>
       </div>
 
-      {/* 2. REKAP STATUS PRESENSI REAL HARI INI */}
+      {/* 2. CARD ABSENSI MANUAL DENGAN MEMASUKKAN KODE LOKASI */}
+      <div className="card scan-card-pad" style={{ padding: '18px 20px', borderRadius: '18px', marginTop: '16px', background: '#ffffff', border: '1.5px solid #bbf7d0', boxShadow: '0 4px 14px rgba(5, 150, 105, 0.06)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <KeyRound size={16} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.02rem', fontWeight: 800, color: '#0f172a' }}>
+                Absensi Manual dengan Kode
+              </h3>
+            </div>
+            <p style={{ margin: '4px 0 0 0', fontSize: '0.76rem', color: '#64748b' }}>
+              Masukkan kode manual ruangan jika kamera tidak dapat memindai barcode secara langsung.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', background: '#f0fdf4', padding: '4px 10px', borderRadius: '8px', border: '1px solid #bbf7d0', color: '#065f46', fontWeight: 700 }}>
+            <span>Sesi:</span>
+            <strong>{selectedSesi || "Pilih Sesi"}</strong>
+          </div>
+        </div>
+
+        {/* Input Form Kode Manual */}
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ flex: '1 1 240px', position: 'relative' }}>
+            <input
+              type="text"
+              placeholder="Ketik kode ruangan (contoh: KANTOR, MSJ-IKH)..."
+              value={manualCodeInput}
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck="false"
+              onChange={(e) => setManualCodeInput(e.target.value.toUpperCase())}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleManualCodeSubmit(manualCodeInput, selectedSesi);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '11px 16px',
+                borderRadius: '12px',
+                border: '2px solid #059669',
+                fontSize: '1rem',
+                fontFamily: 'monospace',
+                fontWeight: 800,
+                letterSpacing: '1.5px',
+                color: '#065f46',
+                background: '#ffffff',
+                boxShadow: '0 2px 6px rgba(5, 150, 105, 0.08)',
+                outline: 'none'
+              }}
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleManualCodeSubmit(manualCodeInput, selectedSesi)}
+            style={{
+              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '11px 22px',
+              borderRadius: '12px',
+              fontSize: '0.88rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '7px',
+              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.28)',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <CheckCircle2 size={17} />
+            <span>Kirim Presensi Manual</span>
+          </button>
+        </div>
+
+        {/* Quick Clickable Chips of Registered Locations */}
+        {lokasiList.length > 0 && (
+          <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#64748b' }}>
+              ⚡ Ketuk kode cepat:
+            </span>
+            {lokasiList.map(l => (
+              <button
+                key={l.id}
+                type="button"
+                onClick={() => {
+                  setManualCodeInput(l.kodeManual);
+                  handleManualCodeSubmit(l.kodeManual, selectedSesi);
+                }}
+                style={{
+                  background: '#f0fdf4',
+                  border: '1px solid #86efac',
+                  borderRadius: '20px',
+                  padding: '4px 12px',
+                  fontSize: '0.74rem',
+                  fontFamily: 'monospace',
+                  fontWeight: 800,
+                  color: '#166534',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                  transition: 'all 0.15s ease'
+                }}
+                title={`Kirim presensi untuk ${l.lokasi || 'Lokasi Terdaftar'}`}
+              >
+                <span>📍 {l.kodeManual}</span>
+                <span style={{ fontSize: '10.5px', color: '#047857', fontWeight: 600 }}>({l.lokasi || 'Lokasi'})</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 3. REKAP STATUS PRESENSI REAL HARI INI */}
       <div className="card scan-card-pad" style={{ padding: '16px 18px', borderRadius: '16px', marginTop: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
           <div>
@@ -678,13 +838,13 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
             </p>
           </div>
 
-          <span style={{ 
-            background: '#ecfdf5', 
-            color: '#047857', 
-            padding: '3px 10px', 
-            borderRadius: '12px', 
-            fontSize: '0.74rem', 
-            fontWeight: 800 
+          <span style={{
+            background: '#ecfdf5',
+            color: '#047857',
+            padding: '3px 10px',
+            borderRadius: '12px',
+            fontSize: '0.74rem',
+            fontWeight: 800
           }}>
             {todayPengampuRecords.length} Sesi Hadir
           </span>
@@ -732,7 +892,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
             }
 
             return (
-              <div 
+              <div
                 key={sesi.id}
                 className="scan-presensi-row"
                 style={{
@@ -809,12 +969,12 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
       {/* ========================================================= */}
       {showLiveCamera && (
         <div className="modal-overlay" onClick={stopCameraScanner}>
-          <div 
-            className="modal-content" 
-            style={{ 
-              maxWidth: '500px', 
-              padding: 0, 
-              borderRadius: '24px', 
+          <div
+            className="modal-content"
+            style={{
+              maxWidth: '500px',
+              padding: 0,
+              borderRadius: '24px',
               overflow: 'hidden',
               boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
               animation: 'fadeIn 0.2s ease-out'
@@ -852,15 +1012,15 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
                 </div>
               </div>
 
-              <button 
+              <button
                 type="button"
                 onClick={stopCameraScanner}
-                style={{ 
-                  background: 'rgba(255,255,255,0.15)', 
-                  border: 'none', 
-                  color: '#ffffff', 
-                  width: '32px', 
-                  height: '32px', 
+                style={{
+                  background: 'rgba(255,255,255,0.15)',
+                  border: 'none',
+                  color: '#ffffff',
+                  width: '32px',
+                  height: '32px',
                   borderRadius: '50%',
                   cursor: 'pointer',
                   display: 'flex',
@@ -939,10 +1099,10 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
               </div>
 
               {/* Status Info Di Bawah Kamera */}
-              <div style={{ 
-                marginTop: '12px', 
-                display: 'flex', 
-                alignItems: 'center', 
+              <div style={{
+                marginTop: '12px',
+                display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'space-between',
                 fontSize: '0.74rem',
                 color: '#64748b'
@@ -976,58 +1136,65 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
                 )}
               </div>
 
-              {/* Simulasi Cepat Barcode (Opsi Bantu untuk Pengampu/Admin tanpa cetak fisik) */}
+              {/* Input Kode Manual & Pilihan Cepat di Modal Kamera */}
               <div style={{
                 marginTop: '14px',
-                padding: '10px 12px',
+                padding: '12px 14px',
                 background: '#f8fafc',
                 border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                textAlign: 'left'
+                borderRadius: '14px',
+                textAlign: 'left',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
               }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#475569', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <Building2 size={13} color="#059669" />
-                  <span>Scan Cepat Lokasi Terdaftar:</span>
-                </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <CustomSelect
-                    value={selectedLokasiId}
-                    onChange={(e) => setSelectedLokasiId(e.target.value)}
-                    style={{ flex: 1 }}
-                    triggerStyle={{ minHeight: '34px', fontSize: '11.5px', borderRadius: '8px', fontWeight: 700 }}
-                  >
-                    {lokasiList.map(l => (
-                      <option key={l.id} value={l.id}>
-                        {l.kelas} ({l.kodeManual}) — {l.lokasi || ''}
-                      </option>
-                    ))}
-                  </CustomSelect>
-
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const target = lokasiList.find(l => l.id === selectedLokasiId) || lokasiList[0];
-                      await stopCameraScanner();
-                      handleProcessScannedCode(target.kodeManual, selectedSesi);
-                    }}
-                    style={{
-                      background: '#059669',
-                      border: 'none',
-                      color: '#ffffff',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      fontSize: '11.5px',
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    <Zap size={13} />
-                    <span>Scan Ini</span>
-                  </button>
+                {/* 1. Ketik Kode Manual Langsung */}
+                <div>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#334155', marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <KeyRound size={13} color="#059669" />
+                    <span>Atau Ketik Kode Manual:</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <input
+                      type="text"
+                      placeholder="Ketik kode (cth: KANTOR, MSJ-IKH)..."
+                      value={manualCodeInput}
+                      onChange={(e) => setManualCodeInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleManualCodeSubmit(manualCodeInput, selectedSesi);
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '6px 10px',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '12px',
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        color: '#0f172a'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleManualCodeSubmit(manualCodeInput, selectedSesi)}
+                      style={{
+                        background: '#059669',
+                        border: 'none',
+                        color: '#ffffff',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        fontSize: '11.5px',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      Kirim Kode
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1060,31 +1227,31 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
       {/* 4. POP-UP MODAL HASIL PRESENSI (SUKSES / GAGAL / WARNING) */}
       {/* ========================================================= */}
       {scanPopup.isOpen && (
-        <div 
-          className="modal-overlay" 
+        <div
+          className="modal-overlay"
           style={{ zIndex: 1100 }}
           onClick={() => setScanPopup(prev => ({ ...prev, isOpen: false }))}
         >
-          <div 
+          <div
             className="modal-content pulse-badge"
-            style={{ 
-              maxWidth: '460px', 
-              padding: '0', 
-              borderRadius: '24px', 
+            style={{
+              maxWidth: '460px',
+              padding: '0',
+              borderRadius: '24px',
               overflow: 'hidden',
               boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
-              border: scanPopup.status === 'success' 
-                ? '2px solid #34d399' 
-                : scanPopup.status === 'warning' 
-                  ? '2px solid #fcd34d' 
+              border: scanPopup.status === 'success'
+                ? '2px solid #34d399'
+                : scanPopup.status === 'warning'
+                  ? '2px solid #fcd34d'
                   : '2px solid #f87171'
             }}
             onClick={e => e.stopPropagation()}
           >
             {/* Header Pop-up Sesuai Status */}
             <div style={{
-              background: scanPopup.status === 'success' 
-                ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' 
+              background: scanPopup.status === 'success'
+                ? 'linear-gradient(135deg, #059669 0%, #047857 100%)'
                 : scanPopup.status === 'warning'
                   ? 'linear-gradient(135deg, #d97706 0%, #b45309 100%)'
                   : 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
@@ -1093,18 +1260,18 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
               textAlign: 'center',
               position: 'relative'
             }}>
-              <button 
+              <button
                 type="button"
                 onClick={() => setScanPopup(prev => ({ ...prev, isOpen: false }))}
-                style={{ 
-                  position: 'absolute', 
-                  top: '16px', 
-                  right: '16px', 
-                  background: 'rgba(255,255,255,0.2)', 
-                  border: 'none', 
-                  color: '#ffffff', 
-                  width: '28px', 
-                  height: '28px', 
+                style={{
+                  position: 'absolute',
+                  top: '16px',
+                  right: '16px',
+                  background: 'rgba(255,255,255,0.2)',
+                  border: 'none',
+                  color: '#ffffff',
+                  width: '28px',
+                  height: '28px',
                   borderRadius: '50%',
                   cursor: 'pointer',
                   display: 'flex',
@@ -1287,7 +1454,7 @@ export default function ScanPresensiView({ santriList, onReload, showToast, setA
                         >
                           {lokasiList.map(l => (
                             <option key={l.id} value={l.id}>
-                              {l.kelas} ({l.kodeManual}) — {l.lokasi || ''}
+                              {l.lokasi || l.kelas} ({l.kodeManual})
                             </option>
                           ))}
                         </CustomSelect>

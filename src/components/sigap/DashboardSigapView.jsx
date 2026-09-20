@@ -30,14 +30,17 @@ import {
   Moon,
   Flame,
   Timer,
-  CheckCheck
+  CheckCheck,
+  ChevronDown
 } from 'lucide-react';
 import { storageService } from '../../services/storage';
 import CustomSelect from '../common/CustomSelect';
 
-export default function DashboardSigapView({ setActiveTab, showToast }) {
+export default function DashboardSigapView({ setActiveTab, showToast, activeBranchId }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  const currentBranch = (storageService.getCabang() || []).find(c => c.id === activeBranchId) || storageService.getActiveBranch() || { nama: "MA Ihya As-Sunnah" };
 
   const [monitoringData, setMonitoringData] = useState(() => storageService.getSigapMonitoring());
   const [izinList, setIzinList] = useState(() => storageService.getSigapIzinGuru());
@@ -49,8 +52,13 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
     return (storageService.getAllSetoranRaw ? storageService.getAllSetoranRaw().length : (storageService.getSetoran('ALL') || []).length) || 0;
   });
 
-  const siswaList = storageService.getSigapSiswa();
-  const guruList = storageService.getSigapGuru();
+  const [siswaList, setSiswaList] = useState(() => storageService.getSigapSiswa(activeBranchId));
+  const [guruList, setGuruList] = useState(() => storageService.getSigapGuru(activeBranchId));
+
+  useEffect(() => {
+    setSiswaList(storageService.getSigapSiswa(activeBranchId));
+    setGuruList(storageService.getSigapGuru(activeBranchId));
+  }, [activeBranchId]);
 
   // State Filter Presensi Pengampu (Filter Sesi: 'aktif' [default], 'subuh', 'pagi', 'ashar', 'malam', 'semua')
   const [sesiFilter, setSesiFilter] = useState('aktif');
@@ -82,6 +90,8 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
     setAllPengampu(storageService.getAllUniquePengampu('ALL'));
     setSesiList(storageService.getSesi());
     setTotalSetoran((storageService.getAllSetoranRaw ? storageService.getAllSetoranRaw().length : (storageService.getSetoran('ALL') || []).length) || 0);
+    setSiswaList(storageService.getSigapSiswa(activeBranchId));
+    setGuruList(storageService.getSigapGuru(activeBranchId));
   };
 
   // Real-time listener saat ada izin diajukan oleh pengampu atau presensi diupdate
@@ -118,27 +128,76 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
 
   // =========================================================================
   // DETEKSI SESI AKTIF SAAT INI (REAL-TIME DETECTION)
+  // Aturan User:
+  // 1. Jika ada sesi yang sedang berlangsung saat ini -> tampilkan sesi tersebut (Sedang Berlangsung).
+  // 2. Jika jadwal saat ini KOSONG (di luar jam sesi) -> tampilkan SESI SEBELUMNYA yang sudah lewat,
+  //    beserta statusnya (jika tidak absen maka otomatis ALPA).
+  // 3. Jika dini hari sebelum sesi pertama -> tampilkan sesi pertama hari ini.
   // =========================================================================
   const detectActiveSession = () => {
     const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
     const list = sesiList || [];
-    
-    // 1. Cek apakah ada sesi yang sedang berlangsung saat ini
-    for (const s of list) {
-      const [bukaH, bukaM] = (s.bukaScan || s.jamMulai || s.mulai || '05:00').split(':').map(Number);
-      const [endH, endM] = (s.jamSelesai || s.selesai || '06:30').split(':').map(Number);
-      const bMin = bukaH * 60 + bukaM;
-      const eMin = endH * 60 + endM;
-      if (nowMin >= bMin && nowMin <= eMin) {
-        return { ...s, isCurrentlyRunning: true };
+    if (list.length === 0) return null;
+
+    const parseMin = (str, fallback) => {
+      if (!str || typeof str !== 'string') return fallback;
+      const parts = str.trim().split(':');
+      if (parts.length < 2) return fallback;
+      const h = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      return (isNaN(h) || isNaN(m)) ? fallback : (h * 60 + m);
+    };
+
+    const getSessionTimes = (s) => {
+      const startMin = parseMin(s.bukaScan || s.jam_mulai || s.jamMulai || s.mulai, 5 * 60);
+      const mulaiMin = parseMin(s.jam_mulai || s.jamMulai || s.mulai || s.bukaScan, startMin);
+      const endMin = parseMin(s.jam_selesai || s.jamSelesai || s.selesai, mulaiMin + 90);
+      const batasMin = parseMin(s.batasScan || s.batas_scan, endMin);
+      return { startMin, mulaiMin, endMin, batasMin };
+    };
+
+    // Urutkan sesi secara kronologis berdasarkan jam mulai
+    const sortedList = [...list].sort((a, b) => {
+      return getSessionTimes(a).mulaiMin - getSessionTimes(b).mulaiMin;
+    });
+
+    // 1. Cek apakah ada sesi yang SEDANG BERLANGSUNG saat ini
+    for (const s of sortedList) {
+      const { startMin, endMin } = getSessionTimes(s);
+      if (nowMin >= startMin && nowMin <= endMin) {
+        return {
+          ...s,
+          isCurrentlyRunning: true,
+          isSesiSebelumnya: false,
+          labelStatus: 'Sedang Berlangsung'
+        };
       }
     }
 
-    // 2. Jika di luar jam sesi, cari sesi berikutnya atau yang paling relevan hari ini
-    if (nowMin < 7 * 60) return { ...(list.find(s => s.id === 'subuh') || list[0]), isCurrentlyRunning: false };
-    if (nowMin < 12 * 60) return { ...(list.find(s => s.id === 'pagi') || list[1] || list[0]), isCurrentlyRunning: false };
-    if (nowMin < 17 * 60 + 30) return { ...(list.find(s => s.id === 'ashar') || list[2] || list[0]), isCurrentlyRunning: false };
-    return { ...(list.find(s => s.id === 'malam') || list[3] || list[0]), isCurrentlyRunning: false };
+    // 2. Jika di luar jam sesi (jadwal kosong):
+    // Tampilkan SESI SEBELUMNYA yang sudah selesai hari ini!
+    const finishedSessions = sortedList.filter(s => {
+      const { endMin, batasMin } = getSessionTimes(s);
+      return nowMin > endMin || nowMin > batasMin;
+    });
+
+    if (finishedSessions.length > 0) {
+      const previousSession = finishedSessions[finishedSessions.length - 1];
+      return {
+        ...previousSession,
+        isCurrentlyRunning: false,
+        isSesiSebelumnya: true,
+        labelStatus: 'Sesi Sebelumnya'
+      };
+    }
+
+    // 3. Jika belum ada sesi yang mulai hari ini (misal dini hari sebelum Subuh):
+    return {
+      ...sortedList[0],
+      isCurrentlyRunning: false,
+      isSesiSebelumnya: false,
+      labelStatus: 'Sesi Terjadwal Berikutnya'
+    };
   };
 
   const activeDetectedSession = detectActiveSession();
@@ -148,24 +207,24 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
   // 1. SUDAH: Jika sudah absen -> Hadir (Tepat Waktu / Terlambat)
   // 2. IJIN: Jika ada pengajuan izin resmi yang disetujui / aktif
   // 3. BELUM: Jika belum absen dan waktu sekarang belum melewati batas absensi
-  // 4. ALPA: JIKA SUDAH LEWAT BATAS ABSENSI NYA MAKA OTOMATIS ALPA
+  // 4. ALPA: JIKA SUDAH LEWAT BATAS ABSENSI NYA ATAU SESI SUDAH LEWAT MAKA OTOMATIS ALPA
   // =========================================================================
   const evaluatePengampuAttendance = (p, sesi) => {
     const todayISO = storageService.getTodayISO ? storageService.getTodayISO() : currentTime.toISOString().split('T')[0];
     const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
 
-    const [startH, startM] = (sesi.mulai || sesi.jamMulai || '05:00').split(':').map(Number);
-    const [endH, endM] = (sesi.selesai || sesi.jamSelesai || '06:30').split(':').map(Number);
-    const [batasH, batasM] = (sesi.batasScan || '05:30').split(':').map(Number);
-    const [bukaH, bukaM] = (sesi.bukaScan || '04:45').split(':').map(Number);
+    const [startH, startM] = (sesi.mulai || sesi.jamMulai || sesi.jam_mulai || '05:00').split(':').map(Number);
+    const [endH, endM] = (sesi.selesai || sesi.jamSelesai || sesi.jam_selesai || '06:30').split(':').map(Number);
+    const [batasH, batasM] = (sesi.batasScan || sesi.batas_scan || '05:30').split(':').map(Number);
+    const [bukaH, bukaM] = (sesi.bukaScan || sesi.buka_scan || '04:45').split(':').map(Number);
 
     const startMin = startH * 60 + startM;
     const endMin = endH * 60 + endM;
     const batasMin = batasH * 60 + batasM;
     const bukaMin = bukaH * 60 + bukaM;
 
-    const isLewatBatas = nowMin > batasMin;
-    const isSessionStarted = nowMin >= bukaMin;
+    const isLewatBatas = nowMin > batasMin || sesi.isSesiSebelumnya || nowMin > endMin;
+    const isSessionStarted = nowMin >= bukaMin || sesi.isSesiSebelumnya;
     const cleanPName = storageService._cleanName(p.nama);
 
     // 1. Cek Kehadiran (SUDAH) di PENGAMPU_PRESENSI & liveFeed
@@ -284,7 +343,9 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
         label: 'Otomatis Alpa',
         keterangan: (matchedScan && matchedScan.keterangan && isExplicitAlpa)
           ? matchedScan.keterangan
-          : `Otomatis Alpa (Melewati Batas Waktu ${sesi.batasScan || '05:30'} WIB)`,
+          : sesi.isSesiSebelumnya
+            ? `Otomatis Alpa (Tidak Hadir pada Sesi ${sesi.nama})`
+            : `Otomatis Alpa (Melewati Batas Waktu ${sesi.batasScan || '05:30'} WIB)`,
         jamScan: '-',
         selisihMenit: 0,
         borderAccent: '#ef4444',
@@ -325,7 +386,18 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
   const sessionsToDisplay = useMemo(() => {
     if (sesiFilter === 'semua') return sesiList || [];
     if (sesiFilter === 'aktif') return activeDetectedSession ? [activeDetectedSession] : (sesiList || []).slice(0, 1);
-    const found = (sesiList || []).find(s => s.id === sesiFilter || (s.nama || '').toLowerCase().includes(sesiFilter.toLowerCase()));
+    const filter = (sesiFilter || '').toLowerCase();
+    const found = (sesiList || []).find(s => {
+      const sId = String(s.id || '').toLowerCase();
+      const sNama = String(s.nama || '').toLowerCase();
+      return sId === filter || 
+             sNama.includes(filter) ||
+             (filter === 'subuh' && (sNama.includes('subuh') || sNama.includes('shubuh'))) ||
+             (filter === 'pagi' && (sNama.includes('pagi') || sNama.includes('dhuha'))) ||
+             (filter === 'ashar' && (sNama.includes('ashar') || sNama.includes('asar'))) ||
+             (filter === 'malam' && sNama.includes('maghrib')) ||
+             (filter === 'maghrib' && sNama.includes('maghrib'));
+    });
     return found ? [found] : ((sesiList || []).slice(0, 1));
   }, [sesiFilter, sesiList, activeDetectedSession]);
 
@@ -384,10 +456,9 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
         const matchNama = (item.nama || '').toLowerCase().includes(q);
         const matchNip = (item.nip || '').toLowerCase().includes(q);
         const matchMapel = (item.mapel || '').toLowerCase().includes(q);
-        const matchKelas = (item.kelas || '').toLowerCase().includes(q);
         const matchSesi = (item.sesi || '').toLowerCase().includes(q);
         const matchKet = (item.evaluation.keterangan || '').toLowerCase().includes(q);
-        if (!matchNama && !matchNip && !matchMapel && !matchKelas && !matchSesi && !matchKet) {
+        if (!matchNama && !matchNip && !matchMapel && !matchSesi && !matchKet) {
           return false;
         }
       }
@@ -400,7 +471,7 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
   const handleExportCSV = () => {
     const headers = [
       "No", "Nama Pengampu", "NIP", "Peran", "Sesi Halaqah", 
-      "Halaqah Bimbingan", "Kelas / Lokasi", "Jadwal", "Batas Akhir Scan", 
+      "Halaqah Bimbingan", "Titik Lokasi Presensi", "Jadwal", "Batas Akhir Scan", 
       "Jam Scan", "Status Absensi", "Keterangan", "Selisih Menit", "Metode"
     ];
     const rows = filteredFeed.map((item, i) => [
@@ -556,8 +627,8 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
       {/* 1. HEADER DASHBOARD PERSIS GAMBAR 1 */}
       <div className="sigap-dash-header-row">
         <div>
-          <h1 className="sigap-dash-title">Dashboard MA IHYA' AS-SUNNAH</h1>
-          <p className="sigap-dash-subtitle">Manajemen data dan monitoring KBM.</p>
+          <h1 className="sigap-dash-title">Dashboard {currentBranch.nama ? currentBranch.nama.toUpperCase() : "MA IHYA' AS-SUNNAH"}</h1>
+          <p className="sigap-dash-subtitle">Manajemen data dan monitoring KBM {currentBranch.nama || 'MA Ihya As-Sunnah'}.</p>
         </div>
 
         <div className="sigap-dash-actions">
@@ -801,97 +872,70 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
         }}>
           {/* Baris 1: Tab Pilihan Sesi & Jam Digital */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-            {/* Quick Session Tabs */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#475569', display: 'flex', alignItems: 'center', gap: '4px', marginRight: '4px' }}>
-                <Clock size={14} color="#0d9488" />
-                <span>Pilih Sesi:</span>
-              </span>
-
-              {/* Tab 1: Sesi Aktif Saat Ini */}
-              <button
-                type="button"
-                className={`sigap-tab-pill ${sesiFilter === 'aktif' ? 'active' : ''}`}
-                onClick={() => setSesiFilter('aktif')}
-                style={{
-                  fontSize: '11.5px',
-                  padding: '5px 12px',
-                  fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: sesiFilter === 'aktif' ? '#0d9488' : '#ffffff',
-                  color: sesiFilter === 'aktif' ? '#ffffff' : '#0f766e',
-                  borderColor: sesiFilter === 'aktif' ? '#0f766e' : '#ccfbf1'
+            {/* Session Selector Dropdown */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <label 
+                htmlFor="sigap-sesi-dropdown-filter"
+                style={{ 
+                  fontSize: '12px', 
+                  fontWeight: 800, 
+                  color: '#475569', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '5px' 
                 }}
-                title="Menampilkan sesi yang sedang aktif atau terjadwal saat ini"
               >
-                <Flame size={13} color={sesiFilter === 'aktif' ? '#fef08a' : '#ea580c'} />
-                <span>Sesi Aktif: {activeDetectedSession?.nama || "Ba'da Subuh"}</span>
-                {activeDetectedSession?.isCurrentlyRunning && (
-                  <span style={{
-                    width: '7px',
-                    height: '7px',
-                    borderRadius: '50%',
-                    background: sesiFilter === 'aktif' ? '#fef08a' : '#10b981',
-                    boxShadow: '0 0 6px #10b981'
-                  }}></span>
-                )}
-              </button>
+                <Clock size={15} color="#0d9488" />
+                <span>Pilih Sesi:</span>
+              </label>
 
-              {/* Tab 2: Ba'da Subuh */}
-              <button
-                type="button"
-                className={`sigap-tab-pill ${sesiFilter === 'subuh' ? 'active' : ''}`}
-                onClick={() => setSesiFilter('subuh')}
-                style={{ fontSize: '11.5px', padding: '5px 11px', fontWeight: 700 }}
-              >
-                <Sunrise size={13} style={{ marginRight: '4px', display: 'inline' }} />
-                <span>Ba'da Subuh</span>
-              </button>
-
-              {/* Tab 3: Pagi / Dhuha */}
-              <button
-                type="button"
-                className={`sigap-tab-pill ${sesiFilter === 'pagi' ? 'active' : ''}`}
-                onClick={() => setSesiFilter('pagi')}
-                style={{ fontSize: '11.5px', padding: '5px 11px', fontWeight: 700 }}
-              >
-                <Sun size={13} style={{ marginRight: '4px', display: 'inline' }} />
-                <span>Pagi / Dhuha</span>
-              </button>
-
-              {/* Tab 4: Ba'da Ashar */}
-              <button
-                type="button"
-                className={`sigap-tab-pill ${sesiFilter === 'ashar' ? 'active' : ''}`}
-                onClick={() => setSesiFilter('ashar')}
-                style={{ fontSize: '11.5px', padding: '5px 11px', fontWeight: 700 }}
-              >
-                <CloudSun size={13} style={{ marginRight: '4px', display: 'inline' }} />
-                <span>Ba'da Ashar</span>
-              </button>
-
-              {/* Tab 5: Ba'da Maghrib */}
-              <button
-                type="button"
-                className={`sigap-tab-pill ${sesiFilter === 'malam' ? 'active' : ''}`}
-                onClick={() => setSesiFilter('malam')}
-                style={{ fontSize: '11.5px', padding: '5px 11px', fontWeight: 700 }}
-              >
-                <Moon size={13} style={{ marginRight: '4px', display: 'inline' }} />
-                <span>Ba'da Maghrib</span>
-              </button>
-
-              {/* Tab 6: Semua Sesi */}
-              <button
-                type="button"
-                className={`sigap-tab-pill ${sesiFilter === 'semua' ? 'active' : ''}`}
-                onClick={() => setSesiFilter('semua')}
-                style={{ fontSize: '11.5px', padding: '5px 11px', fontWeight: 700 }}
-              >
-                <span>Semua Sesi</span>
-              </button>
+              <div style={{ position: 'relative', minWidth: '270px' }}>
+                <select
+                  id="sigap-sesi-dropdown-filter"
+                  value={sesiFilter}
+                  onChange={(e) => setSesiFilter(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '7px 34px 7px 12px',
+                    borderRadius: '10px',
+                    border: '1.5px solid #0d9488',
+                    background: '#ffffff',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: '#0f766e',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 3px rgba(13, 148, 136, 0.12)',
+                    appearance: 'none',
+                    WebkitAppearance: 'none'
+                  }}
+                  title="Pilih filter sesi halaqah yang ingin dipantau"
+                >
+                  <option value="aktif">
+                    {activeDetectedSession?.isCurrentlyRunning 
+                      ? `🔥 Sesi Aktif: ${activeDetectedSession?.nama || "Ba'da Subuh"}`
+                      : activeDetectedSession?.isSesiSebelumnya
+                        ? `⏱️ Sesi Sebelumnya: ${activeDetectedSession?.nama || "Ba'da Subuh"}`
+                        : `📅 Sesi Terjadwal: ${activeDetectedSession?.nama || "Ba'da Subuh"}`}
+                  </option>
+                  <option value="subuh">🌅 Ba'da Subuh</option>
+                  <option value="pagi">☀️ Pagi / Dhuha</option>
+                  <option value="ashar">🌤️ Ba'da Ashar</option>
+                  <option value="malam">🌙 Ba'da Maghrib</option>
+                  <option value="semua">📋 Semua Sesi</option>
+                </select>
+                <ChevronDown 
+                  size={15} 
+                  color="#0d9488" 
+                  style={{ 
+                    position: 'absolute', 
+                    right: '11px', 
+                    top: '50%', 
+                    transform: 'translateY(-50%)', 
+                    pointerEvents: 'none' 
+                  }} 
+                />
+              </div>
             </div>
 
             {/* Jam Digital Real-Time WIB */}
@@ -922,24 +966,25 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
           {sessionsToDisplay.length === 1 && (() => {
             const curSesi = sessionsToDisplay[0];
             const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
-            const [startH, startM] = (curSesi.mulai || curSesi.jamMulai || '05:00').split(':').map(Number);
-            const [endH, endM] = (curSesi.selesai || curSesi.jamSelesai || '06:30').split(':').map(Number);
-            const [batasH, batasM] = (curSesi.batasScan || '05:30').split(':').map(Number);
-            const [bukaH, bukaM] = (curSesi.bukaScan || '04:45').split(':').map(Number);
+            const [startH, startM] = (curSesi.mulai || curSesi.jamMulai || curSesi.jam_mulai || '05:00').split(':').map(Number);
+            const [endH, endM] = (curSesi.selesai || curSesi.jamSelesai || curSesi.jam_selesai || '06:30').split(':').map(Number);
+            const [batasH, batasM] = (curSesi.batasScan || curSesi.batas_scan || '05:30').split(':').map(Number);
+            const [bukaH, bukaM] = (curSesi.bukaScan || curSesi.buka_scan || '04:45').split(':').map(Number);
 
             const startMin = startH * 60 + startM;
             const endMin = endH * 60 + endM;
             const batasMin = batasH * 60 + batasM;
             const bukaMin = bukaH * 60 + bukaM;
 
-            const isLewatBatas = nowMin > batasMin;
-            const isCurrentlyRunning = nowMin >= bukaMin && nowMin <= endMin;
+            const isSesiSebelumnya = curSesi.isSesiSebelumnya || (nowMin > endMin && nowMin > batasMin);
+            const isLewatBatas = nowMin > batasMin || isSesiSebelumnya || nowMin > endMin;
+            const isCurrentlyRunning = (nowMin >= bukaMin && nowMin <= endMin) && !isSesiSebelumnya;
             const minutesLeft = batasMin - nowMin;
 
             return (
               <div style={{
-                background: isLewatBatas ? '#fef2f2' : isCurrentlyRunning ? '#ecfdf5' : '#f0fdf4',
-                border: `1.5px solid ${isLewatBatas ? '#fecaca' : isCurrentlyRunning ? '#a7f3d0' : '#bbf7d0'}`,
+                background: isSesiSebelumnya ? '#fff1f2' : isLewatBatas ? '#fef2f2' : isCurrentlyRunning ? '#ecfdf5' : '#f0fdf4',
+                border: `1.5px solid ${isSesiSebelumnya ? '#fecdd3' : isLewatBatas ? '#fecaca' : isCurrentlyRunning ? '#a7f3d0' : '#bbf7d0'}`,
                 borderRadius: '10px',
                 padding: '10px 14px',
                 display: 'flex',
@@ -953,21 +998,25 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
                     width: '34px',
                     height: '34px',
                     borderRadius: '8px',
-                    background: isLewatBatas ? '#fee2e2' : isCurrentlyRunning ? '#d1fae5' : '#e0f2fe',
-                    color: isLewatBatas ? '#dc2626' : isCurrentlyRunning ? '#059669' : '#0284c7',
+                    background: isSesiSebelumnya || isLewatBatas ? '#fee2e2' : isCurrentlyRunning ? '#d1fae5' : '#e0f2fe',
+                    color: isSesiSebelumnya || isLewatBatas ? '#dc2626' : isCurrentlyRunning ? '#059669' : '#0284c7',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0
                   }}>
-                    {isLewatBatas ? <AlertTriangle size={18} /> : isCurrentlyRunning ? <Flame size={18} /> : <Clock size={18} />}
+                    {isSesiSebelumnya || isLewatBatas ? <AlertTriangle size={18} /> : isCurrentlyRunning ? <Flame size={18} /> : <Clock size={18} />}
                   </div>
                   <div>
-                    <div style={{ fontSize: '12.5px', fontWeight: 800, color: isLewatBatas ? '#991b1b' : '#065f46' }}>
-                      Sesi: {curSesi.nama} ({curSesi.jamMulai || curSesi.mulai} - {curSesi.jamSelesai || curSesi.selesai} WIB)
+                    <div style={{ fontSize: '12.5px', fontWeight: 800, color: isSesiSebelumnya || isLewatBatas ? '#991b1b' : '#065f46' }}>
+                      {isSesiSebelumnya ? `Sesi Sebelumnya: ${curSesi.nama}` : `Sesi: ${curSesi.nama}`} ({curSesi.jamMulai || curSesi.mulai} - {curSesi.jamSelesai || curSesi.selesai} WIB)
                     </div>
-                    <div style={{ fontSize: '11.5px', color: isLewatBatas ? '#b91c1c' : '#047857', marginTop: '2px', fontWeight: 600 }}>
-                      {isLewatBatas ? (
+                    <div style={{ fontSize: '11.5px', color: isSesiSebelumnya || isLewatBatas ? '#b91c1c' : '#047857', marginTop: '2px', fontWeight: 600 }}>
+                      {isSesiSebelumnya ? (
+                        <span>
+                          ⚠️ <b>Jadwal saat ini kosong (di luar jam halaqah).</b> Menampilkan evaluasi sesi sebelumnya (<b>{curSesi.nama}</b>). Batas waktu absensi telah berakhir, seluruh pengampu yang tidak hadir otomatis tercatat <b>ALPA</b>.
+                        </span>
+                      ) : isLewatBatas ? (
                         <span>
                           ⚠️ <b>Batas Waktu Absensi ({curSesi.batasScan || '05:30'} WIB) Telah Terlewati!</b> Seluruh pengampu yang belum presensi otomatis berstatus <b>ALPA</b>.
                         </span>
@@ -986,14 +1035,14 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                   <span style={{
-                    background: isLewatBatas ? '#dc2626' : isCurrentlyRunning ? '#059669' : '#64748b',
+                    background: isSesiSebelumnya ? '#be123c' : isLewatBatas ? '#dc2626' : isCurrentlyRunning ? '#059669' : '#64748b',
                     color: '#ffffff',
                     fontSize: '11px',
                     fontWeight: 800,
                     padding: '4px 10px',
                     borderRadius: '6px'
                   }}>
-                    {isLewatBatas ? 'Lewat Batas (Alpa)' : isCurrentlyRunning ? 'Sedang Berlangsung' : 'Terjadwal'}
+                    {isSesiSebelumnya ? 'Sesi Selesai (Otomatis Alpa)' : isLewatBatas ? 'Lewat Batas (Alpa)' : isCurrentlyRunning ? 'Sedang Berlangsung' : 'Terjadwal'}
                   </span>
                 </div>
               </div>
@@ -1336,8 +1385,8 @@ export default function DashboardSigapView({ setActiveTab, showToast }) {
                   <span style={{ fontWeight: 700, color: '#0f172a' }}>{selectedDetail.mapel}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e2e8f0', paddingBottom: '6px' }}>
-                  <span style={{ color: '#64748b' }}>Kelas & Lokasi:</span>
-                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{selectedDetail.kelas}</span>
+                  <span style={{ color: '#64748b' }}>Titik Lokasi:</span>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{selectedDetail.kelas || selectedDetail.lokasi || 'Masjid Tahfidz'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #e2e8f0', paddingBottom: '6px' }}>
                   <span style={{ color: '#64748b' }}>Metode Absensi:</span>

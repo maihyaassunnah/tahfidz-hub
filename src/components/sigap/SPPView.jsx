@@ -37,7 +37,6 @@ export default function SPPView({ showToast, activeBranchId }) {
   const [selectedBulan, setSelectedBulan] = useState('September 2026');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedCabang, setSelectedCabang] = useState(activeBranchId || 'all');
-  const [selectedKelas, setSelectedKelas] = useState('all');
 
   // Modal States
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -57,15 +56,20 @@ export default function SPPView({ showToast, activeBranchId }) {
       cabangId: selectedCabang,
       bulan: selectedBulan,
       status: selectedStatus,
-      kelas: selectedKelas,
       search: searchQuery
     });
     setSppList(list);
   };
 
   useEffect(() => {
+    if (activeBranchId) {
+      setSelectedCabang(activeBranchId === 'ALL' ? 'all' : activeBranchId);
+    }
+  }, [activeBranchId]);
+
+  useEffect(() => {
     loadData();
-  }, [selectedBulan, selectedStatus, selectedCabang, selectedKelas, searchQuery]);
+  }, [selectedBulan, selectedStatus, selectedCabang, searchQuery]);
 
   const allSantri = storageService.getSantri();
   const allCabang = storageService.getCabang();
@@ -95,7 +99,7 @@ export default function SPPView({ showToast, activeBranchId }) {
       santriId: firstSantri.id || '',
       santriNama: firstSantri.nama || '',
       nis: firstSantri.nis || '',
-      kelas: firstSantri.kelas || 'X-A',
+      kelas: '',
       cabangId: firstSantri.cabangId || 'cabang-pusat',
       wali: firstSantri.wali || 'Wali Santri',
       noHpWali: firstSantri.noHpWali || '',
@@ -128,7 +132,7 @@ export default function SPPView({ showToast, activeBranchId }) {
         santriId: s.id,
         santriNama: s.nama,
         nis: s.nis,
-        kelas: s.kelas,
+        kelas: '',
         cabangId: s.cabangId || 'cabang-pusat',
         wali: s.wali || '',
         noHpWali: s.noHpWali || ''
@@ -193,7 +197,6 @@ export default function SPPView({ showToast, activeBranchId }) {
       `----------------------------------------\n` +
       `No. Invoice: *${item.invoiceNo || item.invoice_no}*\n` +
       `Nama Santri: *${item.santriNama || item.santri_nama}* (${item.nis || '-'})\n` +
-      `Kelas: ${item.kelas || '-'}\n` +
       `Bulan Tagihan: *${item.bulan}*\n` +
       `Nominal: *${formatRupiah(item.nominal)}*\n` +
       `Status: *${item.status === 'Lunas' ? '✅ LUNAS' : '⚠️ BELUM LUNAS'}*\n` +
@@ -401,18 +404,6 @@ export default function SPPView({ showToast, activeBranchId }) {
             ))}
           </CustomSelect>
 
-          {/* Filter Kelas */}
-          <CustomSelect 
-            style={{ width: '150px' }}
-            triggerStyle={{ minHeight: '38px', borderRadius: '12px' }}
-            value={selectedKelas} 
-            onChange={(e) => setSelectedKelas(e.target.value)}
-          >
-            <option value="all">Semua Kelas</option>
-            <option value="X-A">Kelas X-A</option>
-            <option value="XI-A">Kelas XI-A</option>
-            <option value="XII-A">Kelas XII-A</option>
-          </CustomSelect>
         </div>
 
         <div className="spp-search-box">
@@ -444,7 +435,7 @@ export default function SPPView({ showToast, activeBranchId }) {
                   <th style={{ width: '40px' }}>No</th>
                   <th>No. Invoice</th>
                   <th>Nama Santri</th>
-                  <th>Kelas & Cabang</th>
+                  <th>Cabang Lembaga</th>
                   <th>Bulan Tagihan</th>
                   <th>Nominal</th>
                   <th>Metode & Tgl</th>
@@ -472,8 +463,7 @@ export default function SPPView({ showToast, activeBranchId }) {
                         </div>
                       </td>
                       <td>
-                        <div style={{ fontWeight: 600 }}>{item.kelas || '-'}</div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        <div style={{ fontWeight: 600 }}>
                           {item.cabangId === 'cabang-pusat' ? 'MA Pusat' : (item.cabangId || 'Pusat')}
                         </div>
                       </td>
@@ -584,7 +574,7 @@ export default function SPPView({ showToast, activeBranchId }) {
                   >
                     {allSantri.map(s => (
                       <option key={s.id} value={s.id}>
-                        {s.nama} ({s.nis}) — Kelas {s.kelas}
+                        {s.nama} ({s.nis})
                       </option>
                     ))}
                   </CustomSelect>
@@ -693,7 +683,7 @@ export default function SPPView({ showToast, activeBranchId }) {
                     style={{ width: '100%' }}
                     value={formData.catatan || ''}
                     onChange={(e) => setFormData({ ...formData, catatan: e.target.value })}
-                    placeholder="Contoh: Titipan melalui wali kelas"
+                    placeholder="Contoh: Titipan melalui musyrif / transfer"
                   />
                 </div>
               </div>
@@ -812,9 +802,9 @@ export default function SPPView({ showToast, activeBranchId }) {
                       </td>
                     </tr>
                     <tr>
-                      <td style={{ color: '#64748b' }}>Kelas / Tingkat</td>
+                      <td style={{ color: '#64748b' }}>Status Santri</td>
                       <td>:</td>
-                      <td style={{ fontWeight: 600 }}>{selectedInvoice.kelas || '-'}</td>
+                      <td style={{ fontWeight: 600 }}>Aktif</td>
                       <td style={{ color: '#64748b' }}>No. Referensi</td>
                       <td>:</td>
                       <td style={{ fontWeight: 600 }}>{selectedInvoice.nomorRef || selectedInvoice.nomor_ref || '-'}</td>

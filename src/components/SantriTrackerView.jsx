@@ -191,7 +191,6 @@ export default function SantriTrackerView({
 
   const filteredSantri = effectiveSantriList.filter(s => 
     (s.nama || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (s.kelas || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (s.nis || '').includes(searchTerm)
   );
 
@@ -412,7 +411,7 @@ export default function SantriTrackerView({
                         {s.nama}
                       </div>
                       <div style={{ fontSize: '0.70rem', color: '#64748b', marginTop: '1px' }}>
-                        {s.kelas} • {sHalaqah ? sHalaqah.nama.replace('Halaqah ', '') : 'Halaqah'}
+                        {sHalaqah ? sHalaqah.nama : 'Halaqah Bimbingan'} • NIS: {s.nis}
                       </div>
                     </div>
                   </div>
@@ -599,19 +598,6 @@ export default function SantriTrackerView({
                     marginTop: '10px',
                     fontSize: '0.78rem'
                   }}>
-                    <span style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      background: '#f8fafc',
-                      padding: '4px 10px',
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      color: '#475569'
-                    }}>
-                      <GraduationCap size={13} color="#15803d" />
-                      <span><strong>Kelas:</strong> {currentSantri.kelas}</span>
-                    </span>
 
                     <span style={{
                       display: 'inline-flex',
@@ -1265,7 +1251,7 @@ export default function SantriTrackerView({
                     Kelola Capaian Juz {selectedJuzModal}
                   </h3>
                   <div style={{ fontSize: '0.76rem', opacity: 0.9 }}>
-                    Santri: <strong>{currentSantri.nama}</strong> ({currentSantri.kelas})
+                    Santri: <strong>{currentSantri.nama}</strong> (NIS: {currentSantri.nis})
                   </div>
                 </div>
               </div>

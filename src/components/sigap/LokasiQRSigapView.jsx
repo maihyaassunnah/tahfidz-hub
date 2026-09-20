@@ -60,8 +60,8 @@ function RealQRCodeImage({ value, size = 76 }) {
   );
 }
 
-export default function LokasiQRSigapView({ showToast }) {
-  const [lokasiList, setLokasiList] = useState(storageService.getSigapLokasiQR());
+export default function LokasiQRSigapView({ showToast, activeBranchId }) {
+  const [lokasiList, setLokasiList] = useState(() => storageService.getSigapLokasiQR(activeBranchId));
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingLokasi, setEditingLokasi] = useState(null);
 
@@ -80,15 +80,15 @@ export default function LokasiQRSigapView({ showToast }) {
     radiusMeter: 50
   });
 
-  // Pastikan data tersinkronisasi jika ada perubahan storage
+  // Pastikan data tersinkronisasi jika ada perubahan storage atau cabang
   const reloadData = () => {
-    const list = storageService.getSigapLokasiQR();
+    const list = storageService.getSigapLokasiQR(activeBranchId);
     setLokasiList(list);
   };
 
   useEffect(() => {
     reloadData();
-  }, []);
+  }, [activeBranchId]);
 
   // Helper: Set Titik Presensi Kampus MAIAS Tasikmalaya
   const handleSetPresetMaias = () => {
@@ -130,108 +130,103 @@ export default function LokasiQRSigapView({ showToast }) {
     showToast && showToast("Format koordinat tidak terbaca. Contoh format: -7.327415, 108.215542");
   };
 
-  // Ambil Titik GPS Asli dari Perangkat (Dengan Multi-Stage Fallback Cepat)
+  // Ambil Titik GPS Asli dari Perangkat (Dengan Multi-Stage Fallback Handal & Cepat)
   const handleGetRealGPS = async () => {
-    if (!navigator.geolocation) {
-      alert("Browser Anda tidak mendukung deteksi Geolocation / GPS.");
-      return;
-    }
-
     setIsGettingGPS(true);
     setGpsError(null);
     setGpsAccuracy(null);
 
-    const queryPosition = (options) => {
-      return new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, options);
-      });
-    };
-
-    try {
-      // TAHAP 1: Coba Fast Geolocation (enableHighAccuracy: false) - Sangat cepat di PC/Laptop/Wi-Fi
-      let position = null;
+    // 1. Coba browser Geolocation dengan timeout pendek (3.5 detik)
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
       try {
-        position = await queryPosition({
-          enableHighAccuracy: false,
-          timeout: 7000,
-          maximumAge: 300000
-        });
-      } catch (e1) {
-        // TAHAP 2: Jika gagal, coba dengan akurasi tinggi (jika perangkat memiliki chip satelit GPS)
-        try {
-          position = await queryPosition({
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 60000
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: false,
+            timeout: 3500,
+            maximumAge: 120000
           });
-        } catch (e2) {
-          throw e2;
-        }
-      }
-
-      if (position && position.coords) {
-        const lat = Number(position.coords.latitude.toFixed(6));
-        const lng = Number(position.coords.longitude.toFixed(6));
-        const acc = Math.round(position.coords.accuracy || 15);
-
-        setFormData(prev => ({
-          ...prev,
-          lat,
-          lng,
-          locked: true
-        }));
-        setGpsAccuracy(acc);
-        setIsGettingGPS(false);
-        showToast && showToast(`Titik GPS berhasil dikunci! (Akurasi: ±${acc}m)`);
-        return;
-      }
-    } catch (error) {
-      console.warn("Browser GPS timeout/error, mencoba IP Geolocation fallback...", error);
-      
-      // TAHAP 3: IP Geolocation Fallback
-      try {
-        const res = await fetch('https://ipapi.co/json/');
-        const data = await res.json();
-        if (data && data.latitude && data.longitude) {
-          const lat = Number(Number(data.latitude).toFixed(6));
-          const lng = Number(Number(data.longitude).toFixed(6));
-          setFormData(prev => ({
-            ...prev,
-            lat,
-            lng,
-            locked: true
-          }));
-          setGpsAccuracy(100);
+        });
+        if (pos && pos.coords) {
+          const lat = Number(pos.coords.latitude.toFixed(6));
+          const lng = Number(pos.coords.longitude.toFixed(6));
+          const acc = Math.round(pos.coords.accuracy || 15);
+          setFormData(prev => ({ ...prev, lat, lng, locked: true }));
+          setGpsAccuracy(acc);
           setIsGettingGPS(false);
-          setGpsError(`GPS Satelit timeout. Berhasil mendapatkan titik lokasi jaringan/Wi-Fi (${data.city || 'Jawa Barat'}).`);
-          showToast && showToast(`Lokasi jaringan/IP berhasil diambil (${data.city || ''})`);
+          showToast && showToast(`Titik GPS Perangkat berhasil dideteksi! (±${acc}m)`);
           return;
         }
-      } catch (ipErr) {
-        console.warn("IP Fallback failed:", ipErr);
+      } catch (errGeo) {
+        console.warn("Browser GPS gagal/timeout, beralih ke deteksi IP...", errGeo);
+        if (errGeo && errGeo.code === 1) {
+          setGpsError("Akses GPS diblokir oleh browser. Klik ikon gembok/setelan situs di samping URL browser untuk mengaktifkan izin 'Lokasi', atau gunakan tombol preset Kampus / tempel URL Google Maps.");
+        }
       }
-
-      setIsGettingGPS(false);
-      let errMsg = "Waktu permintaan GPS habis (Timeout). Komputer desktop seringkali tidak memiliki chip satelit GPS.";
-      if (error.code === 1) errMsg = "Izin akses lokasi ditolak oleh browser. Klik ikon gembok di URL browser untuk mengizinkan lokasi.";
-      else if (error.code === 2) errMsg = "Sinyal GPS tidak tersedia pada perangkat.";
-      setGpsError(errMsg);
-      showToast && showToast(errMsg);
     }
+
+    // 2. Fallback Provider 1: ipwho.is (sangat handal, open CORS)
+    try {
+      const res = await fetch('https://ipwho.is/');
+      const data = await res.json();
+      if (data && data.success && data.latitude && data.longitude) {
+        const lat = Number(Number(data.latitude).toFixed(6));
+        const lng = Number(Number(data.longitude).toFixed(6));
+        setFormData(prev => ({ ...prev, lat, lng, locked: true }));
+        setGpsAccuracy(50);
+        setIsGettingGPS(false);
+        showToast && showToast(`Lokasi jaringan Wi-Fi/IP berhasil dideteksi (${data.city || 'Jawa Barat'})!`);
+        return;
+      }
+    } catch (e1) {
+      console.warn("ipwho.is failed, trying freeipapi...", e1);
+    }
+
+    // 3. Fallback Provider 2: freeipapi.com
+    try {
+      const res = await fetch('https://freeipapi.com/api/json');
+      const data = await res.json();
+      if (data && data.latitude && data.longitude) {
+        const lat = Number(Number(data.latitude).toFixed(6));
+        const lng = Number(Number(data.longitude).toFixed(6));
+        setFormData(prev => ({ ...prev, lat, lng, locked: true }));
+        setGpsAccuracy(60);
+        setIsGettingGPS(false);
+        showToast && showToast(`Lokasi jaringan berhasil dideteksi (${data.cityName || 'Indonesia'})!`);
+        return;
+      }
+    } catch (e2) {
+      console.warn("freeipapi failed, applying campus preset...", e2);
+    }
+
+    // 4. Fallback Default Kampus MAIAS jika offline / terisolasi
+    setFormData(prev => ({
+      ...prev,
+      lat: -7.327415,
+      lng: 108.215542,
+      locked: true
+    }));
+    setGpsAccuracy(10);
+    setIsGettingGPS(false);
+    showToast && showToast("Titik Kampus MAIAS (-7.327415, 108.215542) otomatis diterapkan.");
   };
 
   const handleAddSubmit = (e) => {
     e.preventDefault();
-    if (!formData.kelas || !formData.lokasi) {
-      alert("Kelas dan Lokasi wajib diisi!");
+    if (!formData.lokasi || !formData.lokasi.trim()) {
+      alert("Nama Titik Lokasi Presensi wajib diisi!");
       return;
     }
 
-    // Pastikan koordinat tersimpan sebagai angka valid (bersihkan koma jika ada)
+    const cleanLokasi = formData.lokasi.trim();
     const cleanLat = Number(parseFloat(String(formData.lat).replace(',', '.')).toFixed(6)) || -7.327415;
     const cleanLng = Number(parseFloat(String(formData.lng).replace(',', '.')).toFixed(6)) || 108.215542;
+    const cleanKode = (formData.kodeManual || cleanLokasi.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 8)).trim();
+
     const cleanPayload = {
       ...formData,
+      lokasi: cleanLokasi,
+      kelas: cleanLokasi,
+      kodeManual: cleanKode,
       lat: cleanLat,
       lng: cleanLng,
       radiusMeter: parseInt(formData.radiusMeter) || 50
@@ -242,13 +237,10 @@ export default function LokasiQRSigapView({ showToast }) {
         ...cleanPayload,
         gpsStatus: formData.locked ? 'GPS: Locked' : 'GPS: Tidak Wajib'
       });
-      showToast && showToast(`Titik lokasi ${formData.kelas} berhasil diperbarui!`);
+      showToast && showToast(`Titik lokasi ${cleanLokasi} berhasil diperbarui!`);
     } else {
-      storageService.addSigapLokasiQR({
-        ...cleanPayload,
-        kodeManual: formData.kodeManual || `MAIAS-${formData.kelas.replace(/\s+/g, '')}`
-      });
-      showToast && showToast(`Titik lokasi ${formData.kelas} berhasil ditambahkan!`);
+      storageService.addSigapLokasiQR(cleanPayload);
+      showToast && showToast(`Titik lokasi ${cleanLokasi} berhasil ditambahkan!`);
     }
 
     reloadData();
@@ -257,9 +249,8 @@ export default function LokasiQRSigapView({ showToast }) {
     setGpsAccuracy(null);
     setGpsError(null);
     setFormData({
-      kelas: 'X A',
       lokasi: '',
-      kodeManual: 'MAIAS-XA',
+      kodeManual: '',
       locked: true,
       lat: -7.327415,
       lng: 108.215542,
@@ -267,11 +258,11 @@ export default function LokasiQRSigapView({ showToast }) {
     });
   };
 
-  const handleDelete = (id, kelas) => {
-    if (window.confirm(`Hapus titik presensi QR kelas ${kelas}?`)) {
+  const handleDelete = (id, namaLokasi) => {
+    if (window.confirm(`Hapus titik presensi QR ${namaLokasi}?`)) {
       storageService.deleteSigapLokasiQR(id);
       reloadData();
-      showToast && showToast(`Titik QR kelas ${kelas} berhasil dihapus.`);
+      showToast && showToast(`Titik QR ${namaLokasi} berhasil dihapus.`);
     }
   };
 
@@ -374,8 +365,8 @@ export default function LokasiQRSigapView({ showToast }) {
             <QrCode size={22} />
           </div>
           <div>
-            <h1 className="sigap-page-title">QR & Lokasi Kelas</h1>
-            <p className="sigap-page-subtitle">Atur titik presensi, kode unik QR, dan koordinat GPS asli ruangan.</p>
+            <h1 className="sigap-page-title">QR & Lokasi Presensi</h1>
+            <p className="sigap-page-subtitle">Atur titik presensi, kode unik QR, dan koordinat GPS resmi.</p>
           </div>
         </div>
 
@@ -544,60 +535,48 @@ export default function LokasiQRSigapView({ showToast }) {
 
             <form onSubmit={handleAddSubmit}>
               <div className="modal-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {/* 1. PILIH KELAS */}
+                {/* 1. NAMA TITIK LOKASI / RUANGAN (TANPA PILIH KELAS) */}
                 <div className="form-group">
                   <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155' }}>
-                    Pilih Kelas *
-                  </label>
-                  <CustomSelect 
-                    triggerStyle={{ minHeight: '42px', borderRadius: '12px' }}
-                    value={formData.kelas}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      kelas: e.target.value,
-                      kodeManual: `MAIAS-${e.target.value.replace(/\s+/g, '')}`
-                    })}
-                  >
-                    <option value="X A">X A</option>
-                    <option value="X B">X B</option>
-                    <option value="XI A">XI A</option>
-                    <option value="XI B">XI B</option>
-                    <option value="XII A">XII A</option>
-                    <option value="XII B">XII B</option>
-                    <option value="Masjid Tahfidz">Masjid Tahfidz Ikhwan</option>
-                    <option value="Aula Tahfidz">Aula Tahfidz Akhwat</option>
-                  </CustomSelect>
-                </div>
-
-                {/* 2. NAMA / TITIK RUANGAN */}
-                <div className="form-group">
-                  <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155' }}>
-                    Nama / Titik Ruangan *
+                    Nama Titik Lokasi Presensi *
                   </label>
                   <input 
                     type="text"
                     className="form-input"
-                    placeholder="Contoh: Gedung B, Lt 1 / Lokal Ikhwan Lantai 2"
+                    placeholder="Contoh: Masjid Tahfidz Ikhwan / Kantor / Aula Akhwat"
                     value={formData.lokasi}
-                    onChange={(e) => setFormData({ ...formData, lokasi: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData(prev => ({
+                        ...prev, 
+                        lokasi: val,
+                        kodeManual: prev.kodeManual || val.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 8)
+                      }));
+                    }}
+                    style={{ minHeight: '42px', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 600 }}
                     required
                   />
+                  <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
+                    Nama titik presensi resmi untuk seluruh santri & ustadz pengampu (bebas tanpa terikat kelas).
+                  </small>
                 </div>
 
-                {/* 3. KODE MANUAL KELAS */}
+                {/* 2. KODE MANUAL LOKASI */}
                 <div className="form-group">
                   <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155' }}>
-                    Kode Manual Kelas
+                    Kode Manual Lokasi *
                   </label>
                   <input 
                     type="text"
                     className="form-input"
+                    placeholder="Contoh: KANTOR, MSJ-IKH, AULA-01"
                     value={formData.kodeManual}
-                    onChange={(e) => setFormData({ ...formData, kodeManual: e.target.value })}
-                    style={{ fontFamily: 'monospace', fontWeight: 700 }}
+                    onChange={(e) => setFormData({ ...formData, kodeManual: e.target.value.toUpperCase() })}
+                    style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '0.92rem', letterSpacing: '1px', textTransform: 'uppercase' }}
+                    required
                   />
                   <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
-                    Digunakan jika kamera siswa bermasalah saat scan QR.
+                    Kode ini dapat diketik manual oleh Ustadz Pengampu jika kamera scan bermasalah.
                   </small>
                 </div>
 

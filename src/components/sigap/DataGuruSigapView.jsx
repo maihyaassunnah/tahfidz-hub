@@ -24,10 +24,15 @@ import {
 import { storageService } from '../../services/storage';
 import CustomSelect from '../common/CustomSelect';
 
-export default function DataGuruSigapView({ showToast }) {
-  const [guruList, setGuruList] = useState(storageService.getSigapGuru());
+export default function DataGuruSigapView({ showToast, activeBranchId }) {
+  const currentBranch = (storageService.getCabang() || []).find(c => c.id === activeBranchId) || storageService.getActiveBranch() || { nama: "MA Ihya As-Sunnah" };
+  const [guruList, setGuruList] = useState(() => storageService.getSigapGuru(activeBranchId));
   const [searchTerm, setSearchTerm] = useState('');
   const [isAscending, setIsAscending] = useState(true);
+
+  React.useEffect(() => {
+    setGuruList(storageService.getSigapGuru(activeBranchId));
+  }, [activeBranchId]);
 
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -48,7 +53,7 @@ export default function DataGuruSigapView({ showToast }) {
   });
 
   const reloadData = () => {
-    setGuruList(storageService.getSigapGuru());
+    setGuruList(storageService.getSigapGuru(activeBranchId));
   };
 
   const handleAddSubmit = (e) => {
@@ -158,7 +163,11 @@ export default function DataGuruSigapView({ showToast }) {
           </div>
           <div>
             <h1 className="sigap-page-title">Data Guru & Pegawai</h1>
-            <p className="sigap-page-subtitle">Manajemen SDM jenjang MA IHYA' AS-SUNNAH</p>
+            <p className="sigap-page-subtitle">
+              {(!activeBranchId || activeBranchId === 'ALL') 
+                ? "Manajemen SDM seluruh cabang yayasan (Konsolidasi Global)" 
+                : `Manajemen SDM cabang ${currentBranch.nama || "MA IHYA' AS-SUNNAH"}`}
+            </p>
           </div>
         </div>
 
@@ -245,8 +254,35 @@ export default function DataGuruSigapView({ showToast }) {
       </div>
 
       {/* 3. GRID KARTU GURU & PEGAWAI (3 KOLOM PERSIS GAMBAR 3) */}
-      <div className="sigap-guru-grid">
-        {filteredList.map((item) => (
+      {filteredList.length === 0 ? (
+        <div style={{
+          background: '#ffffff',
+          borderRadius: '16px',
+          padding: '3rem 1.5rem',
+          textAlign: 'center',
+          border: '1.5px dashed #cbd5e1',
+          margin: '1.5rem 0'
+        }}>
+          <Users size={48} style={{ color: '#94a3b8', margin: '0 auto 1rem auto', display: 'block' }} />
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.4rem' }}>
+            Belum Ada Data Guru & Pegawai
+          </h3>
+          <p style={{ fontSize: '0.85rem', color: '#64748b', maxWidth: '450px', margin: '0 auto 1.25rem auto' }}>
+            {searchTerm ? `Tidak ditemukan guru/pegawai dengan kata kunci "${searchTerm}".` : `Belum ada data guru/pegawai untuk cabang ${currentBranch.nama || 'ini'}.`}
+          </p>
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm('')} 
+              className="sigap-btn-teal"
+              style={{ padding: '0.5rem 1rem' }}
+            >
+              Reset Pencarian
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="sigap-guru-grid">
+          {filteredList.map((item) => (
           <div key={item.id} className="sigap-guru-card">
             {/* Top Row: Avatar + Name + NIP + Badges */}
             <div className="sigap-guru-card-top">
@@ -343,6 +379,7 @@ export default function DataGuruSigapView({ showToast }) {
           </div>
         ))}
       </div>
+      )}
 
       {/* MODAL: TAMBAH / EDIT GURU */}
       {showAddModal && (
@@ -414,7 +451,7 @@ export default function DataGuruSigapView({ showToast }) {
                       type="text" 
                       required 
                       className="form-input" 
-                      placeholder="Pengampu Tahfidz / Koordinator / Wali Kelas"
+                      placeholder="Pengampu Tahfidz / Koordinator / Musyrif"
                       value={formData.jabatan}
                       onChange={(e) => setFormData({ ...formData, jabatan: e.target.value })}
                     />

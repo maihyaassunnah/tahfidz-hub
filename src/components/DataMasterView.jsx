@@ -32,7 +32,7 @@ export default function DataMasterView({
   const [newSantri, setNewSantri] = useState({
     nama: '',
     nis: '',
-    kelas: 'X MA Tahfidz',
+    kelas: '',
     halaqahId: halaqahList[0]?.id || 'h1',
     targetJuz: 10,
     namaWali: '',
@@ -59,7 +59,7 @@ export default function DataMasterView({
     setNewSantri({
       nama: '',
       nis: '',
-      kelas: 'X MA Tahfidz',
+      kelas: '',
       halaqahId: halaqahList[0]?.id || 'h1',
       targetJuz: 10,
       namaWali: '',
@@ -180,7 +180,6 @@ export default function DataMasterView({
                   <tr>
                     <th>NIS</th>
                     <th>Nama Santri</th>
-                    <th>Kelas</th>
                     <th>Halaqah</th>
                     <th>Target Hafalan</th>
                     <th>Capaian Mutqin</th>
@@ -197,7 +196,6 @@ export default function DataMasterView({
                         <td>
                           <div style={{ fontWeight: 700, color: 'var(--slate-900)' }}>{s.nama}</div>
                         </td>
-                        <td>{s.kelas}</td>
                         <td>{h ? h.nama.replace('Halaqah ', '') : '-'}</td>
                         <td>
                           <strong>{s.targetJuz} Juz</strong>
@@ -448,29 +446,17 @@ export default function DataMasterView({
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Kelas</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={newSantri.kelas} 
-                      onChange={(e) => setNewSantri({ ...newSantri, kelas: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Halaqah Bimbingan</label>
-                    <select 
-                      className="form-select"
-                      value={newSantri.halaqahId}
-                      onChange={(e) => setNewSantri({ ...newSantri, halaqahId: e.target.value })}
-                    >
-                      {halaqahList.map(h => (
-                        <option key={h.id} value={h.id}>{h.nama}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="form-group">
+                  <label className="form-label">Halaqah Bimbingan</label>
+                  <select 
+                    className="form-select"
+                    value={newSantri.halaqahId}
+                    onChange={(e) => setNewSantri({ ...newSantri, halaqahId: e.target.value })}
+                  >
+                    {halaqahList.map(h => (
+                      <option key={h.id} value={h.id}>{h.nama}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="form-group">
@@ -557,29 +543,17 @@ export default function DataMasterView({
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Kelas</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={editingSantri.kelas} 
-                      onChange={(e) => setEditingSantri({ ...editingSantri, kelas: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Halaqah</label>
-                    <select 
-                      className="form-select"
-                      value={editingSantri.halaqahId}
-                      onChange={(e) => setEditingSantri({ ...editingSantri, halaqahId: e.target.value })}
-                    >
-                      {halaqahList.map(h => (
-                        <option key={h.id} value={h.id}>{h.nama}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="form-group">
+                  <label className="form-label">Halaqah</label>
+                  <select 
+                    className="form-select"
+                    value={editingSantri.halaqahId}
+                    onChange={(e) => setEditingSantri({ ...editingSantri, halaqahId: e.target.value })}
+                  >
+                    {halaqahList.map(h => (
+                      <option key={h.id} value={h.id}>{h.nama}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="form-group">

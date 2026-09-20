@@ -29,9 +29,11 @@ import {
   Eye,
   EyeOff,
   Copy,
+  Camera,
   X
 } from 'lucide-react';
 import { storageService } from '../services/storage';
+import PengaturanFotoProfilView from './sigap/PengaturanFotoProfilView';
 
 export default function PengaturanAdminView({ 
   settings, 
@@ -39,9 +41,19 @@ export default function PengaturanAdminView({
   santriList, 
   onSaveSettings, 
   onReload, 
-  showToast 
+  showToast,
+  initialSubTab,
+  currentRole,
+  isOwner
 }) {
-  const [activeSubTab, setActiveSubTab] = useState('pengampu-akun');
+  const [activeSubTab, setActiveSubTab] = useState(initialSubTab || 'pengampu-akun');
+
+  useEffect(() => {
+    const handleOpenFoto = () => setActiveSubTab('foto-profil');
+    window.addEventListener('sigap_open_foto_profil', handleOpenFoto);
+    return () => window.removeEventListener('sigap_open_foto_profil', handleOpenFoto);
+  }, []);
+
   const [formData, setFormData] = useState({ ...settings });
 
   const [guruList, setGuruList] = useState(storageService.getSigapGuru());
@@ -51,7 +63,6 @@ export default function PengaturanAdminView({
 
   const [searchTermGuru, setSearchTermGuru] = useState('');
   const [searchTermSiswa, setSearchTermSiswa] = useState('');
-  const [selectedFilterKelas, setSelectedFilterKelas] = useState('Semua Kelas');
   const [selectedFilterUnit, setSelectedFilterUnit] = useState('Semua Unit');
 
   const [showAddPengampuModal, setShowAddPengampuModal] = useState(false);
@@ -207,17 +218,6 @@ export default function PengaturanAdminView({
     ])
   ).filter(Boolean).sort((a, b) => a.localeCompare(b));
 
-  const getWaliForKelas = (kelasName) => {
-    switch (kelasName) {
-      case 'X A': return 'Wahyudin Hafiz, S.Pd';
-      case 'X B': return 'Febrianti Dewi, S.Pd';
-      case 'XI A': return 'Agus Rinaldi';
-      case 'XI B': return 'Ainun Hamidah, S.Pd';
-      case 'XII A': return 'Feri Hermawan, S.Pd';
-      case 'XII B': return 'Defit Purwaningsih, S.Pd';
-      default: return daftarNamaPengampu[0] || 'Wahyudin Hafiz, S.Pd';
-    }
-  };
 
   // ==========================================
   // HANDLERS: AKUN PENGAMPU & PEGAWAI
@@ -422,9 +422,9 @@ export default function PengaturanAdminView({
       nisn: newSiswa.nisn.trim(),
       nik: newSiswa.nik || '',
       lp: newSiswa.lp || 'L',
-      kelas: newSiswa.kelas || 'X A',
+      kelas: '',
       unitSekolah: newSiswa.unitSekolah || "MA IHYA' AS-SUNNAH",
-      pengampu: newSiswa.pengampu || getWaliForKelas(newSiswa.kelas || 'X A'),
+      pengampu: newSiswa.pengampu || daftarNamaPengampu[0] || '',
       status: 'Aktif'
     };
 
@@ -436,9 +436,9 @@ export default function PengaturanAdminView({
       nik: '',
       lp: 'L',
       nisn: '',
-      kelas: 'X A',
+      kelas: '',
       unitSekolah: "MA IHYA' AS-SUNNAH",
-      pengampu: 'Wahyudin Hafiz, S.Pd',
+      pengampu: daftarNamaPengampu[0] || 'Wahyudin Hafiz, S.Pd',
       tglLahir: '',
       wali: '',
       kontakWali: '',
@@ -460,7 +460,7 @@ export default function PengaturanAdminView({
       nama: editingSiswa.nama.trim(),
       nisn: editingSiswa.nisn.trim(),
       unitSekolah: editingSiswa.unitSekolah || "MA IHYA' AS-SUNNAH",
-      pengampu: editingSiswa.pengampu || getWaliForKelas(editingSiswa.kelas)
+      pengampu: editingSiswa.pengampu || daftarNamaPengampu[0] || ''
     };
 
     storageService.updateSigapSiswa(editingSiswa.id, payload);
@@ -538,11 +538,10 @@ export default function PengaturanAdminView({
       (s.nisn && s.nisn.toLowerCase().includes(term)) ||
       (s.pengampu && s.pengampu.toLowerCase().includes(term));
 
-    const matchKelas = selectedFilterKelas === 'Semua Kelas' || s.kelas === selectedFilterKelas;
     const unitVal = s.unitSekolah || '';
     const matchUnit = selectedFilterUnit === 'Semua Unit' || unitVal === selectedFilterUnit;
 
-    return matchSearch && matchKelas && matchUnit;
+    return matchSearch && matchUnit;
   });
 
   return (
@@ -585,59 +584,86 @@ export default function PengaturanAdminView({
       {/* Sub Tabs Navigation */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '0px', overflowX: 'auto' }}>
         <button
+          type="button"
           className={`btn ${activeSubTab === 'pengampu-akun' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('pengampu-akun')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none' }}
+          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
         >
           <Users size={16} />
           <span>Atur Akun Pengampu & Pegawai</span>
         </button>
 
         <button
+          type="button"
+          className={`btn ${activeSubTab === 'foto-profil' ? 'btn-primary' : 'btn-outline'}`}
+          onClick={() => setActiveSubTab('foto-profil')}
+          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
+        >
+          <Camera size={16} />
+          <span>Foto Profil Akun</span>
+        </button>
+
+        <button
+          type="button"
           className={`btn ${activeSubTab === 'jadwal-sesi' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('jadwal-sesi')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none' }}
+          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
         >
           <Clock size={16} />
           <span>Jadwal Sesi Presensi</span>
         </button>
 
         <button
+          type="button"
           className={`btn ${activeSubTab === 'tambah-siswa' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('tambah-siswa')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none' }}
+          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
         >
           <GraduationCap size={16} />
           <span>Kelola Data Siswa Unit</span>
         </button>
 
         <button
+          type="button"
           className={`btn ${activeSubTab === 'template-rapor' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('template-rapor')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none' }}
+          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
         >
           <FileCheck size={16} />
           <span>Template & Format Rapor</span>
         </button>
 
         <button
+          type="button"
           className={`btn ${activeSubTab === 'lembaga' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('lembaga')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none' }}
+          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
         >
           <Building2 size={16} />
           <span>Identitas Lembaga</span>
         </button>
 
         <button
+          type="button"
           className={`btn ${activeSubTab === 'backup' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('backup')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none' }}
+          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
         >
           <Database size={16} />
           <span>Cadangan Database</span>
         </button>
       </div>
+
+      {/* ========================================================= */}
+      {/* 0. PENGATURAN FOTO PROFIL (SUPER ADMIN, ADMIN CABANG, PENGAMPU) */}
+      {/* ========================================================= */}
+      {activeSubTab === 'foto-profil' && (
+        <PengaturanFotoProfilView 
+          showToast={showToast} 
+          currentRole={currentRole} 
+          isOwner={isOwner} 
+        />
+      )}
 
       {/* ========================================================= */}
       {/* 1. ATUR AKUN PENGAMPU (USTADZ / MUSYRIF / PEGAWAI) */}
@@ -1050,7 +1076,7 @@ export default function PengaturanAdminView({
                 Kelola Data Siswa Unit ({filteredSiswaList.length})
               </h3>
               <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
-                Tersinkronisasi langsung dengan Menu <strong>Data Siswa</strong>. Mengatur pembagian kelas ('X A' s/d 'XII B'), Unit Lembaga, dan Guru Pengampu / Wali Kelas.
+                Tersinkronisasi langsung dengan Menu <strong>Data Siswa</strong>. Mengatur Unit Lembaga dan Guru Pengampu / Musyrif.
               </p>
             </div>
             <button className="btn btn-primary btn-sm" onClick={() => setShowAddSiswaModal(true)}>
@@ -1075,20 +1101,6 @@ export default function PengaturanAdminView({
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Filter size={15} color="#64748b" />
-              <select
-                className="form-select"
-                value={selectedFilterKelas}
-                onChange={(e) => setSelectedFilterKelas(e.target.value)}
-                style={{ height: '38px', fontSize: '0.85rem', minWidth: '150px' }}
-              >
-                <option value="Semua Kelas">Semua Kelas</option>
-                <option value="X A">Kelas X A</option>
-                <option value="X B">Kelas X B</option>
-                <option value="XI A">Kelas XI A</option>
-                <option value="XI B">Kelas XI B</option>
-                <option value="XII A">Kelas XII A</option>
-                <option value="XII B">Kelas XII B</option>
-              </select>
 
               <select
                 className="form-select"
@@ -1113,9 +1125,8 @@ export default function PengaturanAdminView({
                     <th>Nama Siswa & NIK</th>
                     <th style={{ width: '55px', textAlign: 'center' }}>L/P</th>
                     <th>NISN</th>
-                    <th>Kelas</th>
                     <th>Unit Sekolah</th>
-                    <th>Guru Pengampu (Wali Kelas)</th>
+                    <th>Guru Pengampu</th>
                     <th>Wali & Kontak</th>
                     <th style={{ textAlign: 'center' }}>Tindakan</th>
                   </tr>
@@ -1123,14 +1134,14 @@ export default function PengaturanAdminView({
                 <tbody>
                   {filteredSiswaList.length === 0 ? (
                     <tr>
-                      <td colSpan={9} style={{ textAlign: 'center', padding: '32px', color: '#64748b' }}>
+                      <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: '#64748b' }}>
                         Tidak ada data siswa yang cocok dengan filter atau pencarian.
                       </td>
                     </tr>
                   ) : (
                     filteredSiswaList.map((siswa, idx) => {
                       const unitName = siswa.unitSekolah || "MA IHYA' AS-SUNNAH";
-                      const pengampuName = siswa.pengampu || getWaliForKelas(siswa.kelas);
+                      const pengampuName = siswa.pengampu || 'Ustadz Pengampu';
 
                       return (
                         <tr key={siswa.id || idx}>
@@ -1158,20 +1169,6 @@ export default function PengaturanAdminView({
                           <td>
                             <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', color: '#334155' }}>
                               {siswa.nisn || '-'}
-                            </span>
-                          </td>
-                          <td>
-                            <span style={{
-                              display: 'inline-block',
-                              padding: '3px 8px',
-                              borderRadius: '6px',
-                              fontSize: '0.8rem',
-                              fontWeight: 700,
-                              background: '#f1f5f9',
-                              color: '#334155',
-                              border: '1px solid #cbd5e1'
-                            }}>
-                              {siswa.kelas || '-'}
                             </span>
                           </td>
                           <td>
@@ -1369,7 +1366,7 @@ export default function PengaturanAdminView({
                     </span>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
-                    Tingkat Aliyah / SMA ? Kelas X, XI, XII (A/B) ? Muatan Kurikulum Tahfidz & Kepesantrenan
+                    Tingkat Aliyah / SMA • Jenjang Lanjutan • Muatan Kurikulum Tahfidz & Kepesantrenan
                   </div>
                 </div>
 
@@ -1882,7 +1879,7 @@ export default function PengaturanAdminView({
                     <input 
                       type="text" 
                       className="form-input" 
-                      placeholder="Contoh: Wali Kelas X A / Guru Tahfidz"
+                      placeholder="Contoh: Musyrif Halaqah / Guru Tahfidz"
                       value={newPengampu.jabatan}
                       onChange={(e) => setNewPengampu({ ...newPengampu, jabatan: e.target.value })}
                     />
@@ -2365,42 +2362,21 @@ export default function PengaturanAdminView({
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Kelas *</label>
-                    <select
-                      className="form-select"
-                      value={newSiswa.kelas}
-                      onChange={(e) => {
-                        const k = e.target.value;
-                        setNewSiswa({ ...newSiswa, kelas: k, pengampu: getWaliForKelas(k) });
-                      }}
-                    >
-                      <option value="X A">Kelas X A (Wali: Wahyudin Hafiz, S.Pd)</option>
-                      <option value="X B">Kelas X B (Wali: Febrianti Dewi, S.Pd)</option>
-                      <option value="XI A">Kelas XI A (Wali: Agus Rinaldi)</option>
-                      <option value="XI B">Kelas XI B (Wali: Ainun Hamidah, S.Pd)</option>
-                      <option value="XII A">Kelas XII A (Wali: Feri Hermawan, S.Pd)</option>
-                      <option value="XII B">Kelas XII B (Wali: Defit Purwaningsih, S.Pd)</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Unit Satuan Pendidikan *</label>
-                    <select
-                      className="form-select"
-                      value={newSiswa.unitSekolah}
-                      onChange={(e) => setNewSiswa({ ...newSiswa, unitSekolah: e.target.value })}
-                    >
-                      <option value="MA IHYA' AS-SUNNAH">MA IHYA' AS-SUNNAH</option>
-                      <option value="SMP IT IHYA' AS-SUNNAH">SMP IT IHYA' AS-SUNNAH</option>
-                      <option value="Pondok Pesantren PPIAS">Pondok Pesantren PPIAS</option>
-                    </select>
-                  </div>
+                <div className="form-group">
+                  <label className="form-label">Unit Satuan Pendidikan *</label>
+                  <select
+                    className="form-select"
+                    value={newSiswa.unitSekolah}
+                    onChange={(e) => setNewSiswa({ ...newSiswa, unitSekolah: e.target.value })}
+                  >
+                    <option value="MA IHYA' AS-SUNNAH">MA IHYA' AS-SUNNAH</option>
+                    <option value="SMP IT IHYA' AS-SUNNAH">SMP IT IHYA' AS-SUNNAH</option>
+                    <option value="Pondok Pesantren PPIAS">Pondok Pesantren PPIAS</option>
+                  </select>
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Guru Pengampu (Wali Kelas / Asatidzah) *</label>
+                  <label className="form-label">Guru Pengampu / Musyrif Halaqah *</label>
                   <select
                     className="form-select"
                     value={newSiswa.pengampu}
@@ -2411,7 +2387,7 @@ export default function PengaturanAdminView({
                     ))}
                   </select>
                   <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
-                    *Otomatis disinkronkan dengan Data Pegawai dan wali kelas yang bersangkutan.
+                    *Otomatis disinkronkan dengan Data Pegawai dan pengampu tahfidz.
                   </small>
                 </div>
 
@@ -2511,42 +2487,21 @@ export default function PengaturanAdminView({
                   </div>
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Kelas *</label>
-                    <select
-                      className="form-select"
-                      value={editingSiswa.kelas}
-                      onChange={(e) => {
-                        const k = e.target.value;
-                        setEditingSiswa({ ...editingSiswa, kelas: k, pengampu: getWaliForKelas(k) });
-                      }}
-                    >
-                      <option value="X A">Kelas X A (Wali: Wahyudin Hafiz, S.Pd)</option>
-                      <option value="X B">Kelas X B (Wali: Febrianti Dewi, S.Pd)</option>
-                      <option value="XI A">Kelas XI A (Wali: Agus Rinaldi)</option>
-                      <option value="XI B">Kelas XI B (Wali: Ainun Hamidah, S.Pd)</option>
-                      <option value="XII A">Kelas XII A (Wali: Feri Hermawan, S.Pd)</option>
-                      <option value="XII B">Kelas XII B (Wali: Defit Purwaningsih, S.Pd)</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Unit Satuan Pendidikan *</label>
-                    <select
-                      className="form-select"
-                      value={editingSiswa.unitSekolah || "MA IHYA' AS-SUNNAH"}
-                      onChange={(e) => setEditingSiswa({ ...editingSiswa, unitSekolah: e.target.value })}
-                    >
-                      <option value="MA IHYA' AS-SUNNAH">MA IHYA' AS-SUNNAH</option>
-                      <option value="SMP IT IHYA' AS-SUNNAH">SMP IT IHYA' AS-SUNNAH</option>
-                      <option value="Pondok Pesantren PPIAS">Pondok Pesantren PPIAS</option>
-                    </select>
-                  </div>
+                <div className="form-group">
+                  <label className="form-label">Unit Satuan Pendidikan *</label>
+                  <select
+                    className="form-select"
+                    value={editingSiswa.unitSekolah || "MA IHYA' AS-SUNNAH"}
+                    onChange={(e) => setEditingSiswa({ ...editingSiswa, unitSekolah: e.target.value })}
+                  >
+                    <option value="MA IHYA' AS-SUNNAH">MA IHYA' AS-SUNNAH</option>
+                    <option value="SMP IT IHYA' AS-SUNNAH">SMP IT IHYA' AS-SUNNAH</option>
+                    <option value="Pondok Pesantren PPIAS">Pondok Pesantren PPIAS</option>
+                  </select>
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Guru Pengampu (Wali Kelas / Asatidzah) *</label>
+                  <label className="form-label">Guru Pengampu / Musyrif Halaqah *</label>
                   <select
                     className="form-select"
                     value={editingSiswa.pengampu || ''}
@@ -2557,7 +2512,7 @@ export default function PengaturanAdminView({
                     ))}
                   </select>
                   <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
-                    *Pilih guru pengampu yang membimbing siswa ini. Perubahan akan langsung tersinkron ke Data Siswa.
+                    *Otomatis disinkronkan dengan Data Pegawai dan pengampu tahfidz.
                   </small>
                 </div>
 

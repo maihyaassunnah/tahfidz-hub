@@ -27,7 +27,7 @@ export default function AdminEmptyMenuView({ activeTab, onOpenPasswordModal }) {
       title: 'Data Siswa',
       kategori: 'CIVITAS AKADEMIKA',
       icon: GraduationCap,
-      desc: 'Manajemen basis data siswa, NIS, kelas, riwayat akademik, dan informasi wali santri.'
+      desc: 'Manajemen basis data santri, NIS, halaqah bimbingan, riwayat setoran, dan informasi wali santri.'
     },
     'sigap-guru': {
       title: 'Data Guru & Pegawai',
@@ -40,12 +40,6 @@ export default function AdminEmptyMenuView({ activeTab, onOpenPasswordModal }) {
       kategori: 'CIVITAS AKADEMIKA',
       icon: GraduationCap,
       desc: 'Pelacakan lulusan madrasah, tahun kelulusan, penelusuran karir/studi lanjut, dan jaringan alumni.'
-    },
-    'sigap-kelas': {
-      title: 'Data Kelas',
-      kategori: 'MANAJEMEN KBM',
-      icon: Users,
-      desc: 'Pengaturan rombongan belajar, wali kelas, kapasitas ruang, dan alokasi santri per kelas.'
     },
     'sigap-mapel': {
       title: 'Data Mapel',
@@ -60,10 +54,10 @@ export default function AdminEmptyMenuView({ activeTab, onOpenPasswordModal }) {
       desc: 'Pengaturan jadwal kegiatan belajar mengajar harian, sesi tahfidz, dan rotasi ruangan.'
     },
     'sigap-lokasi-qr': {
-      title: 'Lokasi & QR Kelas',
+      title: 'Lokasi & QR Presensi',
       kategori: 'MANAJEMEN KBM',
       icon: MapPin,
-      desc: 'Pemetaan titik lokasi halaqah/kelas, geofencing presensi, dan cetak kode QR ruang belajar.'
+      desc: 'Pemetaan titik lokasi presensi halaqah/masjid, geofencing presensi, dan cetak kode QR resmi.'
     },
     'sigap-monitoring': {
       title: 'Monitoring & Rekap',

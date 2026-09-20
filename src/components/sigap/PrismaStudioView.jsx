@@ -34,18 +34,42 @@ import {
   Upload,
   Smartphone,
   Laptop,
+  Camera,
   Key
 } from 'lucide-react';
 import { storageService } from '../../services/storage';
 import './PrismaStudioView.css';
 
-export default function PrismaStudioView({ showToast }) {
+export default function PrismaStudioView({ showToast, activeBranchId }) {
   const [activeTab, setActiveTab] = useState('visual'); // 'visual', 'embed', 'vps'
   const [selectedModel, setSelectedModel] = useState('santri');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
+
+  // User & Cabang Session (Multi-Tenant Isolation)
+  const currentUser = storageService.getAuthUser();
+  const isOwner = currentUser?.role === 'owner' || currentUser?.cabangId === 'ALL';
+  const cabangList = storageService.getCabang();
+
+  // Cabang ID Akun Super Admin (misal 'cabang-pusat' untuk MA)
+  const userCabangId = currentUser?.cabangId && currentUser?.cabangId !== 'ALL'
+    ? currentUser.cabangId
+    : (activeBranchId || storageService.getActiveBranchId() || 'cabang-pusat');
+
+  const [selectedCabangId, setSelectedCabangId] = useState(isOwner ? (activeBranchId || 'ALL') : userCabangId);
+
+  // Pastikan Super Admin terkunci pada cabang miliknya, atau Owner tersinkron dengan activeBranchId
+  useEffect(() => {
+    if (!isOwner) {
+      setSelectedCabangId(userCabangId);
+    } else if (activeBranchId) {
+      setSelectedCabangId(activeBranchId);
+    }
+  }, [userCabangId, isOwner, activeBranchId]);
+
+  const currentCabangObj = cabangList.find(c => c.id === (selectedCabangId === 'ALL' ? 'cabang-pusat' : selectedCabangId)) || cabangList[0];
 
   // Prisma Studio URL configuration
   const [studioUrl, setStudioUrl] = useState(() => {
@@ -66,65 +90,147 @@ export default function PrismaStudioView({ showToast }) {
   // Model Data State
   const [tableData, setTableData] = useState([]);
 
-  // Load Model Data
-  const loadModelData = () => {
-    switch (selectedModel) {
-      case 'cabang':
-        setTableData(storageService.getCabang());
-        break;
-      case 'superadmin':
-        setTableData(storageService.getSuperAdminAccounts());
-        break;
+  // =========================================================
+  // HELPER ISOLASI DATABASE PER CABANG (TIDAK BERCAMPUR DENGAN CABANG LAIN)
+  // =========================================================
+  const getFilteredModelData = (modelKey, targetBranchId) => {
+    const isAll = targetBranchId === 'ALL';
+
+    // 1. Santri dalam cabang ini
+    const allSantri = storageService.getAllSantriRaw();
+    const branchSantri = isAll 
+      ? allSantri 
+      : allSantri.filter(s => (s.cabangId || s.cabang_id || 'cabang-pusat') === targetBranchId);
+    const branchSantriIdSet = new Set(branchSantri.map(s => String(s.id)));
+    const branchSantriNisSet = new Set(branchSantri.map(s => String(s.nis || '')).filter(Boolean));
+
+    // 2. Pengampu / Guru dalam cabang ini
+    const allPengampu = storageService.getAllPengampuRaw();
+    const branchPengampu = isAll
+      ? allPengampu
+      : allPengampu.filter(p => (p.cabangId || p.cabang_id || 'cabang-pusat') === targetBranchId);
+    const branchPengampuIdSet = new Set(branchPengampu.map(p => String(p.id)));
+
+    // 3. Kelas dalam cabang ini
+    const allKelas = storageService.getAllSigapKelasRaw();
+    const branchKelas = isAll
+      ? allKelas
+      : allKelas.filter(k => (k.cabangId || k.cabang_id || 'cabang-pusat') === targetBranchId);
+    const branchKelasNameSet = new Set(branchKelas.map(k => String(k.nama || '').toLowerCase().trim()));
+
+    switch (modelKey) {
+      case 'cabang': {
+        const list = storageService.getCabang();
+        return isAll ? list : list.filter(c => c.id === targetBranchId);
+      }
+      case 'superadmin': {
+        const list = storageService.getSuperAdminAccounts();
+        return isAll ? list : list.filter(sa => (sa.cabangId || sa.cabang_id || 'cabang-pusat') === targetBranchId);
+      }
       case 'pengampu':
-        setTableData(storageService.getAllPengampuRaw());
-        break;
-      case 'halaqah':
-        setTableData(storageService.getHalaqah());
-        break;
+        return branchPengampu;
+      case 'halaqah': {
+        const list = storageService.getHalaqah();
+        return isAll ? list : list.filter(h => (h.cabangId || h.cabang_id || 'cabang-pusat') === targetBranchId);
+      }
       case 'santri':
-        setTableData(storageService.getAllSantriRaw());
-        break;
-      case 'sesi':
-        setTableData(storageService.getSesi());
-        break;
-      case 'absensi':
-        setTableData(storageService.getAbsensi());
-        break;
-      case 'setoran':
-        setTableData(storageService.getSetoran());
-        break;
-      case 'izin':
-        setTableData(storageService.getIzin());
-        break;
-      case 'monitoring':
-        setTableData((storageService.getSigapMonitoring() || {}).liveFeed || []);
-        break;
-      case 'spp':
-        setTableData(storageService.getPembayaranSPP());
-        break;
-      case 'kelas':
-        setTableData(storageService.getAllSigapKelasRaw());
-        break;
-      case 'alumni':
-        setTableData(storageService.getAllSigapAlumniRaw());
-        break;
-      case 'lokasi_qr':
-        setTableData(storageService.getAllSigapLokasiQRRaw());
-        break;
-      case 'rapor_template':
+        return branchSantri;
+      case 'sesi': {
+        const list = storageService.getSesi();
+        return isAll ? list : list.filter(s => !s.cabangId || s.cabangId === 'ALL' || s.cabangId === targetBranchId);
+      }
+      case 'absensi': {
+        const list = storageService.getAbsensi();
+        if (isAll) return list;
+        return list.filter(a =>
+          (a.cabangId && a.cabangId === targetBranchId) ||
+          (a.cabang_id && a.cabang_id === targetBranchId) ||
+          (a.santriId && branchSantriIdSet.has(String(a.santriId))) ||
+          (a.santri_id && branchSantriIdSet.has(String(a.santri_id)))
+        );
+      }
+      case 'setoran': {
+        const list = storageService.getSetoran();
+        if (isAll) return list;
+        return list.filter(s =>
+          (s.cabangId && s.cabangId === targetBranchId) ||
+          (s.cabang_id && s.cabang_id === targetBranchId) ||
+          (s.santriId && branchSantriIdSet.has(String(s.santriId))) ||
+          (s.santri_id && branchSantriIdSet.has(String(s.santri_id))) ||
+          (s.nis && branchSantriNisSet.has(String(s.nis)))
+        );
+      }
+      case 'izin': {
+        const list = storageService.getIzin();
+        if (isAll) return list;
+        return list.filter(i =>
+          (i.cabangId && i.cabangId === targetBranchId) ||
+          (i.cabang_id && i.cabang_id === targetBranchId) ||
+          (i.santriId && branchSantriIdSet.has(String(i.santriId))) ||
+          (i.santri_id && branchSantriIdSet.has(String(i.santri_id)))
+        );
+      }
+      case 'monitoring': {
+        const feed = (storageService.getSigapMonitoring() || {}).liveFeed || [];
+        if (isAll) return feed;
+        return feed.filter(m =>
+          (m.cabangId && m.cabangId === targetBranchId) ||
+          (m.cabang_id && m.cabang_id === targetBranchId) ||
+          (m.pengampuId && branchPengampuIdSet.has(String(m.pengampuId))) ||
+          (m.pengampu_id && branchPengampuIdSet.has(String(m.pengampu_id))) ||
+          (m.kelas && branchKelasNameSet.has(String(m.kelas).toLowerCase().trim()))
+        );
+      }
+      case 'spp': {
+        const list = storageService.getPembayaranSPP();
+        if (isAll) return list;
+        return list.filter(p =>
+          (p.cabangId && p.cabangId === targetBranchId) ||
+          (p.cabang_id && p.cabang_id === targetBranchId) ||
+          (p.santriId && branchSantriIdSet.has(String(p.santriId))) ||
+          (p.santri_id && branchSantriIdSet.has(String(p.santri_id)))
+        );
+      }
+      case 'alumni': {
+        const list = storageService.getAllSigapAlumniRaw();
+        return isAll ? list : list.filter(a => (a.cabangId || a.cabang_id || 'cabang-pusat') === targetBranchId);
+      }
+      case 'lokasi_qr': {
+        const list = storageService.getAllSigapLokasiQRRaw();
+        return isAll ? list : list.filter(l => (l.cabangId || l.cabang_id || 'cabang-pusat') === targetBranchId);
+      }
+      case 'rapor_template': {
         const tpl = storageService.getRaporTemplate();
-        setTableData(tpl ? [tpl] : []);
-        break;
-      case 'nilai_rapor':
-        setTableData(storageService.getAllNilaiRapor());
-        break;
-      case 'settings':
+        return tpl ? [tpl] : [];
+      }
+      case 'nilai_rapor': {
+        const list = storageService.getAllNilaiRapor();
+        if (isAll) return list;
+        return list.filter(nr =>
+          (nr.santriId && branchSantriIdSet.has(String(nr.santriId))) ||
+          (nr.santri_id && branchSantriIdSet.has(String(nr.santri_id)))
+        );
+      }
+      case 'settings': {
         const s = storageService.getSettings() || {};
-        setTableData(Object.entries(s).map(([key, value]) => ({ key, value: typeof value === 'object' ? JSON.stringify(value) : String(value) })));
-        break;
+        return Object.entries(s).map(([key, value]) => ({
+          key,
+          value: typeof value === 'object' ? JSON.stringify(value) : String(value)
+        }));
+      }
+      case 'foto_profil': {
+        const list = storageService.getFotoProfilList();
+        return isAll ? list : list.filter(f => !f.cabangId || f.cabangId === targetBranchId);
+      }
       default:
-        setTableData([]);
+        return [];
     }
+  };
+
+  // Load Model Data Khusus Cabang Ini
+  const loadModelData = () => {
+    const data = getFilteredModelData(selectedModel, selectedCabangId);
+    setTableData(data);
   };
 
   useEffect(() => {
@@ -139,7 +245,7 @@ export default function PrismaStudioView({ showToast }) {
   useEffect(() => {
     loadModelData();
     setSearchQuery('');
-  }, [selectedModel]);
+  }, [selectedModel, selectedCabangId]);
 
   const handleCopyCode = (code, index) => {
     navigator.clipboard.writeText(code);
@@ -191,38 +297,37 @@ export default function PrismaStudioView({ showToast }) {
     if (showToast) showToast("URL Prisma Studio berhasil disimpan!");
   };
 
-  // Open Modal for Create
+  // Open Modal for Create (Terikat ke Cabang Terpilih)
   const handleOpenAdd = () => {
     setModalMode('add');
+    const branchForNew = (selectedCabangId && selectedCabangId !== 'ALL') ? selectedCabangId : 'cabang-pusat';
     let initForm = {};
     if (selectedModel === 'cabang') {
       initForm = { nama: '', kode: '', kota: 'Tasikmalaya', alamat: '', penanggungJawab: '', noHp: '', status: 'Aktif' };
     } else if (selectedModel === 'superadmin') {
-      initForm = { nama: '', username: '', email: '', password: 'bismillah123', cabangId: 'cabang-pusat', status: 'Aktif' };
+      initForm = { nama: '', username: '', email: '', password: 'bismillah123', cabangId: branchForNew, status: 'Aktif' };
     } else if (selectedModel === 'pengampu') {
-      initForm = { nama: '', nip: '', kontak: '', role: 'Pengampu Halaqoh', halaqahId: 'hq-1', status: 'Aktif', cabangId: 'cabang-pusat' };
+      initForm = { nama: '', nip: '', kontak: '', role: 'Pengampu Halaqoh', halaqahId: 'hq-1', status: 'Aktif', cabangId: branchForNew };
     } else if (selectedModel === 'halaqah') {
-      initForm = { nama: '', pengampuNama: '', targetJuz: '30', level: 'Dasar', cabangId: 'cabang-pusat' };
+      initForm = { nama: '', pengampuNama: '', targetJuz: '30', level: 'Dasar', cabangId: branchForNew };
     } else if (selectedModel === 'santri') {
-      initForm = { nama: '', nis: '', kelas: 'X-A', halaqahId: 'hq-1', halaqahNama: 'Halaqah 1', cabangId: 'cabang-pusat', status: 'Aktif' };
+      initForm = { nama: '', nis: '', halaqahId: 'hq-1', halaqahNama: 'Halaqah 1', cabangId: branchForNew, status: 'Aktif' };
     } else if (selectedModel === 'sesi') {
-      initForm = { nama: '', waktuMulai: '05:00', waktuSelesai: '06:00', jamBatas: '05:30', status: 'Aktif' };
+      initForm = { nama: '', waktuMulai: '05:00', waktuSelesai: '06:00', jamBatas: '05:30', status: 'Aktif', cabangId: branchForNew };
     } else if (selectedModel === 'absensi') {
-      initForm = { tanggal: new Date().toISOString().split('T')[0], sesiId: 'sesi-shubuh', santriId: 's-1', status: 'Hadir', keterangan: '' };
+      initForm = { tanggal: new Date().toISOString().split('T')[0], sesiId: 'sesi-shubuh', santriId: 's-1', status: 'Hadir', keterangan: '', cabangId: branchForNew };
     } else if (selectedModel === 'setoran') {
-      initForm = { santriNama: '', surahName: 'An-Naba', ayatAwal: 1, ayatAkhir: 10, nilai: 'Mumtaz', tanggal: new Date().toISOString().split('T')[0] };
+      initForm = { santriNama: '', surahName: 'An-Naba', ayatAwal: 1, ayatAkhir: 10, nilai: 'Mumtaz', tanggal: new Date().toISOString().split('T')[0], cabangId: branchForNew };
     } else if (selectedModel === 'izin') {
-      initForm = { pemohonNama: '', alasan: '', status: 'Menunggu', tanggal: new Date().toISOString().split('T')[0] };
+      initForm = { pemohonNama: '', alasan: '', status: 'Menunggu', tanggal: new Date().toISOString().split('T')[0], cabangId: branchForNew };
     } else if (selectedModel === 'monitoring') {
-      initForm = { nama: '', nip: '', role: 'Pengampu', halaqah: 'Halaqah 1', kelas: 'X-A', sesi: 'Subuh', jadwal: '05:00 - 06:30', jam: '05:00', status: 'Tepat Waktu', keterangan: 'Hadir' };
+      initForm = { nama: '', nip: '', role: 'Pengampu', halaqah: 'Halaqah 1', sesi: 'Subuh', jadwal: '05:00 - 06:30', jam: '05:00', status: 'Tepat Waktu', keterangan: 'Hadir', cabangId: branchForNew };
     } else if (selectedModel === 'spp') {
-      initForm = { invoiceNo: storageService.generateInvoiceNo(), santriNama: '', nis: '', kelas: 'X-A', bulan: 'September 2026', nominal: 350000, status: 'Lunas', metodeBayar: 'Transfer Bank BSI' };
-    } else if (selectedModel === 'kelas') {
-      initForm = { nama: '', unitSekolah: "MA IHYA' AS-SUNNAH", waliKelas: '', cabangId: 'cabang-pusat', aktif: true };
+      initForm = { invoiceNo: storageService.generateInvoiceNo(), santriNama: '', nis: '', bulan: 'September 2026', nominal: 350000, status: 'Lunas', metodeBayar: 'Transfer Bank BSI', cabangId: branchForNew };
     } else if (selectedModel === 'alumni') {
-      initForm = { nama: '', nik: '', nisn: '', nism: '-', lp: 'L', tahunLulus: '2026', cabangId: 'cabang-pusat' };
+      initForm = { nama: '', nik: '', nisn: '', nism: '-', lp: 'L', tahunLulus: '2026', cabangId: branchForNew };
     } else if (selectedModel === 'lokasi_qr') {
-      initForm = { kelas: 'X A', lokasi: 'Gedung A', kodeManual: 'MAIAS-XA', cabangId: 'cabang-pusat', gpsStatus: 'GPS: Locked', locked: true, lat: -7.3274, lng: 108.2155, radiusMeter: 50 };
+      initForm = { lokasi: 'Masjid Tahfidz Ikhwan', kodeManual: 'MSJ-IKH', cabangId: branchForNew, gpsStatus: 'GPS: Locked', locked: true, lat: -7.327415, lng: 108.215542, radiusMeter: 50 };
     } else if (selectedModel === 'settings') {
       initForm = { key: '', value: '' };
     }
@@ -252,7 +357,6 @@ export default function PrismaStudioView({ showToast }) {
     else if (selectedModel === 'izin') storageService.deleteIzin(id);
     else if (selectedModel === 'monitoring') storageService.deleteMonitoring(id);
     else if (selectedModel === 'spp') storageService.deletePembayaranSPP(id);
-    else if (selectedModel === 'kelas') storageService.deleteSigapKelas(id);
     else if (selectedModel === 'alumni') storageService.deleteSigapAlumni(id);
     else if (selectedModel === 'lokasi_qr') storageService.deleteSigapLokasiQR(id);
     else if (selectedModel === 'nilai_rapor') storageService.deleteNilaiRapor(id);
@@ -261,45 +365,53 @@ export default function PrismaStudioView({ showToast }) {
     if (showToast) showToast("Data berhasil dihapus dari database!");
   };
 
-  // Submit Modal Form
+  // Submit Modal Form (Kunci Otomatis Cabang untuk Super Admin)
   const handleSaveForm = (e) => {
     e.preventDefault();
+    const dataToSave = { ...formData };
+    
+    // Kunci cabang jika bukan owner
+    if (!isOwner && selectedCabangId && selectedCabangId !== 'ALL') {
+      if (selectedModel !== 'cabang' && selectedModel !== 'settings' && selectedModel !== 'rapor_template') {
+        dataToSave.cabangId = selectedCabangId;
+        dataToSave.cabang_id = selectedCabangId;
+      }
+    }
+
     if (modalMode === 'add') {
-      if (selectedModel === 'cabang') storageService.addCabang(formData);
-      else if (selectedModel === 'superadmin') storageService.addSuperAdminAccount(formData);
-      else if (selectedModel === 'pengampu') storageService.addPengampu(formData);
-      else if (selectedModel === 'halaqah') storageService.addHalaqah(formData);
-      else if (selectedModel === 'santri') storageService.addSantri(formData);
-      else if (selectedModel === 'sesi') storageService.addSesi(formData);
-      else if (selectedModel === 'absensi') storageService.addAbsensiRecord(formData);
-      else if (selectedModel === 'setoran') storageService.addSetoran(formData);
-      else if (selectedModel === 'izin') storageService.addIzin(formData);
-      else if (selectedModel === 'monitoring') storageService.addMonitoring(formData);
-      else if (selectedModel === 'spp') storageService.addPembayaranSPP(formData);
-      else if (selectedModel === 'kelas') storageService.addSigapKelas(formData);
-      else if (selectedModel === 'alumni') storageService.addSigapAlumni(formData);
-      else if (selectedModel === 'lokasi_qr') storageService.addSigapLokasiQR(formData);
-      else if (selectedModel === 'rapor_template') storageService.saveRaporTemplate(formData);
-      else if (selectedModel === 'nilai_rapor') storageService.saveNilaiRapor(formData);
+      if (selectedModel === 'cabang') storageService.addCabang(dataToSave);
+      else if (selectedModel === 'superadmin') storageService.addSuperAdminAccount(dataToSave);
+      else if (selectedModel === 'pengampu') storageService.addPengampu(dataToSave);
+      else if (selectedModel === 'halaqah') storageService.addHalaqah(dataToSave);
+      else if (selectedModel === 'santri') storageService.addSantri(dataToSave);
+      else if (selectedModel === 'sesi') storageService.addSesi(dataToSave);
+      else if (selectedModel === 'absensi') storageService.addAbsensiRecord(dataToSave);
+      else if (selectedModel === 'setoran') storageService.addSetoran(dataToSave);
+      else if (selectedModel === 'izin') storageService.addIzin(dataToSave);
+      else if (selectedModel === 'monitoring') storageService.addMonitoring(dataToSave);
+      else if (selectedModel === 'spp') storageService.addPembayaranSPP(dataToSave);
+      else if (selectedModel === 'alumni') storageService.addSigapAlumni(dataToSave);
+      else if (selectedModel === 'lokasi_qr') storageService.addSigapLokasiQR(dataToSave);
+      else if (selectedModel === 'rapor_template') storageService.saveRaporTemplate(dataToSave);
+      else if (selectedModel === 'nilai_rapor') storageService.saveNilaiRapor(dataToSave);
       if (showToast) showToast("Data baru berhasil ditambahkan!");
     } else {
-      const id = formData.id;
-      if (selectedModel === 'cabang') storageService.updateCabang(id, formData);
-      else if (selectedModel === 'superadmin') storageService.updateSuperAdminAccount(id, formData);
-      else if (selectedModel === 'pengampu') storageService.updatePengampu(id, formData);
-      else if (selectedModel === 'halaqah') storageService.updateHalaqah(id, formData);
-      else if (selectedModel === 'santri') storageService.updateSantri(id, formData);
-      else if (selectedModel === 'sesi') storageService.updateSesi(id, formData);
-      else if (selectedModel === 'absensi') storageService.updateAbsensiRecord(id, formData);
-      else if (selectedModel === 'setoran') storageService.updateSetoran(id, formData);
-      else if (selectedModel === 'izin') storageService.updateIzin(id, formData);
-      else if (selectedModel === 'monitoring') storageService.updateMonitoring(id, formData);
-      else if (selectedModel === 'spp') storageService.updatePembayaranSPP(id, formData);
-      else if (selectedModel === 'kelas') storageService.updateSigapKelas(id, formData);
-      else if (selectedModel === 'alumni') storageService.addSigapAlumni(formData);
-      else if (selectedModel === 'lokasi_qr') storageService.updateSigapLokasiQR(id, formData);
-      else if (selectedModel === 'rapor_template') storageService.saveRaporTemplate(formData);
-      else if (selectedModel === 'nilai_rapor') storageService.saveNilaiRapor(formData);
+      const id = dataToSave.id;
+      if (selectedModel === 'cabang') storageService.updateCabang(id, dataToSave);
+      else if (selectedModel === 'superadmin') storageService.updateSuperAdminAccount(id, dataToSave);
+      else if (selectedModel === 'pengampu') storageService.updatePengampu(id, dataToSave);
+      else if (selectedModel === 'halaqah') storageService.updateHalaqah(id, dataToSave);
+      else if (selectedModel === 'santri') storageService.updateSantri(id, dataToSave);
+      else if (selectedModel === 'sesi') storageService.updateSesi(id, dataToSave);
+      else if (selectedModel === 'absensi') storageService.updateAbsensiRecord(id, dataToSave);
+      else if (selectedModel === 'setoran') storageService.updateSetoran(id, dataToSave);
+      else if (selectedModel === 'izin') storageService.updateIzin(id, dataToSave);
+      else if (selectedModel === 'monitoring') storageService.updateMonitoring(id, dataToSave);
+      else if (selectedModel === 'spp') storageService.updatePembayaranSPP(id, dataToSave);
+      else if (selectedModel === 'alumni') storageService.addSigapAlumni(dataToSave);
+      else if (selectedModel === 'lokasi_qr') storageService.updateSigapLokasiQR(id, dataToSave);
+      else if (selectedModel === 'rapor_template') storageService.saveRaporTemplate(dataToSave);
+      else if (selectedModel === 'nilai_rapor') storageService.saveNilaiRapor(dataToSave);
       if (showToast) showToast("Perubahan data berhasil disimpan!");
     }
     setIsModalOpen(false);
@@ -315,23 +427,24 @@ export default function PrismaStudioView({ showToast }) {
     );
   });
 
+  // Model List dengan Count Real-Time Sesuai Cabang Ini Saja
   const modelList = [
-    { id: 'cabang', name: 'Cabang Lembaga', icon: Building2, count: storageService.getCabang().length },
-    { id: 'superadmin', name: 'Akun Super Admin', icon: Shield, count: storageService.getSuperAdminAccounts().length },
-    { id: 'pengampu', name: 'Pengampu / Guru', icon: Users, count: storageService.getAllPengampuRaw().length },
-    { id: 'halaqah', name: 'Halaqah Al-Qur\'an', icon: BookOpen, count: storageService.getHalaqah().length },
-    { id: 'santri', name: 'Santri & Siswa', icon: Users, count: storageService.getAllSantriRaw().length },
-    { id: 'sesi', name: 'Sesi Halaqah', icon: Clock, count: storageService.getSesi().length },
-    { id: 'absensi', name: 'Absensi Santri', icon: ClipboardCheck, count: storageService.getAbsensi().length },
-    { id: 'setoran', name: 'Pencatatan Setoran', icon: BookOpen, count: storageService.getSetoran().length },
-    { id: 'izin', name: 'Permohonan Izin', icon: FileText, count: storageService.getIzin().length },
-    { id: 'monitoring', name: 'Monitoring Sigap', icon: Activity, count: ((storageService.getSigapMonitoring() || {}).liveFeed || []).length },
-    { id: 'spp', name: 'Pembayaran SPP', icon: FileText, count: storageService.getPembayaranSPP().length },
+    { id: 'cabang', name: 'Cabang Lembaga', icon: Building2, count: getFilteredModelData('cabang', selectedCabangId).length },
+    { id: 'superadmin', name: 'Akun Super Admin', icon: Shield, count: getFilteredModelData('superadmin', selectedCabangId).length },
+    { id: 'pengampu', name: 'Pengampu / Guru', icon: Users, count: getFilteredModelData('pengampu', selectedCabangId).length },
+    { id: 'halaqah', name: 'Halaqah Al-Qur\'an', icon: BookOpen, count: getFilteredModelData('halaqah', selectedCabangId).length },
+    { id: 'santri', name: 'Santri & Siswa', icon: Users, count: getFilteredModelData('santri', selectedCabangId).length },
+    { id: 'sesi', name: 'Sesi Halaqah', icon: Clock, count: getFilteredModelData('sesi', selectedCabangId).length },
+    { id: 'absensi', name: 'Absensi Santri', icon: ClipboardCheck, count: getFilteredModelData('absensi', selectedCabangId).length },
+    { id: 'setoran', name: 'Pencatatan Setoran', icon: BookOpen, count: getFilteredModelData('setoran', selectedCabangId).length },
+    { id: 'izin', name: 'Permohonan Izin', icon: FileText, count: getFilteredModelData('izin', selectedCabangId).length },
+    { id: 'monitoring', name: 'Monitoring Sigap', icon: Activity, count: getFilteredModelData('monitoring', selectedCabangId).length },
+    { id: 'spp', name: 'Pembayaran SPP', icon: FileText, count: getFilteredModelData('spp', selectedCabangId).length },
     { id: 'rapor_template', name: 'Template Rapor', icon: FileText, count: 1 },
-    { id: 'nilai_rapor', name: 'Nilai Rapor Aspek', icon: Award, count: storageService.getAllNilaiRapor().length },
-    { id: 'kelas', name: 'Data Kelas', icon: Layers, count: storageService.getAllSigapKelasRaw().length },
-    { id: 'alumni', name: 'Data Alumni', icon: GraduationCap, count: storageService.getAllSigapAlumniRaw().length },
-    { id: 'lokasi_qr', name: 'Lokasi Presensi QR', icon: MapPin, count: storageService.getAllSigapLokasiQRRaw().length },
+    { id: 'nilai_rapor', name: 'Nilai Rapor Aspek', icon: Award, count: getFilteredModelData('nilai_rapor', selectedCabangId).length },
+    { id: 'alumni', name: 'Data Alumni', icon: GraduationCap, count: getFilteredModelData('alumni', selectedCabangId).length },
+    { id: 'lokasi_qr', name: 'Lokasi Presensi QR', icon: MapPin, count: getFilteredModelData('lokasi_qr', selectedCabangId).length },
+    { id: 'foto_profil', name: 'Foto Profil Akun', icon: Camera, count: getFilteredModelData('foto_profil', selectedCabangId).length },
     { id: 'settings', name: 'Pengaturan Sistem', icon: Sliders, count: Object.keys(storageService.getSettings() || {}).length }
   ];
 
@@ -395,6 +508,111 @@ export default function PrismaStudioView({ showToast }) {
             <span>Buka Studio di Tab Baru</span>
           </a>
         </div>
+      </div>
+
+      {/* =========================================================
+          BANNER ISOLASI MULTI-CABANG (KHUSUS SUPER ADMIN CABANG)
+          ========================================================= */}
+      <div style={{
+        background: '#f8fafc',
+        border: '1.5px solid #e2e8f0',
+        borderLeft: '5px solid #059669',
+        borderRadius: '14px',
+        padding: '14px 18px',
+        marginBottom: '16px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '12px',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.03)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: '42px',
+            height: '42px',
+            borderRadius: '10px',
+            background: '#ecfdf5',
+            color: '#059669',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid #a7f3d0',
+            flexShrink: 0
+          }}>
+            <Building2 size={22} />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.96rem', fontWeight: 800, color: '#0f172a' }}>
+                Database Terfilter: {selectedCabangId === 'ALL' ? 'Semua Cabang (Pusat & Ranting - Konsolidasi Global)' : (currentCabangObj?.nama || 'MA Ihya As-Sunnah (Pusat)')}
+              </span>
+              <span style={{
+                background: selectedCabangId === 'ALL' ? '#2563eb' : '#047857',
+                color: '#ffffff',
+                fontSize: '0.70rem',
+                fontWeight: 800,
+                padding: '2px 8px',
+                borderRadius: '6px'
+              }}>
+                {selectedCabangId === 'ALL' ? 'SEMUA CABANG (GLOBAL)' : (currentCabangObj?.kode || 'MA-PUSAT')}
+              </span>
+              {!isOwner && (
+                <span style={{
+                  background: '#f1f5f9',
+                  color: '#475569',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  padding: '2px 7px',
+                  borderRadius: '6px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px'
+                }}>
+                  <Shield size={10} color="#059669" /> Terkunci Khusus Cabang Ini
+                </span>
+              )}
+            </div>
+            <p style={{ margin: '3px 0 0 0', fontSize: '0.76rem', color: '#64748b' }}>
+              {!isOwner ? (
+                <span>
+                  Mode Super Admin Aktif: Seluruh tabel santri, pengampu, alumni, SPP, dan absensi <strong>hanya menampilkan data cabang {currentCabangObj?.nama}</strong> dan tidak bercampur dengan cabang lain.
+                </span>
+              ) : (
+                <span>
+                  Mode Pimpinan (Owner): Menampilkan seluruh record database {selectedCabangId === 'ALL' ? 'dari semua cabang lembaga (Konsolidasi Global Seluruh Cabang)' : `cabang ${currentCabangObj?.nama}`} secara real-time.
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Dropdown Filter untuk Owner / Pimpinan */}
+        {isOwner && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#334155' }}>Filter Cabang:</span>
+            <select
+              value={selectedCabangId}
+              onChange={(e) => setSelectedCabangId(e.target.value)}
+              style={{
+                padding: '7px 12px',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: '#0f172a',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="ALL">🌐 Semua Cabang (Terpadu)</option>
+              {cabangList.map(c => (
+                <option key={c.id} value={c.id}>{c.nama} ({c.kode})</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* =========================================================
@@ -569,6 +787,25 @@ export default function PrismaStudioView({ showToast }) {
           ========================================================= */}
       {activeTab === 'embed' && (
         <div className="studio-iframe-card">
+          {!isOwner && (
+            <div style={{
+              background: '#ecfdf5',
+              border: '1px solid #a7f3d0',
+              borderRadius: '8px',
+              padding: '10px 14px',
+              margin: '12px 14px 0 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '0.80rem',
+              color: '#065f46'
+            }}>
+              <Shield size={16} color="#059669" style={{ flexShrink: 0 }} />
+              <div>
+                <strong>Akses Terisolasi:</strong> Gunakan <strong>Tab 1 (Editor Visual Tabel Database)</strong> untuk mengelola data khusus cabang <strong>{currentCabangObj?.nama}</strong>. Jika membuka Prisma Studio eksternal mentah, seluruh tabel server terhubung langsung ke database PostgreSQL.
+              </div>
+            </div>
+          )}
           <div className="studio-iframe-bar">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, maxWidth: '600px' }}>
               <Globe size={16} color="#0d9488" />
@@ -759,20 +996,39 @@ export default function PrismaStudioView({ showToast }) {
 
             <form onSubmit={handleSaveForm}>
               <div className="login-modal-body" style={{ maxHeight: '420px', overflowY: 'auto' }}>
-                {Object.keys(formData).filter(k => k !== 'id' && k !== 'createdAt' && k !== 'updatedAt').map((fieldKey) => (
-                  <div key={fieldKey} style={{ marginBottom: '0.85rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.775rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.3rem' }}>
-                      {fieldKey}
-                    </label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      style={{ fontSize: '0.825rem', width: '100%' }}
-                      value={typeof formData[fieldKey] === 'object' && formData[fieldKey] !== null ? JSON.stringify(formData[fieldKey]) : (formData[fieldKey] ?? '')}
-                      onChange={(e) => setFormData({ ...formData, [fieldKey]: e.target.value })}
-                    />
-                  </div>
-                ))}
+                {Object.keys(formData).filter(k => k !== 'id' && k !== 'createdAt' && k !== 'updatedAt').map((fieldKey) => {
+                  const isCabangField = fieldKey === 'cabangId' || fieldKey === 'cabang_id';
+                  const isLocked = !isOwner && isCabangField;
+                  return (
+                    <div key={fieldKey} style={{ marginBottom: '0.85rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                        <label style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                          {fieldKey}
+                        </label>
+                        {isLocked && (
+                          <span style={{ fontSize: '10.5px', color: '#059669', fontWeight: 700 }}>
+                            🔒 Terkunci (Cabang Anda)
+                          </span>
+                        )}
+                      </div>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        disabled={isLocked}
+                        style={{ 
+                          fontSize: '0.825rem', 
+                          width: '100%',
+                          background: isLocked ? '#f1f5f9' : undefined,
+                          cursor: isLocked ? 'not-allowed' : undefined,
+                          fontWeight: isLocked ? 700 : undefined,
+                          color: isLocked ? '#0f172a' : undefined
+                        }}
+                        value={typeof formData[fieldKey] === 'object' && formData[fieldKey] !== null ? JSON.stringify(formData[fieldKey]) : (formData[fieldKey] ?? '')}
+                        onChange={(e) => setFormData({ ...formData, [fieldKey]: e.target.value })}
+                      />
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="login-modal-footer">

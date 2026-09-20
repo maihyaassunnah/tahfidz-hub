@@ -85,7 +85,7 @@ export default function RiwayatPresensiPengampuView({
   }) || {
     nama: myName,
     nip: currentAuth?.nip || '19880101201501',
-    jabatan: currentAuth?.halaqahNama || 'Koordinator Tahfidz & Wali Kelas X A'
+    jabatan: currentAuth?.halaqahNama || 'Koordinator Tahfidz & Musyrif Halaqah'
   };
 
   const isTeacherMatch = (targetNama) => {

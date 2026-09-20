@@ -33,6 +33,7 @@ model Cabang {
   kelasList       Kelas[]
   alumniList      Alumni[]
   lokasiQrList    LokasiQr[]
+  fotoProfilList  FotoProfil[]
 
   @@map("cabang")
 }
@@ -44,6 +45,7 @@ model SuperadminAccounts {
   password  String    @db.VarChar(255)
   role      String?   @default("Super Admin Cabang") @db.VarChar(64)
   cabangId  String?   @map("cabang_id") @db.VarChar(64)
+  foto      String?   @db.Text
   status    String?   @default("Aktif") @db.VarChar(32)
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
 
@@ -264,7 +266,7 @@ model Alumni {
 
 model LokasiQr {
   id          String    @id @db.VarChar(64)
-  kelas       String    @db.VarChar(100)
+  kelas       String?   @db.VarChar(100)
   lokasi      String    @db.VarChar(255)
   kodeManual  String?   @map("kode_manual") @db.VarChar(64)
   cabangId    String?   @map("cabang_id") @db.VarChar(64)
@@ -345,3 +347,21 @@ model NilaiRapor {
   @@map("nilai_rapor")
 }
 
+model FotoProfil {
+  id        String    @id @db.VarChar(64)
+  userId    String    @map("user_id") @db.VarChar(64)
+  userType  String    @map("user_type") @db.VarChar(32)
+  nama      String    @db.VarChar(150)
+  username  String?   @db.VarChar(100)
+  nip       String?   @db.VarChar(64)
+  role      String?   @db.VarChar(64)
+  cabangId  String?   @map("cabang_id") @db.VarChar(64)
+  fotoUrl   String    @map("foto_url") @db.Text
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  cabang    Cabang?   @relation(fields: [cabangId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, userType])
+  @@map("foto_profil")
+}

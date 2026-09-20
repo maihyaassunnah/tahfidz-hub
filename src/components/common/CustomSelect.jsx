@@ -55,9 +55,13 @@ export default function CustomSelect({
     } else if (children) {
       React.Children.forEach(children, child => {
         if (React.isValidElement(child) && child.type === 'option') {
+          const rawLabel = child.props.children;
+          const labelText = Array.isArray(rawLabel)
+            ? rawLabel.map(c => (typeof c === 'object' ? '' : c)).join('')
+            : (typeof rawLabel === 'string' || typeof rawLabel === 'number' ? String(rawLabel) : '');
           list.push({
             value: child.props.value,
-            label: child.props.children,
+            label: labelText || rawLabel,
             disabled: child.props.disabled
           });
         }

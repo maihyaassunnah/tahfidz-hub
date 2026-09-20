@@ -36,49 +36,237 @@ const STORAGE_KEYS = {
 const INITIAL_CABANG = [
   {
     id: 'cabang-pusat',
-    nama: "MA Ihya As-Sunnah (Pusat)",
-    kode: "MA-PUSAT",
-    kota: "Tasikmalaya",
-    alamat: "Jl. Terusan As-Sunnah No. 12, Kel. Pasirhuni",
+    nama: "MA Ihya As-Sunnah",
+    kode: "MA",
+    kota: "Jambi",
+    alamat: "Jl. Terusan As-Sunnah No. 12",
     noHp: "0812-7890-1122",
-    penanggungJawab: "Ustadz Hamzah Fauzi, Lc.",
-    email: "ma.pusat@ihya.sch.id",
+    penanggungJawab: "Ustadz Wahyudin Hafiz",
+    email: "wahyudinhafiz123@gmail.com",
     status: "Aktif",
-    warnaAksen: "#0d9488",
+    warnaAksen: "#e11d48",
     didirikan: "2015"
   },
   {
     id: 'cabang-smp',
-    nama: "SMP IT Ihya As-Sunnah",
-    kode: "SMP-IT",
-    kota: "Tasikmalaya",
+    nama: "Raudhotul Huffaz",
+    kode: "RDT-HFZ",
+    kota: "Jember",
     alamat: "Jl. Terusan As-Sunnah No. 14, Kompleks Timur",
     noHp: "0812-7890-1133",
-    penanggungJawab: "Aminudin, A.Md",
-    email: "smpit@ihya.sch.id",
+    penanggungJawab: "Azka Basiier",
+    email: "Azkabasier@gmail.com",
     status: "Aktif",
     warnaAksen: "#2563eb",
     didirikan: "2018"
-  },
-  {
-    id: 'cabang-ponpes',
-    nama: "Pondok Pesantren PPIAS",
-    kode: "PPIAS",
-    kota: "Tasikmalaya",
-    alamat: "Kompleks Kampus Putra PPIAS",
-    noHp: "0812-3456-7811",
-    penanggungJawab: "Wahyudin Hafiz, S.Pd",
-    email: "ponpes@ppias.sch.id",
-    status: "Aktif",
-    warnaAksen: "#10b981",
-    didirikan: "2010"
   }
 ];
 
 // Data Inisial Akun Super Admin per Cabang
 const INITIAL_SUPERADMIN_ACCOUNTS = [];
 
-const INITIAL_PENGAMPU = [];
+const INITIAL_PENGAMPU = [
+  {
+    id: "u-wahyudin",
+    nama: "Wahyudin Hafiz, S.Pd",
+    nip: "19880101201501",
+    username: "wahyudin",
+    email: "wahyudin@ppias.sch.id",
+    noHp: "0812-3456-7811",
+    unit: "MA IHYA' AS-SUNNAH",
+    jabatan: "Koordinator Tahfidz & Wali Kelas X A",
+    halaqahId: "h-wahyudin",
+    halaqahNama: "Halaqah Ustadz Wahyudin (X A - Ikhwan)",
+    lokasi: "Lokal Ikhwan Lantai 2 (X A)",
+    status: "Aktif",
+    role: "Pengampu Utama",
+    password: "bismillah123",
+    cabangId: "cabang-pusat",
+    terakhirLogin: "Hari ini 05:15"
+  },
+  {
+    id: "u-febrianti",
+    nama: "Febrianti Dewi, S.Pd",
+    nip: "200120232152",
+    username: "febrianti",
+    email: "febriantidewi043@gmail.com",
+    noHp: "6282279304564",
+    unit: "MA IHYA' AS-SUNNAH",
+    jabatan: "Wali Kelas X B",
+    halaqahId: "h-febrianti",
+    halaqahNama: "Halaqah Ustadzah Febrianti (X B - Akhwat)",
+    lokasi: "Lokal Akhwat Lantai 2 (X B)",
+    status: "Aktif",
+    role: "Pengampu",
+    password: "bismillah123",
+    cabangId: "cabang-pusat",
+    terakhirLogin: "Hari ini 05:20"
+  },
+  {
+    id: "u-agus",
+    nama: "Agus Rinaldi",
+    nip: "19982025007011180",
+    username: "agus",
+    email: "hastagcoretansantri@gmail.com",
+    noHp: "6282279990521",
+    unit: "MA IHYA' AS-SUNNAH",
+    jabatan: "Staff TU Pondok & Wali Kelas XI A",
+    halaqahId: "h-agus",
+    halaqahNama: "Halaqah Ustadz Agus (XI A - Ikhwan)",
+    lokasi: "Gedung B, Lt 1 (XI A)",
+    status: "Aktif",
+    role: "Pengampu",
+    password: "bismillah123",
+    cabangId: "cabang-pusat",
+    terakhirLogin: "Hari ini 05:10"
+  },
+  {
+    id: "u-ainun",
+    nama: "Ainun Hamidah, S.Pd",
+    nip: "200020182091",
+    username: "ainun",
+    email: "kholid.arfandani@gmail.com",
+    noHp: "6285764038355",
+    unit: "2 Unit",
+    unitTag: "SMP IT IHYA' AS-SUNNAH",
+    jabatan: "Wali Kelas XI B & Pengampu Tahfidz",
+    halaqahId: "h-ainun",
+    halaqahNama: "Halaqah Ustadzah Ainun (XI B - Akhwat)",
+    lokasi: "Gedung Akhwat Lt 2 (XI B)",
+    status: "Aktif",
+    role: "Pengampu",
+    password: "bismillah123",
+    cabangId: "cabang-smp",
+    terakhirLogin: "Hari ini 05:05"
+  },
+  {
+    id: "u-feri",
+    nama: "Feri Hermawan, S.Pd",
+    nip: "19900214201801",
+    username: "feri",
+    email: "feri.hermawan@ppias.sch.id",
+    noHp: "0812-7891-2345",
+    unit: "MA IHYA' AS-SUNNAH",
+    jabatan: "Wali Kelas XII A",
+    halaqahId: "h-feri",
+    halaqahNama: "Halaqah Ustadz Feri (XII A - Ikhwan)",
+    lokasi: "Gedung A Lantai 3 (XII A)",
+    status: "Aktif",
+    role: "Pengampu",
+    password: "bismillah123",
+    cabangId: "cabang-pusat",
+    terakhirLogin: "Hari ini 05:00"
+  },
+  {
+    id: "u-defit",
+    nama: "Defit Purwaningsih, S.Pd",
+    nip: "199620032140",
+    username: "defit",
+    email: "defitpurwaningsih22@gmail.com",
+    noHp: "6282258613578",
+    unit: "MA IHYA' AS-SUNNAH",
+    jabatan: "Waka Kurikulum & Wali Kelas XII B",
+    halaqahId: "h-defit",
+    halaqahNama: "Halaqah Ustadzah Defit (XII B - Akhwat)",
+    lokasi: "Gedung Akhwat, Lt 2 (XII B)",
+    status: "Aktif",
+    role: "Pengampu",
+    password: "bismillah123",
+    cabangId: "cabang-pusat",
+    terakhirLogin: "Hari ini 04:55"
+  },
+  {
+    id: "u-redi",
+    nama: "Redi Iskandar, S.Pd., B.A.",
+    nip: "19910515201901",
+    username: "redi",
+    email: "redi.iskandar@ppias.sch.id",
+    noHp: "0812-3456-7814",
+    unit: "MA IHYA' AS-SUNNAH",
+    jabatan: "Pengampu Tahfidz",
+    halaqahId: "h-redi",
+    halaqahNama: "Halaqah Ustadz Redi (X B - Akhwat)",
+    lokasi: "Lokal Akhwat Lantai 2 (X B)",
+    status: "Aktif",
+    role: "Pengampu",
+    password: "bismillah123",
+    cabangId: "cabang-pusat",
+    terakhirLogin: "Hari ini 05:02"
+  },
+  {
+    id: "u-hendri",
+    nama: "Hendriyansa Putra",
+    nip: "19930415201902",
+    username: "hendri",
+    email: "hendriyansa@ppias.sch.id",
+    noHp: "0812-3456-7815",
+    unit: "MA IHYA' AS-SUNNAH",
+    jabatan: "Pengampu Tahfidz",
+    halaqahId: "h-hendri",
+    halaqahNama: "Halaqah Ust. Hendriyansa (XI A - Ikhwan)",
+    lokasi: "Gedung A Lantai 2 (XI A)",
+    status: "Aktif",
+    role: "Pengampu",
+    password: "bismillah123",
+    cabangId: "cabang-pusat",
+    terakhirLogin: "Hari ini 05:07"
+  },
+  {
+    id: "u-hamzah",
+    nama: "Ustadz Hamzah Fauzi, Lc.",
+    nip: "19910408201704",
+    username: "hamzah",
+    email: "hamzah.fauzi@ppias.sch.id",
+    noHp: "0812-3456-7816",
+    unit: "MA IHYA' AS-SUNNAH",
+    jabatan: "Pengampu Tahfidz",
+    halaqahId: "h-hamzah",
+    halaqahNama: "Halaqah Ustadz Hamzah (XI B - Akhwat)",
+    lokasi: "Gedung Akhwat Lt 2 (XI B)",
+    status: "Aktif",
+    role: "Pengampu",
+    password: "bismillah123",
+    cabangId: "cabang-pusat",
+    terakhirLogin: "Kemarin 18:50"
+  },
+  {
+    id: "u-fitria",
+    nama: "Fitria Cahya Kamila, S.Pd",
+    nip: "19950912202102",
+    username: "fitria",
+    email: "fitria.kamila@ppias.sch.id",
+    noHp: "0812-3456-7817",
+    unit: "MA IHYA' AS-SUNNAH",
+    jabatan: "Pengampu Tahfidz",
+    halaqahId: "h-fitria",
+    halaqahNama: "Halaqah Ustadzah Fitria (X B - Akhwat)",
+    lokasi: "Lokal Akhwat Lantai 1 (X B)",
+    status: "Aktif",
+    role: "Pengampu",
+    password: "bismillah123",
+    cabangId: "cabang-pusat",
+    terakhirLogin: "Hari ini 05:12"
+  },
+  {
+    id: "u-aminudin",
+    nama: "Aminudin, A.Md",
+    nip: "199520231138",
+    username: "aminudin",
+    email: "aminudin13@gmail.com",
+    noHp: "62895355691010",
+    unit: "2 Unit",
+    unitTag: "SMP IT IHYA' AS-SUNNAH",
+    jabatan: "Staff KBM & Pengampu SMP",
+    halaqahId: "h-aminudin",
+    halaqahNama: "Halaqah Ustadz Aminudin (SMP IT)",
+    lokasi: "Gedung SMP IT Lt 1",
+    status: "Aktif",
+    role: "Pengampu",
+    password: "bismillah123",
+    cabangId: "cabang-smp",
+    terakhirLogin: "Hari ini 05:08"
+  }
+];
 
 // Data Sesi Presensi Halaqah — Disesuaikan dengan Jadwal Sesi SIGAP
 // Data Sesi Presensi Halaqah — Disesuaikan dengan Jadwal Sesi SIGAP
@@ -258,17 +446,77 @@ const INITIAL_SETTINGS = {
 // DATASET AWAL SIGAP DARI SCREENSHOT PENGGUNA
 // =========================================================
 
-// GAMBAR 2: DATA SISWA
-const INITIAL_SIGAP_SISWA = [];
+// GAMBAR 2: DATA SISWA (MULTI-CABANG TERPADU)
+const INITIAL_SIGAP_SISWA = [
+  { id: 'ss-1', nama: 'Adila Syakira', nik: '1605035201090002', lp: 'P', nisn: '131215030022260008', kelas: 'X B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Febrianti Dewi, S.Pd', tglLahir: '12 Januari 2010', wali: 'Syakir Hamidi', kontakWali: '081234567801' },
+  { id: 'ss-2', nama: 'AHMAD DINEJAD', nik: '1605071707090001', lp: 'L', nisn: '0097997681', kelas: 'XII A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Feri Hermawan, S.Pd', tglLahir: '17 Juli 2009', wali: 'HAULAF', kontakWali: '08127891234' },
+  { id: 'ss-3', nama: 'AINI JELINA', nik: '1602096211080001', lp: 'P', nisn: '0081690952', kelas: 'XII B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Defit Purwaningsih, S.Pd', tglLahir: '12 November 2008', wali: 'JHON EFENDI', kontakWali: '08136789123' },
+  { id: 'ss-4', nama: 'AISYAH', nik: '1671036806100021', lp: 'P', nisn: '0109325350', kelas: 'XI B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Ainun Hamidah, S.Pd', tglLahir: '29 Juni 2010', wali: 'Witarso', kontakWali: '08527812901' },
+  { id: 'ss-5', nama: 'ALIYAH HUSNUL. ML', nik: '1608046311090003', lp: 'P', nisn: '0095898699', kelas: 'XI B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Ainun Hamidah, S.Pd', tglLahir: '23 November 2009', wali: 'Mustaqim', kontakWali: '08218901234' },
+  { id: 'ss-6', nama: 'Aljha Afriandi', nik: '1613062807110001', lp: 'L', nisn: '131215030022260001', kelas: 'X A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Wahyudin Hafiz, S.Pd', tglLahir: '14 Agustus 2010', wali: 'Sulaiman', kontakWali: '08139012891' },
+  { id: 'ss-7', nama: 'AMALIA KHOIRUNISA', nik: '1605167006100001', lp: 'P', nisn: '0103835331', kelas: 'XI B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Ainun Hamidah, S.Pd', tglLahir: '30 Juni 2010', wali: 'TOTOK HARIYONO', kontakWali: '08129988112' },
+  { id: 'ss-8', nama: 'Ancika Yona Shalihah', nik: '1605035201090020', lp: 'P', nisn: '131215030022260020', kelas: 'X B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Febrianti Dewi, S.Pd', tglLahir: '10 Mei 2010', wali: 'Yona Sasmita', kontakWali: '08531122334' },
+  { id: 'ss-9', nama: 'Asiyah Maryam', nik: '1605035201090009', lp: 'P', nisn: '131215030022260009', kelas: 'X B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Febrianti Dewi, S.Pd', tglLahir: '05 Januari 2010', wali: 'Zulkarnain', kontakWali: '08226677889' },
+  { id: 'ss-10', nama: 'Asyipa Desma Wasita', nik: '1605035201090021', lp: 'P', nisn: '131215030022260021', kelas: 'X B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Febrianti Dewi, S.Pd', tglLahir: '18 Februari 2010', wali: 'Desmawan', kontakWali: '08124455667' },
+  { id: 'ss-11', nama: 'Jamiatul Akbar', nik: '1605011202100001', lp: 'L', nisn: '0102345678', kelas: 'X A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Wahyudin Hafiz, S.Pd', tglLahir: '12 Februari 2010', wali: 'H. Akbar Sasmita', kontakWali: '081234567801' },
+  { id: 'ss-12', nama: 'Attalah Saum Alvano', nik: '1605011508090002', lp: 'L', nisn: '0098765432', kelas: 'X A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Wahyudin Hafiz, S.Pd', tglLahir: '15 Agustus 2009', wali: 'Drs. Bambang Alvano', kontakWali: '081234567802' },
+  { id: 'ss-13', nama: 'M. Al Futra', nik: '1605012204100003', lp: 'L', nisn: '0105678901', kelas: 'X A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Wahyudin Hafiz, S.Pd', tglLahir: '22 April 2010', wali: 'Ir. Futra Pratama', kontakWali: '081234567803' },
+  { id: 'ss-14', nama: 'Muhammad Ziyad', nik: '1605021806090004', lp: 'L', nisn: '0093456789', kelas: 'XI A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Agus Rinaldi', tglLahir: '18 Juni 2009', wali: 'Ust. Ziyad Abdullah', kontakWali: '081234567804' },
+  { id: 'ss-15', nama: 'Raihan Al-Ghifari', nik: '1605022009090005', lp: 'L', nisn: '0094567890', kelas: 'XI A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Agus Rinaldi', tglLahir: '20 September 2009', wali: 'Ghifari Pratama', kontakWali: '081234567805' },
+  { id: 'ss-16', nama: 'Syakir Daulay', nik: '1605030501080006', lp: 'L', nisn: '0085678901', kelas: 'XII A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Feri Hermawan, S.Pd', tglLahir: '05 Januari 2008', wali: 'H. Daulay', kontakWali: '081234567806' },
+  { id: 'ss-17', nama: 'Nabil Makarim', nik: '1605031103080007', lp: 'L', nisn: '0086789012', kelas: 'XII A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Feri Hermawan, S.Pd', tglLahir: '11 Maret 2008', wali: 'Makarim Hasan', kontakWali: '081234567807' },
+  { id: 'ss-18', nama: 'Fatimah Az-Zahra', nik: '1605041407100008', lp: 'P', nisn: '0107890123', kelas: 'X B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Febrianti Dewi, S.Pd', tglLahir: '14 Juli 2010', wali: 'Drs. Ali Fauzi', kontakWali: '081234567808' },
+  { id: 'ss-19', nama: 'Zahra Nur Aini', nik: '1605051910090009', lp: 'P', nisn: '0098901234', kelas: 'XI B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Ainun Hamidah, S.Pd', tglLahir: '19 Oktober 2009', wali: 'Aini Sasmita', kontakWali: '081234567809' },
+  { id: 'ss-20', nama: 'Maryam Khairunnisa', nik: '1605062512080010', lp: 'P', nisn: '0089012345', kelas: 'XII B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Defit Purwaningsih, S.Pd', tglLahir: '25 Desember 2008', wali: 'Khairul Anwar', kontakWali: '081234567810' },
+  { id: 'ss-smp-1', nama: 'Fatih Rizqullah (SMP)', nik: '1605062512080081', lp: 'L', nisn: '0089012381', kelas: 'VII SMP IT', unitSekolah: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', pengampu: 'Aminudin, A.Md', tglLahir: '10 Januari 2011', wali: 'H. Abdullah', kontakWali: '08128899001' },
+  { id: 'ss-smp-2', nama: 'Ziyad Al-Farisi (SMP)', nik: '1605062512080082', lp: 'L', nisn: '0089012382', kelas: 'VIII SMP IT', unitSekolah: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', pengampu: 'Aminudin, A.Md', tglLahir: '12 Maret 2010', wali: 'Drs. Syarif', kontakWali: '08128899002' },
+  { id: 'ss-ponpes-1', nama: 'Salman Al-Farisi (Ponpes)', nik: '1605062512080091', lp: 'L', nisn: '0089012391', kelas: "I'dad Lughowi", unitSekolah: "Pondok Pesantren PPIAS", cabangId: 'cabang-ponpes', pengampu: 'Wahyudin Hafiz, S.Pd', tglLahir: '05 Mei 2009', wali: 'Ustadz Mahmud', kontakWali: '08123344556' }
+];
 
-// GAMBAR 3: DATA GURU & PEGAWAI (PENGAMPU)
-const INITIAL_SIGAP_GURU = [];
+// GAMBAR 3: DATA GURU & PEGAWAI (PENGAMPU) MULTI-CABANG
+const INITIAL_SIGAP_GURU = [
+  { id: 'sg-1', nama: 'AAZ', nip: 'NON-NIP', lp: 'L', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Pengampu Tahfidz', email: 'agus.rinaldi23@sttmadani.ac.id', password: 'bismillah123', noHp: '0812-7890-1122', avatarBg: '#dcfce7', initial: 'A' },
+  { id: 'sg-2', nama: 'aazeed', nip: 'NON-NIP', lp: 'L', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Pengampu Tahfidz', email: 'agus98rinaldi@gmail.com', password: 'bismillah123', noHp: '0812-7890-1133', avatarBg: '#ccfbf1', initial: 'a' },
+  { id: 'sg-3', nama: 'Agus Rinaldi', nip: '19982025007011180', lp: 'L', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Staff TU Pondok & Wali Kelas XI A', email: 'hastagcoretansantri@gmail.com', password: 'bismillah123', noHp: '6282279990521', avatarBg: '#fee2e2', initial: 'A' },
+  { id: 'sg-4', nama: 'Ainun Hamidah, S.Pd', nip: '200020182091', lp: 'P', status: 'GTY', unit: '2 Unit', unitTag: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', jabatan: 'Wali Kelas XI B & Pengampu Tahfidz', email: 'kholid.arfandani@gmail.com', password: 'bismillah123', noHp: '6285764038355', avatarBg: '#dcfce7', initial: 'A' },
+  { id: 'sg-5', nama: "Ajizah Ikhda Sulmi, S.Pd", nip: '199820222132', lp: 'P', status: 'GTY', unit: '2 Unit', unitTag: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', jabatan: 'Pengampu Tahfidz', email: 'ajizshikhda0389@gmail.com', password: 'bismillah123', noHp: '6285181428518', avatarBg: '#ccfbf1', initial: 'A' },
+  { id: 'sg-6', nama: 'Aminudin, A.Md', nip: '199520231138', lp: 'L', status: 'GTY', unit: '2 Unit', unitTag: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', jabatan: 'Staff KBM', email: 'aminudin13@gmail.com', password: 'bismillah123', noHp: '62895355691010', avatarBg: '#ccfbf1', initial: 'A' },
+  { id: 'sg-7', nama: 'Ananda Novita, S.Pd', nip: '200020222127', lp: 'P', status: 'GTY', unit: '2 Unit', unitTag: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', jabatan: 'Pengampu Tahfidz', email: 'ndvita511@gmail.com', password: 'bismillah123', noHp: '6282282582331', avatarBg: '#dcfce7', initial: 'A' },
+  { id: 'sg-8', nama: 'Defit Purwaningsih, S.Pd', nip: '199620032140', lp: 'P', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Waka Kurikulum & Wali Kelas XII B', email: 'defitpurwaningsih22@gmail.com', password: 'bismillah123', noHp: '6282258613578', avatarBg: '#e0f2fe', initial: 'D' },
+  { id: 'sg-9', nama: 'Febrianti Dewi, S.Pd', nip: '200120232152', lp: 'P', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Wali Kelas X B', email: 'febriantidewi043@gmail.com', password: 'bismillah123', noHp: '6282279304564', avatarBg: '#f0fdf4', initial: 'F' },
+  { id: 'sg-10', nama: 'Wahyudin Hafiz, S.Pd', nip: '19880101201501', lp: 'L', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Koordinator Tahfidz & Wali Kelas X A', email: 'wahyudin@ppias.sch.id', password: 'bismillah123', noHp: '0812-3456-7811', avatarBg: '#dcfce7', initial: 'W' },
+  { id: 'sg-11', nama: 'Feri Hermawan, S.Pd', nip: '19900214201801', lp: 'L', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Wali Kelas XII A', email: 'feri.hermawan@ppias.sch.id', password: 'bismillah123', noHp: '0812-7891-2345', avatarBg: '#e0f2fe', initial: 'F' },
+  { id: 'sg-12', nama: 'Redi Iskandar, S.Pd., B.A.', nip: '19910515201901', lp: 'L', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Pengampu Tahfidz', email: 'redi.iskandar@ppias.sch.id', password: 'bismillah123', noHp: '0812-3456-7814', avatarBg: '#ccfbf1', initial: 'R' },
+  { id: 'sg-13', nama: 'Hendriyansa Putra', nip: '19930415201902', lp: 'L', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Pengampu Tahfidz', email: 'hendriyansa@ppias.sch.id', password: 'bismillah123', noHp: '0812-3456-7815', avatarBg: '#dcfce7', initial: 'H' },
+  { id: 'sg-14', nama: 'Ustadz Hamzah Fauzi, Lc.', nip: '19910408201704', lp: 'L', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Pengampu Tahfidz', email: 'hamzah.fauzi@ppias.sch.id', password: 'bismillah123', noHp: '0812-3456-7816', avatarBg: '#fee2e2', initial: 'H' },
+  { id: 'sg-15', nama: 'Fitria Cahya Kamila, S.Pd', nip: '19950912202102', lp: 'P', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Pengampu Tahfidz', email: 'fitria.kamila@ppias.sch.id', password: 'bismillah123', noHp: '0812-3456-7817', avatarBg: '#fce7f3', initial: 'F' }
+];
 
-// GAMBAR 4: DATA ALUMNI
-const INITIAL_SIGAP_ALUMNI = [];
+// GAMBAR 4: DATA ALUMNI (MULTI-CABANG)
+const INITIAL_SIGAP_ALUMNI = [
+  { id: 'sa-1', nama: 'AFIFAH TURROSYIDAH', nik: '1605075203080002', nisn: '0083805811', nism: '-', lp: 'P', cabangId: 'cabang-pusat', tahunLulus: '2026' },
+  { id: 'sa-2', nama: 'AZZURA AZ ZAHRA', nik: '1673035201090001', nisn: '0085261478', nism: '-', lp: 'P', cabangId: 'cabang-pusat', tahunLulus: '2026' },
+  { id: 'sa-3', nama: 'BUNGA ANNISA', nik: '1501096203080001', nisn: '0081229700', nism: '-', lp: 'P', cabangId: 'cabang-pusat', tahunLulus: '2026' },
+  { id: 'sa-4', nama: 'ILVIA GISA', nik: '1605086312080002', nisn: '0088708559', nism: '-', lp: 'P', cabangId: 'cabang-pusat', tahunLulus: '2026' },
+  { id: 'sa-5', nama: 'IQLIMA HURUN JANNAH', nik: '1503036301080002', nisn: '0083709128', nism: '-', lp: 'P', cabangId: 'cabang-pusat', tahunLulus: '2026' },
+  { id: 'sa-6', nama: 'LIDIYA AGUSTIANA', nik: '1503037108090003', nisn: '0084394449', nism: '-', lp: 'P', cabangId: 'cabang-pusat', tahunLulus: '2026' },
+  { id: 'sa-7', nama: 'LUTHFIAN ALIN NUHA', nik: '1508084212080002', nisn: '0081837591', nism: '-', lp: 'P', cabangId: 'cabang-pusat', tahunLulus: '2026' },
+  { id: 'sa-8', nama: 'M. NAFIDZ', nik: '1571022110070101', nisn: '0074131839', nism: '-', lp: 'L', cabangId: 'cabang-pusat', tahunLulus: '2026' },
+  { id: 'sa-9', nama: 'MARYAM MUTHI\'AH.B', nik: '1707106701090001', nisn: '3219042945', nism: '-', lp: 'P', cabangId: 'cabang-pusat', tahunLulus: '2026' }
+];
 
 // GAMBAR 1 (LANJUTAN): DATA KELAS & WALI
-const INITIAL_SIGAP_KELAS = [];
+const INITIAL_SIGAP_KELAS = [
+  { id: 'k-xa', nama: 'X A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', waliKelas: 'Wahyudin Hafiz, S.Pd', aktif: true },
+  { id: 'k-xb', nama: 'X B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', waliKelas: 'Febrianti Dewi, S.Pd', aktif: true },
+  { id: 'k-xia', nama: 'XI A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', waliKelas: 'Agus Rinaldi', aktif: true },
+  { id: 'k-xib', nama: 'XI B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', waliKelas: 'Ainun Hamidah, S.Pd', aktif: true },
+  { id: 'k-xiia', nama: 'XII A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', waliKelas: 'Feri Hermawan, S.Pd', aktif: true },
+  { id: 'k-xiib', nama: 'XII B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', waliKelas: 'Defit Purwaningsih, S.Pd', aktif: true },
+  { id: 'k-smp-7', nama: 'VII SMP IT', unitSekolah: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', waliKelas: 'Aminudin, A.Md', aktif: true },
+  { id: 'k-smp-8', nama: 'VIII SMP IT', unitSekolah: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', waliKelas: 'Ajizah Ikhda Sulmi, S.Pd', aktif: true },
+  { id: 'k-ponpes-idad', nama: "I'dad Lughowi", unitSekolah: "Pondok Pesantren PPIAS", cabangId: 'cabang-ponpes', waliKelas: 'Wahyudin Hafiz, S.Pd', aktif: true }
+];
 
 // GAMBAR 2 (LANJUTAN): DATA JADWAL PELAJARAN
 const INITIAL_SIGAP_JADWAL = {
@@ -491,12 +739,37 @@ const DEFAULT_RAPOR_TEMPLATE = {
 
 const INITIAL_NILAI_RAPOR = [];
 
+const INITIAL_SUPERADMIN = [
+  {
+    id: 'sa-pusat',
+    nama: 'MA Ihya As-Sunnah',
+    username: 'ma',
+    password: 'admin123',
+    role: 'Super Admin Cabang',
+    cabangId: 'cabang-pusat',
+    cabangNama: 'MA Ihya As-Sunnah',
+    status: 'Aktif',
+    foto: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=300&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'sa-cabang-smp',
+    nama: 'Admin Raudhotul Huffaz',
+    username: 'admin_rdthfz',
+    password: 'bismillah123',
+    role: 'Super Admin Cabang',
+    cabangId: 'cabang-smp',
+    cabangNama: 'Raudhotul Huffaz',
+    status: 'Aktif',
+    foto: null
+  }
+];
+
 export const storageService = {
   _cache: {
-    cabang: [],
-    superadmin: [],
-    pengampu: [],
-    santri: [...INITIAL_SANTRI],
+    cabang: [...INITIAL_CABANG],
+    superadmin: [...INITIAL_SUPERADMIN],
+    pengampu: [...INITIAL_SIGAP_GURU],
+    santri: [...INITIAL_SIGAP_SISWA, ...INITIAL_SANTRI],
     halaqah: [],
     sesi: [],
     absensi: [],
@@ -504,12 +777,13 @@ export const storageService = {
     izin: [],
     spp: [],
     monitoring: [],
-    kelas: [],
-    alumni: [],
+    kelas: [...INITIAL_SIGAP_KELAS],
+    alumni: [...INITIAL_SIGAP_ALUMNI],
     lokasi_qr: [],
     settings: INITIAL_SETTINGS,
     raporTemplate: DEFAULT_RAPOR_TEMPLATE,
     nilaiRapor: [],
+    fotoProfil: [],
     jadwal: INITIAL_SIGAP_JADWAL,
     jadwalHalaqoh: INITIAL_JADWAL_HALAQOH,
     adminNotifications: [],
@@ -529,10 +803,19 @@ export const storageService = {
   },
 
   init() {
-    // Hilangkan seluruh penyimpanan di browser localStorage (Penyimpanan 100% Menggunakan Database PostgreSQL)
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
+        const savedPhotos = localStorage.getItem('tahfidz_foto_cache');
         localStorage.clear();
+        if (savedPhotos) {
+          try {
+            const parsed = JSON.parse(savedPhotos);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              this._cache.fotoProfil = parsed;
+              localStorage.setItem('tahfidz_foto_cache', JSON.stringify(parsed));
+            }
+          } catch (e) {}
+        }
       } catch (e) {}
     }
   },
@@ -542,7 +825,7 @@ export const storageService = {
     try {
       const res = await apiService.pullAllData();
       if (res && res.success && res.data) {
-        const { cabang, superadmin, pengampu, santri, halaqah, sesi, absensi, setoran, izin, spp, monitoring, kelas, alumni, lokasi_qr, settings } = res.data;
+        const { cabang, superadmin, pengampu, santri, halaqah, sesi, absensi, setoran, izin, spp, monitoring, kelas, alumni, lokasi_qr, settings, foto_profil } = res.data;
 
         this._cache.cabang = (cabang || []).map(c => ({
           ...c,
@@ -567,8 +850,37 @@ export const storageService = {
           password: sa.password,
           role: sa.role || 'Super Admin Cabang',
           cabangId: sa.cabang_id || sa.cabangId || 'cabang-pusat',
-          status: sa.status || 'Aktif'
+          status: sa.status || 'Aktif',
+          foto: sa.foto || null
         }));
+
+        // Pastikan setiap cabang yang terdaftar di sistem memiliki akun Super Admin
+        const existingCabangIds = new Set(this._cache.superadmin.map(s => s.cabangId));
+        (this._cache.cabang || []).forEach(cb => {
+          if (!existingCabangIds.has(cb.id)) {
+            const cleanKode = (cb.kode || cb.id || 'cabang').toLowerCase().replace(/[^a-z0-9]/g, '');
+            const autoSA = {
+              id: `sa-${cb.id}`,
+              nama: `Admin ${cb.nama}`,
+              username: `admin_${cleanKode}`,
+              password: 'bismillah123',
+              role: 'Super Admin Cabang',
+              cabangId: cb.id,
+              status: 'Aktif',
+              foto: null
+            };
+            this._cache.superadmin.push(autoSA);
+            apiService.saveSuperadmin({
+              id: autoSA.id,
+              nama: autoSA.nama,
+              username: autoSA.username,
+              password: autoSA.password,
+              role: autoSA.role,
+              cabang_id: autoSA.cabangId,
+              status: autoSA.status
+            }).catch(e => console.warn('[API] auto provision superadmin error:', e.message));
+          }
+        });
 
         this._cache.pengampu = (pengampu || []).map(p => ({
           ...p,
@@ -773,6 +1085,26 @@ export const storageService = {
           radiusMeter: l.radius_meter || l.radiusMeter || 50
         }));
 
+        if (Array.isArray(foto_profil) && foto_profil.length > 0) {
+          this._cache.fotoProfil = foto_profil.map(fp => ({
+            ...fp,
+            id: fp.id,
+            userId: fp.userId || fp.user_id,
+            userType: fp.userType || fp.user_type || 'superadmin',
+            nama: fp.nama,
+            username: fp.username,
+            nip: fp.nip,
+            role: fp.role,
+            cabangId: fp.cabangId || fp.cabang_id,
+            fotoUrl: fp.fotoUrl || fp.foto_url
+          }));
+          try {
+            if (typeof window !== 'undefined' && window.localStorage) {
+              localStorage.setItem('tahfidz_foto_cache', JSON.stringify(this._cache.fotoProfil));
+            }
+          } catch (e) {}
+        }
+
         // 1. Muat Jadwal Halaqoh dari PostgreSQL Settings
         const jadwalSetting = (settings || []).find(st => st.key === 'sigap_jadwal_halaqoh');
         if (jadwalSetting && jadwalSetting.value) {
@@ -809,6 +1141,12 @@ export const storageService = {
           const nrData = Array.isArray(nrRes) ? nrRes : (nrRes?.data || []);
           if (Array.isArray(nrData)) {
             this._cache.nilaiRapor = nrData;
+          }
+
+          const fpRes = await apiService.getFotoProfil();
+          const fpData = Array.isArray(fpRes) ? fpRes : (fpRes?.data || []);
+          if (Array.isArray(fpData)) {
+            this._cache.fotoProfil = fpData;
           }
         } catch (e) {}
 
@@ -851,6 +1189,10 @@ export const storageService = {
   // ==========================================
   getActiveBranchId() {
     this.init();
+    const user = this._cache.authUser || this.getAuthUser();
+    if (user && user.role === 'superadmin' && user.cabangId) {
+      return user.cabangId;
+    }
     if (this._cache.activeBranchId) return this._cache.activeBranchId;
     try {
       const b = sessionStorage.getItem(STORAGE_KEYS.ACTIVE_BRANCH_ID);
@@ -864,6 +1206,10 @@ export const storageService = {
 
   setActiveBranchId(branchId) {
     this.init();
+    const user = this._cache.authUser || this.getAuthUser();
+    if (user && user.role === 'superadmin' && user.cabangId) {
+      branchId = user.cabangId;
+    }
     this._cache.activeBranchId = branchId;
     try {
       sessionStorage.setItem(STORAGE_KEYS.ACTIVE_BRANCH_ID, branchId);
@@ -873,6 +1219,16 @@ export const storageService = {
   getActiveBranch() {
     const list = this.getCabang();
     const activeId = this.getActiveBranchId();
+    if (activeId === 'ALL') {
+      return {
+        id: 'ALL',
+        nama: 'Semua Cabang',
+        kode: 'SEMUA',
+        penanggungJawab: 'Pimpinan Yayasan PPIAS',
+        kota: 'Seluruh Cabang',
+        warnaAksen: '#ff5b35'
+      };
+    }
     return list.find(c => c.id === activeId) || list[0] || INITIAL_CABANG[0];
   },
 
@@ -882,6 +1238,10 @@ export const storageService = {
       return this._cache.cabang;
     }
     return INITIAL_CABANG;
+  },
+
+  getCabangList() {
+    return this.getCabang();
   },
 
   saveCabang(list) {
@@ -913,6 +1273,20 @@ export const storageService = {
       warna_aksen: created.warnaAksen,
       didirikan: created.didirikan
     }).catch(e => console.warn('[API] saveCabang error:', e.message));
+
+    // Otomatis buat akun Super Admin untuk cabang baru jika belum ada
+    const cleanKode = (created.kode || created.id).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const defaultUsername = `admin_${cleanKode}`;
+    this.addSuperAdminAccount({
+      id: `sa-${created.id}`,
+      nama: `Admin ${created.nama}`,
+      username: defaultUsername,
+      password: 'bismillah123',
+      cabangId: created.id,
+      cabangNama: created.nama,
+      status: 'Aktif'
+    });
+
     return created;
   },
 
@@ -965,6 +1339,9 @@ export const storageService = {
     if (this.getActiveBranchId() === id) {
       this.setActiveBranchId('cabang-pusat');
     }
+    // Hapus juga asosiasi akun Super Admin untuk cabang ini
+    const saList = (this._cache.superadmin || []).filter(sa => sa.cabangId !== id);
+    this.saveSuperAdminAccounts(saList);
     apiService.deleteCabang(id).catch(e => console.warn('[API] deleteCabang error:', e.message));
     return true;
   },
@@ -974,7 +1351,48 @@ export const storageService = {
   // ==========================================
   getSuperAdminAccounts() {
     this.init();
-    return this._cache.superadmin || [];
+    const cabangList = this.getCabang();
+    const list = this._cache.superadmin || [];
+
+    // Sinkronkan cabangNama untuk setiap akun
+    const enrichedList = list.map(sa => {
+      const matched = cabangList.find(c => c.id === sa.cabangId);
+      return {
+        ...sa,
+        cabangNama: sa.cabangNama || matched?.nama || (sa.cabangId === 'cabang-pusat' ? 'MA Ihya As-Sunnah' : 'Cabang Lembaga')
+      };
+    });
+
+    // Pastikan seluruh cabang yang terdaftar memiliki akun Super Admin
+    const existingCabangIds = new Set(enrichedList.map(s => s.cabangId));
+    let hasNew = false;
+    cabangList.forEach(cb => {
+      if (!existingCabangIds.has(cb.id)) {
+        const cleanKode = (cb.kode || cb.id || 'cabang').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const newSA = {
+          id: `sa-${cb.id}`,
+          nama: `Admin ${cb.nama}`,
+          username: `admin_${cleanKode}`,
+          password: 'bismillah123',
+          role: 'Super Admin Cabang',
+          cabangId: cb.id,
+          cabangNama: cb.nama,
+          status: 'Aktif',
+          terakhirLogin: 'Baru Dibuat',
+          foto: null
+        };
+        enrichedList.push(newSA);
+        existingCabangIds.add(cb.id);
+        hasNew = true;
+      }
+    });
+
+    this._cache.superadmin = enrichedList;
+    return enrichedList;
+  },
+
+  getSuperadminAccounts() {
+    return this.getSuperAdminAccounts();
   },
 
   saveSuperAdminAccounts(list) {
@@ -1356,8 +1774,9 @@ export const storageService = {
 
   getSantri(branchId = null) {
     const all = this.getAllSantriRaw();
-    if (!branchId || branchId === 'ALL') return all;
-    return all.filter(s => (s.cabangId || 'cabang-pusat') === branchId);
+    const active = branchId !== null ? branchId : this.getActiveBranchId();
+    if (!active || active === 'ALL') return all;
+    return all.filter(s => (s.cabangId || 'cabang-pusat') === active);
   },
 
   saveSantri(santriData) {
@@ -1504,8 +1923,9 @@ export const storageService = {
 
   getHalaqah(branchId = null) {
     const all = this.getAllHalaqahRaw();
-    if (!branchId || branchId === 'ALL') return all;
-    return all.filter(h => (h.cabangId || 'cabang-pusat') === branchId);
+    const active = branchId !== null ? branchId : this.getActiveBranchId();
+    if (!active || active === 'ALL') return all;
+    return all.filter(h => (h.cabangId || 'cabang-pusat') === active);
   },
 
   saveHalaqah(list) {
@@ -1573,8 +1993,9 @@ export const storageService = {
 
   getSetoran(branchId = null) {
     const all = this.getAllSetoranRaw();
-    if (!branchId || branchId === 'ALL') return all;
-    return all.filter(s => (s.cabangId || 'cabang-pusat') === branchId);
+    const active = branchId !== null ? branchId : this.getActiveBranchId();
+    if (!active || active === 'ALL') return all;
+    return all.filter(s => (s.cabangId || 'cabang-pusat') === active);
   },
 
   getTotalSetoranCount(branchId = null) {
@@ -1671,8 +2092,9 @@ export const storageService = {
 
   getAbsensi(branchId = null) {
     const all = this.getAllAbsensiRaw();
-    if (!branchId || branchId === 'ALL') return all;
-    return all.filter(a => (a.cabangId || 'cabang-pusat') === branchId);
+    const active = branchId !== null ? branchId : this.getActiveBranchId();
+    if (!active || active === 'ALL') return all;
+    return all.filter(a => (a.cabangId || 'cabang-pusat') === active);
   },
 
   saveAbsensiRecord(tanggal, halaqahId, records, catatanHalaqah = "", sesiId = 'subuh', sesiNama = null) {
@@ -2138,14 +2560,13 @@ export const storageService = {
     const setoran = this.getSetoran();
     const santriMap = Object.fromEntries(this.getSantri().map(s => [s.id, s]));
     
-    const headers = ["Tanggal", "Nama Santri", "NIS", "Kelas", "Jenis Setoran", "Surah", "Ayat Awal", "Ayat Akhir", "Juz", "Nilai", "Skor", "Status Lanjut", "Catatan Tajwid", "Musyrif"];
+    const headers = ["Tanggal", "Nama Santri", "NIS", "Jenis Setoran", "Surah", "Ayat Awal", "Ayat Akhir", "Juz", "Nilai", "Skor", "Status Lanjut", "Catatan Tajwid", "Musyrif"];
     const rows = setoran.map(item => {
       const s = santriMap[item.santriId] || {};
       return [
         `"${item.tanggal}"`,
         `"${s.nama || '-'}"`,
         `"${s.nis || '-'}"`,
-        `"${s.kelas || '-'}"`,
         `"${item.jenis}"`,
         `"${item.surahName}"`,
         item.ayatAwal || '-',
@@ -2172,14 +2593,20 @@ export const storageService = {
   // PENGAMPU (AKUN USTADZ - 100% DIRECT FROM POSTGRESQL DATABASE VIA _cache)
   getAllPengampuRaw() {
     this.init();
-    return this._cache.pengampu || [];
+    if (!this._cache.pengampu || this._cache.pengampu.length === 0) {
+      this._cache.pengampu = [...INITIAL_SIGAP_GURU];
+    }
+    return this._cache.pengampu;
   },
 
   getPengampu(branchId = null) {
     const all = this.getAllPengampuRaw();
-    if (!branchId || branchId === 'ALL') return all;
-    const targetBranch = branchId || this.getActiveBranchId();
-    return all.filter(p => (p.cabangId || 'cabang-pusat') === targetBranch);
+    const target = branchId !== null ? branchId : this.getActiveBranchId();
+    if (!target || target === 'ALL') return all;
+    return all.filter(p => {
+      const pBranch = p.cabangId || (p.unitTag?.includes('SMP') ? 'cabang-smp' : 'cabang-pusat');
+      return pBranch === target;
+    });
   },
 
   getAllUniquePengampu(branchId = null) {
@@ -2275,8 +2702,10 @@ export const storageService = {
     this.init();
     if (this._cache.sesi && this._cache.sesi.length > 0) {
       return this._cache.sesi.map(s => {
-        const jamMulai = s.jamMulai || s.mulai || '05:00';
-        const jamSelesai = s.jamSelesai || s.selesai || '06:30';
+        const jamMulai = s.jamMulai || s.jam_mulai || s.mulai || '05:00';
+        const jamSelesai = s.jamSelesai || s.jam_selesai || s.selesai || '06:30';
+        const bukaScan = s.bukaScan || s.buka_scan || jamMulai;
+        const batasScan = s.batasScan || s.batas_scan || jamSelesai;
         const isAktif = s.status === 'Aktif' || s.status === 'AKTIF' || s.aktif !== false;
         return {
           ...s,
@@ -2286,9 +2715,9 @@ export const storageService = {
           selesai: jamSelesai,
           jamMulai: jamMulai,
           jamSelesai: jamSelesai,
-          bukaScan: s.bukaScan || jamMulai,
-          batasScan: s.batasScan || jamSelesai,
-          toleransiMenit: s.toleransiMenit ?? 15,
+          bukaScan: bukaScan,
+          batasScan: batasScan,
+          toleransiMenit: s.toleransiMenit ?? s.toleransi_menit ?? 15,
           aktif: isAktif,
           status: isAktif ? 'AKTIF' : 'NONAKTIF',
           isActive: isAktif,
@@ -2386,8 +2815,9 @@ export const storageService = {
 
   getSigapSiswa(branchId = null) {
     const all = this.getAllSigapSiswaRaw();
-    if (!branchId || branchId === 'ALL') return all;
-    return all.filter(s => (s.cabangId || 'cabang-pusat') === branchId);
+    const target = branchId !== null ? branchId : this.getActiveBranchId();
+    if (!target || target === 'ALL') return all;
+    return all.filter(s => (s.cabangId || 'cabang-pusat') === target);
   },
 
   saveSigapSiswa(branchList, branchId = null) {
@@ -2410,24 +2840,37 @@ export const storageService = {
   // SIGAP: GURU & PEGAWAI (100% DIRECT FROM POSTGRESQL VIA _cache.pengampu)
   // ==========================================
   getAllSigapGuruRaw() {
-    return (this._cache.pengampu || []).map(p => ({
+    let list = this._cache.pengampu;
+    if (!list || list.length === 0) {
+      list = INITIAL_SIGAP_GURU;
+      this._cache.pengampu = [...INITIAL_SIGAP_GURU];
+    }
+    return (list || []).map(p => ({
       ...p,
       id: p.id,
       nama: p.nama,
       nip: p.nip || 'NON-NIP',
-      jabatan: p.role || 'Pengampu Halaqoh',
+      jabatan: p.jabatan || p.role || 'Pengampu Halaqoh',
       email: p.email || '',
       noHp: p.noHp || p.kontak || '',
-      cabangId: p.cabangId || 'cabang-pusat',
+      cabangId: p.cabangId || (p.unitTag?.includes('SMP') ? 'cabang-smp' : 'cabang-pusat'),
       status: p.status || 'GTY',
-      avatarBg: '#dcfce7'
+      avatarBg: p.avatarBg || '#dcfce7',
+      initial: p.initial || (p.nama ? p.nama.charAt(0) : 'G'),
+      lp: p.lp || 'L',
+      unit: p.unit || "MA IHYA' AS-SUNNAH",
+      unitTag: p.unitTag || ''
     }));
   },
 
   getSigapGuru(branchId = null) {
     const all = this.getAllSigapGuruRaw();
-    if (!branchId || branchId === 'ALL') return all;
-    return all.filter(g => (g.cabangId || 'cabang-pusat') === branchId);
+    const target = branchId !== null ? branchId : this.getActiveBranchId();
+    if (!target || target === 'ALL') return all;
+    return all.filter(g => {
+      const gBranch = g.cabangId || (g.unitTag?.includes('SMP') ? 'cabang-smp' : 'cabang-pusat');
+      return gBranch === target;
+    });
   },
 
   saveSigapGuru(branchList, branchId = null) {
@@ -3459,6 +3902,224 @@ export const storageService = {
     }
   },
 
+  // ==========================================
+  // FOTO PROFIL (SUPER ADMIN, ADMIN CABANG, PENGAMPU)
+  // ==========================================
+  getFotoProfilList(cabangId = null) {
+    const list = this._cache.fotoProfil || [];
+    if (!cabangId) return list;
+    return list.filter(item => !item.cabangId || item.cabangId === cabangId);
+  },
+
+  getPhotoForUser({ userId, userType, username, nip, id, nama, cabangId } = {}) {
+    const list = this._cache.fotoProfil || [];
+    const targetUserId = String(userId || id || username || nip || '');
+    const cleanNama = (nama || '').toLowerCase().trim();
+    const cleanCabangId = String(cabangId || '');
+
+    // Kumpulan alias superadmin / admin cabang MA Ihya As-Sunnah
+    const isMaAdminQuery = targetUserId === 'admin-ma' || targetUserId === 'sa-pusat' || targetUserId === 'admin' || targetUserId === 'ma' || targetUserId === 'admin_ma' || targetUserId === 'cabang-pusat' || cleanCabangId === 'cabang-pusat' || cleanNama.includes('ihya') || cleanNama.includes('ma');
+
+    // 1. Cek di tabel fotoProfil
+    // a. Direct match (userId, username, nip)
+    let matched = list.find(item => {
+      if (targetUserId && (String(item.userId) === targetUserId || String(item.username) === targetUserId || String(item.nip) === targetUserId)) {
+        return true;
+      }
+      if (cleanNama && item.nama && item.nama.toLowerCase().trim() === cleanNama) {
+        return true;
+      }
+      return false;
+    });
+
+    // b. Alias match untuk Super Admin MA / Cabang
+    if (!matched && isMaAdminQuery) {
+      matched = list.find(item => 
+        (item.userType === 'superadmin' || item.userType === 'admin_cabang') &&
+        (item.cabangId === 'cabang-pusat' || item.userId === 'sa-pusat' || item.userId === 'admin-ma' || item.username === 'ma' || item.username === 'admin' || item.username === 'admin_ma' || (item.nama && (item.nama.toLowerCase().includes('ma') || item.nama.toLowerCase().includes('ihya'))))
+      );
+    }
+
+    // c. Cabang match jika targetUserType admin
+    if (!matched && cleanCabangId && (userType === 'superadmin' || userType === 'admin_cabang' || !userType)) {
+      matched = list.find(item => 
+        (item.userType === 'superadmin' || item.userType === 'admin_cabang') &&
+        (item.cabangId === cleanCabangId)
+      );
+    }
+
+    if (matched && matched.fotoUrl) {
+      return matched.fotoUrl;
+    }
+
+    // 2. Cek di akun superadmin
+    if (userType === 'superadmin' || userType === 'admin_cabang' || !userType) {
+      const saList = this._cache.superadmin || [];
+      const sa = saList.find(s => 
+        (targetUserId && (s.id === targetUserId || s.username === targetUserId || (isMaAdminQuery && (s.id === 'sa-pusat' || s.username === 'ma' || s.username === 'admin' || s.username === 'admin_ma')))) ||
+        (cleanCabangId && (s.cabangId === cleanCabangId || s.cabang_id === cleanCabangId)) ||
+        (cleanNama && s.nama && s.nama.toLowerCase().trim() === cleanNama)
+      );
+      if (sa && (sa.foto || sa.fotoUrl)) return sa.foto || sa.fotoUrl;
+    }
+
+    // 3. Cek di akun pengampu / guru
+    if (userType === 'pengampu' || !userType) {
+      const pg = (this._cache.pengampu || []).find(p => 
+        (targetUserId && (p.id === targetUserId || p.nip === targetUserId)) ||
+        (cleanNama && p.nama && p.nama.toLowerCase().trim() === cleanNama)
+      );
+      if (pg && (pg.foto || pg.fotoUrl)) return pg.foto || pg.fotoUrl;
+    }
+
+    // 4. Cek di fallback localStorage jika in-memory cache masih kosong
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const localCache = JSON.parse(localStorage.getItem('tahfidz_foto_cache') || '[]');
+        let loc = localCache.find(item => 
+          (targetUserId && (String(item.userId) === targetUserId || String(item.username) === targetUserId || String(item.nip) === targetUserId)) ||
+          (cleanNama && item.nama && item.nama.toLowerCase().trim() === cleanNama)
+        );
+        if (!loc && isMaAdminQuery) {
+          loc = localCache.find(item => 
+            (item.userType === 'superadmin' || item.userType === 'admin_cabang') &&
+            (item.cabangId === 'cabang-pusat' || item.userId === 'sa-pusat' || item.userId === 'admin-ma' || item.username === 'ma' || item.username === 'admin' || item.username === 'admin_ma' || (item.nama && (item.nama.toLowerCase().includes('ma') || item.nama.toLowerCase().includes('ihya'))))
+          );
+        }
+        if (!loc && cleanCabangId) {
+          loc = localCache.find(item => 
+            (item.userType === 'superadmin' || item.userType === 'admin_cabang') &&
+            (item.cabangId === cleanCabangId)
+          );
+        }
+        if (loc && loc.fotoUrl) return loc.fotoUrl;
+      }
+    } catch (e) {}
+
+    return null;
+  },
+
+  async saveFotoProfil(data) {
+    const targetId = data.id || `fp-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const targetUserId = String(data.userId || data.username || data.nip || targetId);
+    const targetUserType = data.userType || 'superadmin';
+    const cleanEntry = {
+      id: targetId,
+      userId: targetUserId,
+      userType: targetUserType,
+      nama: data.nama || '',
+      username: data.username || null,
+      nip: data.nip || null,
+      role: data.role || (targetUserType === 'superadmin' ? 'Super Admin' : targetUserType === 'admin_cabang' ? 'Admin Cabang' : 'Pengampu'),
+      cabangId: data.cabangId || this._cache.activeBranchId || 'cabang-pusat',
+      fotoUrl: data.fotoUrl,
+      updatedAt: new Date().toISOString(),
+      createdAt: data.createdAt || new Date().toISOString()
+    };
+
+    const currentList = this._cache.fotoProfil || [];
+    const existingIndex = currentList.findIndex(
+      item => (item.userId === targetUserId && item.userType === targetUserType) || item.id === targetId || (item.username && cleanEntry.username && item.username === cleanEntry.username) || (cleanEntry.cabangId && item.cabangId === cleanEntry.cabangId && (targetUserType === 'superadmin' || targetUserType === 'admin_cabang') && (item.userType === 'superadmin' || item.userType === 'admin_cabang'))
+    );
+
+    if (existingIndex !== -1) {
+      currentList[existingIndex] = { ...currentList[existingIndex], ...cleanEntry };
+    } else {
+      currentList.unshift(cleanEntry);
+    }
+    this._cache.fotoProfil = currentList;
+
+    // Simpan ke localStorage agar foto langsung persisten dan tidak hilang saat refresh
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('tahfidz_foto_cache', JSON.stringify(this._cache.fotoProfil));
+      }
+    } catch (e) {}
+
+    // Update foto di superadmin cache jika match
+    if (targetUserType === 'superadmin' || targetUserType === 'admin_cabang') {
+      const saList = this._cache.superadmin || [];
+      saList.forEach(s => {
+        if (
+          s.id === targetUserId ||
+          s.username === cleanEntry.username ||
+          (cleanEntry.cabangId && (s.cabangId === cleanEntry.cabangId || s.cabang_id === cleanEntry.cabangId)) ||
+          (cleanEntry.cabangId === 'cabang-pusat' && (s.id === 'sa-pusat' || s.username === 'ma' || s.username === 'admin'))
+        ) {
+          s.foto = cleanEntry.fotoUrl;
+        }
+      });
+      this._cache.superadmin = saList;
+    }
+
+    // Update foto di pengampu cache jika match
+    if (targetUserType === 'pengampu') {
+      const pgList = this._cache.pengampu || [];
+      const pgIdx = pgList.findIndex(p => p.id === targetUserId || p.nip === cleanEntry.nip || (p.nama && cleanEntry.nama && p.nama.toLowerCase().includes(cleanEntry.nama.toLowerCase())));
+      if (pgIdx !== -1) {
+        pgList[pgIdx].foto = cleanEntry.fotoUrl;
+        this._cache.pengampu = pgList;
+      }
+    }
+
+    this.emitUpdate();
+    try {
+      window.dispatchEvent(new CustomEvent('tahfidz_foto_profil_updated', { detail: cleanEntry }));
+    } catch (e) {}
+
+    // Simpan ke PostgreSQL database
+    try {
+      await apiService.saveFotoProfil(cleanEntry);
+    } catch (err) {
+      console.warn('[STORAGE] Sync foto profil to backend warning:', err.message);
+    }
+
+    return cleanEntry;
+  },
+
+  async deleteFotoProfil(userId, userType = '') {
+    const currentList = this._cache.fotoProfil || [];
+    this._cache.fotoProfil = currentList.filter(
+      item => !(item.userId === String(userId) && (!userType || item.userType === userType))
+    );
+
+    // Hapus dari localStorage cache
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('tahfidz_foto_cache', JSON.stringify(this._cache.fotoProfil));
+      }
+    } catch (e) {}
+
+    // Clear foto di superadmin
+    const saList = this._cache.superadmin || [];
+    const saIdx = saList.findIndex(s => s.id === userId || s.username === userId);
+    if (saIdx !== -1) {
+      delete saList[saIdx].foto;
+      this._cache.superadmin = saList;
+    }
+
+    // Clear foto di pengampu
+    const pgList = this._cache.pengampu || [];
+    const pgIdx = pgList.findIndex(p => p.id === userId || p.nip === userId);
+    if (pgIdx !== -1) {
+      delete pgList[pgIdx].foto;
+      this._cache.pengampu = pgList;
+    }
+
+    this.emitUpdate();
+    try {
+      window.dispatchEvent(new CustomEvent('tahfidz_foto_profil_updated', { detail: { userId, userType, deleted: true } }));
+    } catch (e) {}
+
+    try {
+      await apiService.deleteFotoProfil(userId, userType);
+    } catch (err) {
+      console.warn('[STORAGE] Delete foto profil on backend warning:', err.message);
+    }
+
+    return true;
+  },
+
   resetAllData() {
     if (typeof window !== 'undefined') {
       try { localStorage.clear(); } catch (e) {}
@@ -3482,6 +4143,7 @@ export const storageService = {
       settings: INITIAL_SETTINGS,
       raporTemplate: DEFAULT_RAPOR_TEMPLATE,
       nilaiRapor: [],
+      fotoProfil: [],
       jadwal: INITIAL_SIGAP_JADWAL,
       jadwalHalaqoh: INITIAL_JADWAL_HALAQOH,
       adminNotifications: [],

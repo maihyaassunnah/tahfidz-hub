@@ -279,7 +279,7 @@ export default function RaporView({
               >
                 {santriList.map(s => (
                   <option key={s.id} value={s.id}>
-                    {s.nama} ({s.kelas} - NIS: {s.nis})
+                    {s.nama} (NIS: {s.nis})
                   </option>
                 ))}
               </CustomSelect>
@@ -437,10 +437,6 @@ export default function RaporView({
           <div>
             <span style={{ color: '#64748b', display: 'inline-block', width: '130px' }}>Halaqah</span>
             <strong>: {halaqah.nama || "-"}</strong>
-          </div>
-          <div>
-            <span style={{ color: '#64748b', display: 'inline-block', width: '130px' }}>Kelas</span>
-            <strong>: {currentSantri.kelas}</strong>
           </div>
           <div>
             <span style={{ color: '#64748b', display: 'inline-block', width: '130px' }}>Musyrif Pengampu</span>
@@ -755,7 +751,7 @@ export default function RaporView({
                   <span>Input Nilai Aspek Kualitas Tahfidz</span>
                 </h3>
                 <p style={{ margin: '3px 0 0 0', fontSize: '0.82rem', color: '#047857' }}>
-                  Santri: <strong>{currentSantri.nama}</strong> ({currentSantri.kelas} - NIS: {currentSantri.nis})
+                  Santri: <strong>{currentSantri.nama}</strong> (NIS: {currentSantri.nis})
                 </p>
               </div>
               <button 

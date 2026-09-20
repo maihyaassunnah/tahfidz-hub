@@ -822,7 +822,7 @@ export default function AbsensiView({
                   <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #e2e8f0' }}>
                     <th style={{ width: '45px', padding: '12px 14px', textAlign: 'center' }}>No</th>
                     <th style={{ padding: '12px 14px', textAlign: 'left' }}>Santri</th>
-                    <th style={{ padding: '12px 14px', textAlign: 'left' }}>Kelas &amp; NIS</th>
+                    <th style={{ padding: '12px 14px', textAlign: 'left' }}>NIS Santri</th>
                     <th style={{ padding: '12px 10px', textAlign: 'center' }}>Hadir</th>
                     <th style={{ padding: '12px 10px', textAlign: 'center' }}>Izin</th>
                     <th style={{ padding: '12px 10px', textAlign: 'center' }}>Sakit</th>
@@ -864,8 +864,7 @@ export default function AbsensiView({
                           </div>
                         </td>
                         <td style={{ padding: '12px 14px' }}>
-                          <div style={{ fontWeight: 700, color: '#334155' }}>{st.santri.kelas}</div>
-                          <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'monospace' }}>NIS: {st.santri.nis}</div>
+                          <div style={{ fontWeight: 700, color: '#334155', fontFamily: 'monospace' }}>NIS: {st.santri.nis}</div>
                         </td>
                         <td style={{ textAlign: 'center', padding: '12px 10px' }}>
                           <span style={{ background: '#ecfdf5', color: '#047857', fontWeight: 800, padding: '2px 8px', borderRadius: '6px' }}>
@@ -965,8 +964,8 @@ export default function AbsensiView({
                         <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {st.santri.nama}
                         </div>
-                        <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                          {st.santri.kelas} • NIS: {st.santri.nis}
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'monospace' }}>
+                          NIS: {st.santri.nis}
                         </div>
                       </div>
                     </div>
@@ -1602,7 +1601,7 @@ export default function AbsensiView({
               <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #e2e8f0' }}>
                 <th style={{ width: '50px', padding: '12px 14px', textAlign: 'center' }}>No</th>
                 <th style={{ padding: '12px 14px', textAlign: 'left' }}>Santri</th>
-                <th style={{ padding: '12px 14px', textAlign: 'left' }}>Kelas &amp; NIS</th>
+                <th style={{ padding: '12px 14px', textAlign: 'left' }}>NIS Santri</th>
                 <th style={{ width: '280px', padding: '12px 14px', textAlign: 'center' }}>Status Kehadiran</th>
                 <th style={{ padding: '12px 14px', textAlign: 'left' }}>Keterangan / Alasan Khusus</th>
               </tr>
@@ -1673,12 +1672,9 @@ export default function AbsensiView({
                         </div>
                       </td>
 
-                      {/* Kelas & NIS */}
+                      {/* NIS */}
                       <td style={{ padding: '12px 14px' }}>
-                        <div style={{ fontWeight: 700, color: '#334155', fontSize: '0.84rem' }}>
-                          {s.kelas}
-                        </div>
-                        <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '2px', fontFamily: 'monospace' }}>
+                        <div style={{ fontSize: '0.84rem', color: '#334155', fontFamily: 'monospace', fontWeight: 700 }}>
                           NIS: {s.nis}
                         </div>
                       </td>
@@ -1847,7 +1843,7 @@ export default function AbsensiView({
           textTransform: 'uppercase',
           letterSpacing: '0.04em'
         }}>
-          <span>Santri &amp; Kelas ({displayedSantri.length})</span>
+          <span>Daftar Santri ({displayedSantri.length})</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#15803d' }}>
             <RefreshCw size={12} />
             <span>Tekan Status untuk Ganti</span>
@@ -1936,9 +1932,10 @@ export default function AbsensiView({
                           marginTop: '2px',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
-                          textOverflow: 'ellipsis'
+                          textOverflow: 'ellipsis',
+                          fontFamily: 'monospace'
                         }}>
-                          {s.kelas} • <span style={{ fontFamily: 'monospace' }}>NIS: {s.nis}</span>
+                          NIS: {s.nis}
                         </div>
                       </div>
                     </div>
