@@ -425,7 +425,7 @@ export default function OwnerView({
             >
               <Sparkles size={12} /> PORTAL OWNER YAYASAN
             </span>
-            <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>
+            <span className="owner-institution-name" style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>
               Pesantren Persatuan Islam As-Sunnah (PPIAS)
             </span>
           </div>
@@ -433,14 +433,14 @@ export default function OwnerView({
           <h1 className="owner-title-h1" style={{ fontSize: '1.5rem', fontWeight: '900', margin: '0 0 0.25rem 0', color: '#1e293b', letterSpacing: '-0.02em' }}>
             Tahfidz HUB — Pusat Kendali Yayasan<span style={{ color: '#ff5b35', marginLeft: '2px' }}>.</span>
           </h1>
-          <p style={{ margin: 0, fontSize: '0.825rem', color: '#64748b' }}>
+          <p className="owner-desc-text" style={{ margin: 0, fontSize: '0.825rem', color: '#64748b' }}>
             {isAllBranches 
               ? `Monitoring konsolidasi seluruh cabang pesantren (${totalCabang} cabang terdaftar, ${allSantri.length} santri, ${allGurus.length} pengampu).`
               : `Monitoring khusus cabang ${currentActiveBranch.nama} (${displayedSantri.length} santri, ${displayedGurus.length} pengampu terdaftar).`
             }
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.45rem' }}>
+          <div className="owner-global-badge" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.45rem' }}>
             {isAllBranches ? (
               <span style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', padding: '2px 9px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                 🌐 Menampilkan Seluruh Cabang (Konsolidasi Global)
@@ -545,11 +545,11 @@ export default function OwnerView({
           ========================================================= */}
       <div className="owner-subtabs-scroll">
         {[
-          { id: 'dashboard', label: 'Dashboard Yayasan .', icon: Layers },
-          { id: 'cabang', label: `Analisis & Kelola Cabang . (${cabangList.length})`, icon: Building2 },
-          { id: 'superadmin', label: `Akun Super Admin . (${superAdminList.length})`, icon: ShieldCheck },
-          { id: 'rekap', label: 'Konsolidasi Seluruh Cabang .', icon: FileText },
-          { id: 'konfigurasi', label: 'Konfigurasi Unit & Akun .', icon: Settings },
+          { id: 'dashboard', label: 'Dashboard', icon: Layers },
+          { id: 'cabang', label: `Cabang (${cabangList.length})`, icon: Building2 },
+          { id: 'superadmin', label: `Super Admin (${superAdminList.length})`, icon: ShieldCheck },
+          { id: 'rekap', label: 'Konsolidasi', icon: FileText },
+          { id: 'konfigurasi', label: 'Pengaturan', icon: Settings },
         ].map(tab => {
           const IconComponent = tab.icon;
           const isActive = currentSubTab === tab.id;
@@ -1542,10 +1542,10 @@ export default function OwnerView({
             {/* Top Bar: Title & View Mode Toggle */}
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
               <div>
-                <h2 style={{ fontSize: '1.35rem', fontWeight: '900', color: '#1e293b', margin: 0, letterSpacing: '-0.02em' }}>
-                  Analisis & Manajemen Cabang Lembaga<span style={{ color: '#ff5b35', marginLeft: '2px' }}>.</span>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '900', color: '#1e293b', margin: 0, letterSpacing: '-0.02em' }}>
+                  Analisis Cabang Lembaga<span style={{ color: '#ff5b35', marginLeft: '2px' }}>.</span>
                 </h2>
-                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+                <p className="owner-desc-text" style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
                   {effectiveViewMode === 'list'
                     ? `Menampilkan matriks komparasi seluruh ${cabangList.length} cabang lembaga yayasan.`
                     : `Menampilkan seluruh data terpadu cabang: ${selectedBranch.nama} (${selectedBranch.kode}).`
@@ -1553,7 +1553,7 @@ export default function OwnerView({
                 </p>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '24px' }}>
                   <button
                     onClick={() => {
@@ -1568,7 +1568,7 @@ export default function OwnerView({
                       border: 'none',
                       background: effectiveViewMode === 'detail' ? '#ffffff' : 'transparent',
                       color: effectiveViewMode === 'detail' ? '#ff5b35' : '#64748b',
-                      padding: '0.45rem 0.95rem',
+                      padding: '0.4rem 0.8rem',
                       borderRadius: '20px',
                       fontSize: '0.78rem',
                       fontWeight: effectiveViewMode === 'detail' ? '800' : '600',
@@ -1577,7 +1577,7 @@ export default function OwnerView({
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    🔍 Detail Cabang
+                    🔍 Detail
                   </button>
                   <button
                     onClick={() => {
@@ -1589,7 +1589,7 @@ export default function OwnerView({
                       border: 'none',
                       background: effectiveViewMode === 'list' ? '#ffffff' : 'transparent',
                       color: effectiveViewMode === 'list' ? '#ff5b35' : '#64748b',
-                      padding: '0.45rem 0.95rem',
+                      padding: '0.4rem 0.8rem',
                       borderRadius: '20px',
                       fontSize: '0.78rem',
                       fontWeight: effectiveViewMode === 'list' ? '800' : '600',
@@ -1598,7 +1598,7 @@ export default function OwnerView({
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    📋 Matriks Semua Cabang ({cabangList.length})
+                    📋 Matriks ({cabangList.length})
                   </button>
                 </div>
 
@@ -3226,16 +3226,64 @@ export default function OwnerView({
           ========================================================= */}
       {currentSubTab === 'rekap' && (
         <div>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: '900', color: '#1e293b', margin: 0, letterSpacing: '-0.02em' }}>
-              Matriks Komparasi & Konsolidasi Data Antar Cabang<span style={{ color: '#ff5b35', marginLeft: '2px' }}>.</span>
+          <div style={{ marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '900', color: '#1e293b', margin: 0, letterSpacing: '-0.02em' }}>
+              Konsolidasi Seluruh Cabang<span style={{ color: '#ff5b35', marginLeft: '2px' }}>.</span>
             </h2>
-            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+            <p className="owner-desc-text" style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
               Perbandingan distribusi santri, ustadz pengampu, halaqah bimbingan, dan perolehan syahriah di setiap cabang lembaga PPIAS.
             </p>
           </div>
 
-          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '1.25rem', marginBottom: '1.5rem' }}>
+          {/* Quick Consolidated Metric Cards for Mobile & Desktop */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+            gap: '0.55rem',
+            marginBottom: '0.85rem'
+          }}>
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.65rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#ecfdf5', color: '#047857', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Building2 size={16} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Cabang</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0f172a', lineHeight: 1.1 }}>{cabangList.length}</div>
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.65rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f0fdf4', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <GraduationCap size={16} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Santri</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0f172a', lineHeight: 1.1 }}>{allSantri.length}</div>
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.65rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Users size={16} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Guru & TU</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0f172a', lineHeight: 1.1 }}>{allGurus.length}</div>
+              </div>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0.65rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#f5f3ff', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <ShieldCheck size={16} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Super Admin</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0f172a', lineHeight: 1.1 }}>{superAdminList.length}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '0.9rem', marginBottom: '1.25rem' }}>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
@@ -3353,7 +3401,7 @@ export default function OwnerView({
                       <h3 style={{ margin: 0, fontSize: '1.10rem', fontWeight: 800, color: '#1e293b' }}>
                         Komparasi Realisasi Penerimaan SPP & Syahriah Antar Cabang
                       </h3>
-                      <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.80rem', color: '#64748b' }}>
+                      <p className="owner-desc-text" style={{ margin: '0.2rem 0 0 0', fontSize: '0.80rem', color: '#64748b' }}>
                         Monitoring terpadu arus kas syahriah dari seluruh unit lembaga & cabang yayasan
                       </p>
                     </div>

@@ -5557,8 +5557,9 @@ body.dark-mode .sidebar-drawer-center-pill {
 }
 
 /* 2. Profile Section & 3-Column Stats Card */
+/* 2. Profile Section & 3-Column Stats Card */
 .sidebar-drawer-profile-section {
-  padding: 8px 18px 16px 18px;
+  padding: 8px 14px 10px 14px;
   border-bottom: 1px solid #f1f5f9;
 }
 
@@ -5569,20 +5570,20 @@ body.dark-mode .sidebar-drawer-profile-section {
 .sidebar-drawer-profile-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .sidebar-drawer-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 1.1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-size: 0.95rem;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
   flex-shrink: 0;
 }
 
@@ -5593,7 +5594,7 @@ body.dark-mode .sidebar-drawer-profile-section {
 
 .sidebar-drawer-user-name {
   margin: 0;
-  font-size: 0.96rem;
+  font-size: 0.90rem;
   font-weight: 800;
   color: var(--bottom-nav-text, #0f172a);
   white-space: nowrap;
@@ -5602,7 +5603,7 @@ body.dark-mode .sidebar-drawer-profile-section {
 }
 
 .sidebar-drawer-user-role {
-  font-size: 0.72rem;
+  font-size: 0.70rem;
   color: #64748b;
   margin-top: 1px;
 }
@@ -5615,11 +5616,11 @@ body.dark-mode .sidebar-drawer-user-role {
   background: none;
   border: none;
   padding: 0;
-  font-size: 0.72rem;
+  font-size: 0.70rem;
   color: #0d9488;
   font-weight: 700;
   cursor: pointer;
-  margin-top: 2px;
+  margin-top: 1px;
   display: block;
 }
 
@@ -5629,11 +5630,11 @@ body.dark-mode .sidebar-drawer-user-role {
 
 /* 3-Column Stats Card (Persis gambar 2) */
 .sidebar-drawer-stats-card {
-  margin-top: 12px;
+  margin-top: 8px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 8px 6px;
+  border-radius: 12px;
+  padding: 5px 4px;
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -5658,33 +5659,33 @@ body.dark-mode .sidebar-drawer-stat-col:not(:last-child) {
 }
 
 .stat-number {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 800;
   color: var(--bottom-nav-text, #0f172a);
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .stat-label {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 600;
   color: #64748b;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 /* 3. Menu List Scrollable */
 .sidebar-drawer-menu-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 12px;
+  padding: 6px 10px;
   scrollbar-width: thin;
 }
 
 .sidebar-drawer-category {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: #94a3b8;
-  margin: 14px 10px 6px 10px;
+  margin: 9px 6px 3px 6px;
   text-transform: uppercase;
 }
 
@@ -5692,19 +5693,19 @@ body.dark-mode .sidebar-drawer-stat-col:not(:last-child) {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 9px 12px;
-  border-radius: 12px;
+  gap: 9px;
+  padding: 6px 10px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 3px;
+  transition: all 0.15s ease;
+  margin-bottom: 2px;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 .sidebar-drawer-menu-item:hover {
   background: #f1f5f9;
-  transform: translateX(3px);
+  transform: translateX(2px);
 }
 
 body.dark-mode .sidebar-drawer-menu-item:hover {
@@ -5722,8 +5723,8 @@ body.dark-mode .sidebar-drawer-menu-item.active {
 .menu-active-indicator {
   position: absolute;
   left: 0;
-  width: 3.5px;
-  height: 24px;
+  width: 3px;
+  height: 20px;
   border-radius: 0 4px 4px 0;
   background: transparent;
   transition: background 0.2s;
@@ -5734,22 +5735,22 @@ body.dark-mode .sidebar-drawer-menu-item.active {
 }
 
 .menu-icon-box {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: transform 0.2s;
+  transition: transform 0.15s;
 }
 
 .sidebar-drawer-menu-item:hover .menu-icon-box {
-  transform: scale(1.08);
+  transform: scale(1.05);
 }
 
 .menu-text {
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: #334155;
   transition: color 0.2s, font-weight 0.2s;
@@ -5770,7 +5771,7 @@ body.dark-mode .sidebar-drawer-menu-item.active .menu-text {
 
 /* 4. Drawer Footer Actions & Version Tag */
 .sidebar-drawer-footer {
-  padding: 12px 16px 20px 16px;
+  padding: 8px 12px 14px 12px;
   border-top: 1px solid #f1f5f9;
   background: #f8fafc;
 }
@@ -5785,10 +5786,10 @@ body.dark-mode .sidebar-drawer-footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  font-size: 0.76rem;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 0.74rem;
   font-weight: 700;
   border: 1px solid #e2e8f0;
   background: #ffffff;
@@ -5812,13 +5813,13 @@ body.dark-mode .sidebar-drawer-action-btn {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 12px;
+  gap: 9px;
+  padding: 8px 12px;
+  border-radius: 10px;
   border: 1px solid #e0f2fe;
   background: #ffffff;
   color: #0284c7;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s;
@@ -6930,51 +6931,78 @@ html, body {
   }
 
   .owner-container {
-    padding: 0.75rem 0.75rem 120px 0.75rem !important;
+    padding: 0.5rem 0.5rem 110px 0.5rem !important;
   }
 
   .owner-top-bar {
-    padding: 1rem 0.95rem !important;
-    border-radius: 16px !important;
+    padding: 0.7rem 0.85rem !important;
+    border-radius: 14px !important;
+    margin-bottom: 0.55rem !important;
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 0.9rem !important;
+    gap: 0.55rem !important;
   }
 
   .owner-title-h1 {
-    font-size: 1.22rem !important;
-    line-height: 1.3 !important;
+    font-size: 1.15rem !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+  }
+
+  .owner-desc-text,
+  .owner-institution-name,
+  .owner-global-badge {
+    display: none !important;
   }
 
   .owner-quick-switcher {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 0.65rem !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
     width: 100% !important;
   }
 
   .owner-branch-select-capsule {
-    width: 100% !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     box-sizing: border-box !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
-    padding: 0.5rem 0.75rem !important;
+    gap: 0.4rem !important;
+    padding: 0.35rem 0.65rem !important;
+    border-radius: 16px !important;
   }
 
   .owner-branch-select-capsule select {
     flex: 1 1 auto !important;
-    max-width: calc(100% - 130px) !important;
-    font-size: 0.75rem !important;
+    max-width: 100% !important;
+    font-size: 0.74rem !important;
     text-overflow: ellipsis !important;
     overflow: hidden !important;
     white-space: nowrap !important;
+    padding: 0.2rem 0.4rem !important;
   }
 
   .owner-theme-coral-btn {
-    width: 100% !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
     justify-content: center !important;
-    padding: 0.6rem 1rem !important;
+    padding: 0.45rem 0.85rem !important;
+    font-size: 0.76rem !important;
+    border-radius: 16px !important;
+  }
+
+  .owner-subtabs-scroll {
+    gap: 0.35rem !important;
+    margin-bottom: 0.55rem !important;
+    padding: 2px 2px 6px 2px !important;
+  }
+
+  .owner-subtabs-scroll button {
+    padding: 0.38rem 0.72rem !important;
+    font-size: 0.76rem !important;
+    gap: 0.35rem !important;
+    border-radius: 20px !important;
   }
 
   .owner-branch-cards-grid {

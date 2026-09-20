@@ -564,93 +564,93 @@ export default function PengaturanAdminView({
               <Settings size={26} />
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>
-                Konfigurasi Unit & Database Lembaga
+              <h2 style={{ margin: 0, fontSize: '1.22rem', fontWeight: 800, color: '#0f172a' }}>
+                Konfigurasi Unit & Database
               </h2>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
+              <p className="owner-desc-text" style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
                 Atur akun pengampu unit, jadwal sesi, data siswa, identitas madrasah, dan cadangan data.
               </p>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={() => setShowAddSiswaModal(true)}>
-              <UserPlus size={16} />
+            <button className="btn btn-primary" onClick={() => setShowAddSiswaModal(true)} style={{ padding: '0.45rem 0.85rem', fontSize: '0.8rem' }}>
+              <UserPlus size={15} />
               <span>+ Siswa Baru</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Sub Tabs Navigation */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '0px', overflowX: 'auto' }}>
+      {/* Sub Tabs Navigation - Streamlined & Snug for Mobile */}
+      <div className="pengaturan-subtabs-scroll" style={{ display: 'flex', gap: '6px', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <button
           type="button"
           className={`btn ${activeSubTab === 'pengampu-akun' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('pengampu-akun')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
+          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          <Users size={16} />
-          <span>Atur Akun Pengampu & Pegawai</span>
+          <Users size={15} />
+          <span>Akun Pegawai</span>
         </button>
 
         <button
           type="button"
           className={`btn ${activeSubTab === 'foto-profil' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('foto-profil')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
+          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          <Camera size={16} />
-          <span>Foto Profil Akun</span>
+          <Camera size={15} />
+          <span>Foto Profil</span>
         </button>
 
         <button
           type="button"
           className={`btn ${activeSubTab === 'jadwal-sesi' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('jadwal-sesi')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
+          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          <Clock size={16} />
-          <span>Jadwal Sesi Presensi</span>
+          <Clock size={15} />
+          <span>Jadwal Sesi</span>
         </button>
 
         <button
           type="button"
           className={`btn ${activeSubTab === 'tambah-siswa' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('tambah-siswa')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
+          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          <GraduationCap size={16} />
-          <span>Kelola Data Siswa Unit</span>
+          <GraduationCap size={15} />
+          <span>Data Siswa</span>
         </button>
 
         <button
           type="button"
           className={`btn ${activeSubTab === 'template-rapor' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('template-rapor')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
+          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          <FileCheck size={16} />
-          <span>Template & Format Rapor</span>
+          <FileCheck size={15} />
+          <span>Format Rapor</span>
         </button>
 
         <button
           type="button"
           className={`btn ${activeSubTab === 'lembaga' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('lembaga')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
+          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          <Building2 size={16} />
-          <span>Identitas Lembaga</span>
+          <Building2 size={15} />
+          <span>Lembaga</span>
         </button>
 
         <button
           type="button"
           className={`btn ${activeSubTab === 'backup' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveSubTab('backup')}
-          style={{ borderRadius: '10px 10px 0 0', borderBottom: 'none', cursor: 'pointer' }}
+          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          <Database size={16} />
-          <span>Cadangan Database</span>
+          <Database size={15} />
+          <span>Backup Data</span>
         </button>
       </div>
 

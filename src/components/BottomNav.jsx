@@ -628,7 +628,7 @@ export default function BottomNav({
                           }}
                         >
                           <span>🛡️</span>
-                          <span>Admin Raudhotul Huffaz</span>
+                          <span>Admin Raudhotul</span>
                         </button>
                       </>
                     )}
