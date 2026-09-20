@@ -240,7 +240,7 @@ export default function DataMasterView({
       {subTab === 'halaqah' && (
         <div className="card">
           <h3 style={{ margin: '0 0 16px 0', fontWeight: 700 }}>Kelompok Halaqah & Musyrif Pengampu</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
             {halaqahList.map(h => {
               const count = santriList.filter(s => s.halaqahId === h.id).length;
               return (
@@ -349,7 +349,7 @@ export default function DataMasterView({
 
       {/* TAB 4: BACKUP & RESTORE */}
       {subTab === 'backup' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
           {/* Card Backup */}
           <div className="card">
             <h3 style={{ margin: '0 0 8px 0', fontWeight: 800, color: 'var(--primary-800)' }}>

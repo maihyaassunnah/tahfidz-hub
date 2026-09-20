@@ -796,8 +796,8 @@ export default function RiwayatPresensiPengampuView({
           )}
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table className="data-table" style={{ width: '100%', minWidth: '650px', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
                 <th style={{ padding: '12px 14px', width: '45px', textAlign: 'center' }}>No</th>

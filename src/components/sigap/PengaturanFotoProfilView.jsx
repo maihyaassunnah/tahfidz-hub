@@ -576,7 +576,7 @@ export default function PengaturanFotoProfilView({ showToast, currentRole, isOwn
       </div>
 
       {/* 3. DAFTAR KARTU PENGATURAN FOTO PROFIL */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '14px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: '14px' }}>
         {filteredAccounts.map((account) => {
           const photoUrl = storageService.getPhotoForUser({ 
             userId: account.userId, 

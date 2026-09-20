@@ -2491,32 +2491,38 @@ body.dark-mode .sigap-kpi-val {
 
 @media (max-width: 640px) {
   .sigap-action-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    margin-bottom: 14px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
   }
 
   .sigap-action-card {
-    padding: 10px 4px;
-    border-radius: 12px;
+    padding: 12px 10px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
   }
 
   .sigap-action-circle-icon {
-    width: 34px;
-    height: 34px;
-    margin-bottom: 4px;
+    width: 38px;
+    height: 38px;
+    margin-bottom: 0;
+    flex-shrink: 0;
   }
 
   .sigap-action-circle-icon svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
   }
 
   .sigap-action-label {
-    font-size: 0.64rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    line-height: 1.15;
-    text-align: center;
+    line-height: 1.25;
+    text-align: left;
   }
 }
 
@@ -4551,11 +4557,14 @@ body.dark-mode .sigap-monitor-card:hover {
 
 .sigap-table-wrap {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sigap-table {
   width: 100%;
+  min-width: 680px;
   border-collapse: collapse;
   text-align: left;
 }
@@ -6829,5 +6838,405 @@ body.dark-mode .spp-select option {
     margin-top: 0 !important;
   }
 }
+
+/* ==========================================================
+   KOMPREHENSIF RESPONSIVE MOBILE SYSTEM (SELURUH ROLE)
+   Owner Yayasan • Super Admin SIGAP • Pengampu • Orang Tua
+   ========================================================== */
+
+/* 1. Global Box-Sizing & Viewport Security */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* 2. Universal Table Wrapper for Smooth Mobile Horizontal Swipe */
+.mobile-table-wrapper,
+.table-responsive {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin;
+}
+
+.mobile-table-wrapper table {
+  min-width: 580px;
+}
+
+/* 3. Role: Owner Yayasan Mobile Layout Classes */
+.owner-container {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.owner-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+.owner-subtabs-scroll {
+  display: flex;
+  gap: 0.65rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.owner-subtabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.owner-branch-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.1rem;
+}
+
+/* 4. BREAKPOINT: TABLET & MOBILE (< 1024px) */
+@media (max-width: 1024px) {
+  .owner-dashboard-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  .owner-right-column {
+    width: 100% !important;
+    order: 2 !important;
+  }
+
+  .owner-left-column {
+    width: 100% !important;
+    order: 1 !important;
+  }
+}
+
+/* 5. BREAKPOINT: MOBILE PHONES (< 768px) */
+@media (max-width: 768px) {
+  /* Safe Bottom Spacing to Never be Covered by Floating BottomNav */
+  .simtah-main,
+  .page-content-wrapper,
+  .owner-container {
+    padding-bottom: 120px !important;
+  }
+
+  .owner-container {
+    padding: 0.75rem 0.75rem 120px 0.75rem !important;
+  }
+
+  .owner-top-bar {
+    padding: 1rem 0.95rem !important;
+    border-radius: 16px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.9rem !important;
+  }
+
+  .owner-title-h1 {
+    font-size: 1.22rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .owner-quick-switcher {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
+  }
+
+  .owner-branch-select-capsule {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .owner-branch-select-capsule select {
+    flex: 1 1 auto !important;
+    max-width: calc(100% - 130px) !important;
+    font-size: 0.75rem !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+  }
+
+  .owner-theme-coral-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 0.6rem 1rem !important;
+  }
+
+  .owner-branch-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .owner-branch-card-item {
+    padding: 1rem 0.75rem !important;
+    border-radius: 16px !important;
+  }
+
+  /* Activity Item Cards Mobile Stacking */
+  .owner-activity-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  .owner-activity-item-actions {
+    width: 100% !important;
+    justify-content: flex-end !important;
+  }
+
+  /* SIGAP KPI Grid: Always 2 Columns on Mobile for Clean Legibility */
+  .sigap-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .sigap-kpi-card {
+    padding: 10px 8px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    text-align: left !important;
+  }
+
+  .sigap-kpi-val {
+    font-size: 1.25rem !important;
+  }
+
+  .sigap-kpi-label {
+    font-size: 0.70rem !important;
+  }
+
+  /* Header & Filter Controls on Mobile */
+  .sigap-dash-header-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  .sigap-dash-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .sigap-btn-konfigurasi {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+
+  /* Generic Mobile Modal Fixes */
+  .modal-overlay {
+    padding: 10px !important;
+    align-items: flex-end !important;
+  }
+
+  .modal-content,
+  .setoran-modal-container,
+  .sigap-modal-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 90vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Halaqah Green Banner on Mobile */
+  .halaqah-green-banner {
+    padding: 18px 14px !important;
+    border-radius: 16px !important;
+  }
+
+  .banner-watermark-quran {
+    display: none !important;
+  }
+
+  .banner-title {
+    font-size: 1.3rem !important;
+  }
+}
+
+/* 6. BREAKPOINT: EXTRA SMALL PHONES (< 400px) */
+@media (max-width: 400px) {
+  .owner-branch-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sigap-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+}
+
+/* 7. SPP & Keuangan Responsive Table */
+.spp-table-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
+}
+
+body.dark-mode .spp-table-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.spp-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.spp-table {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.spp-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+body.dark-mode .spp-table th {
+  background: #0f172a;
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+.spp-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.84rem;
+  color: #1e293b;
+}
+
+body.dark-mode .spp-table td {
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+/* 8. SANTRI TRACKER RESPONSIVE GRIDS */
+.tracker-main-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .tracker-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.tracker-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 22px;
+}
+
+@media (max-width: 768px) {
+  .tracker-metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .tracker-metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.tracker-juz-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 1024px) {
+  .tracker-juz-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .tracker-juz-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 6px !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .tracker-juz-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 5px !important;
+  }
+}
+
+/* 9. WALI SANTRI RESPONSIVE CARDS & TABLES */
+.ortu-desktop-table {
+  display: block;
+}
+
+.ortu-mobile-cards {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .ortu-desktop-table {
+    display: none !important;
+  }
+
+  .ortu-mobile-cards {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+.ortu-setoran-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.dark-mode .ortu-setoran-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+
 
 

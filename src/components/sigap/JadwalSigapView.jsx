@@ -1109,7 +1109,7 @@ export default function JadwalSigapView({ showToast }) {
           </div>
 
           {/* DUA KOLOM BAWAH: PLOTTING PENGAMPU KE QR & AGENDA LIBUR KHUSUS */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
             {/* KOLOM KIRI: PLOTTING PENGAMPU KE LOKASI QR */}
             <div style={{
               background: '#ffffff',

@@ -370,8 +370,8 @@ _Diajukan melalui Aplikasi Tahfidz HUB_`;
           </h3>
         </div>
 
-        <div className="table-responsive">
-          <table className="table" style={{ width: '100%', fontSize: '0.85rem' }}>
+        <div className="table-responsive" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table className="table" style={{ width: '100%', minWidth: '780px', fontSize: '0.85rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #e2e8f0' }}>
                 <th style={{ padding: '12px 14px', textAlign: 'left' }}>Waktu Diajukan</th>

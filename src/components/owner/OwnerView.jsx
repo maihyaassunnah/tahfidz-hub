@@ -388,15 +388,15 @@ export default function OwnerView({
   const totalGuruGlobal = displayedGurus.length;
 
   return (
-    <div className="owner-container" style={{ padding: '1.5rem 1.75rem', maxWidth: '1480px', margin: '0 auto', background: '#f8f9fc', minHeight: '100vh' }}>
+    <div className="owner-container" style={{ maxWidth: '1480px', margin: '0 auto', background: '#f8f9fc', minHeight: '100vh' }}>
       {/* =========================================================
           1. TOP EXECUTIVE OVERVIEW BAR (CLEAN & MINIMALIST)
           ========================================================= */}
       <div 
+        className="owner-top-bar"
         style={{
           background: '#ffffff',
           borderRadius: '20px',
-          padding: '1.25rem 1.75rem',
           border: '1px solid #eef2f6',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02)',
           marginBottom: '1.5rem',
@@ -430,7 +430,7 @@ export default function OwnerView({
             </span>
           </div>
 
-          <h1 style={{ fontSize: '1.5rem', fontWeight: '900', margin: '0 0 0.25rem 0', color: '#1e293b', letterSpacing: '-0.02em' }}>
+          <h1 className="owner-title-h1" style={{ fontSize: '1.5rem', fontWeight: '900', margin: '0 0 0.25rem 0', color: '#1e293b', letterSpacing: '-0.02em' }}>
             Tahfidz HUB — Pusat Kendali Yayasan<span style={{ color: '#ff5b35', marginLeft: '2px' }}>.</span>
           </h1>
           <p style={{ margin: 0, fontSize: '0.825rem', color: '#64748b' }}>
@@ -472,8 +472,9 @@ export default function OwnerView({
         </div>
 
         {/* Branch Quick Switcher & Action Capsule */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div className="owner-quick-switcher" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           <div 
+            className="owner-branch-select-capsule"
             style={{ 
               background: '#f8f9fd', 
               padding: '0.45rem 0.95rem', 
@@ -534,7 +535,7 @@ export default function OwnerView({
             className="owner-theme-coral-btn"
           >
             <Plus size={15} />
-            <span>+ Cabang Baru</span>
+            <span>Cabang Baru</span>
           </button>
         </div>
       </div>
@@ -542,17 +543,7 @@ export default function OwnerView({
       {/* =========================================================
           2. SUB-NAVIGATION TABS (PILL STYLE WITH CORAL TRAILING DOT)
           ========================================================= */}
-      <div 
-        style={{ 
-          display: 'flex', 
-          gap: '0.65rem', 
-          marginBottom: '1.75rem',
-          overflowX: 'auto',
-          whiteSpace: 'nowrap',
-          paddingBottom: '4px',
-          WebkitOverflowScrolling: 'touch'
-        }}
-      >
+      <div className="owner-subtabs-scroll">
         {[
           { id: 'dashboard', label: 'Dashboard Yayasan .', icon: Layers },
           { id: 'cabang', label: `Analisis & Kelola Cabang . (${cabangList.length})`, icon: Building2 },
@@ -591,14 +582,14 @@ export default function OwnerView({
       </div>
 
       {/* =========================================================
-          3. TAB 1: DASHBOARD MULTI-CABANG (2-COLUMN REFERENCE THEME)
+          3. TAB 1: DASHBOARD MULTI-CABANG (RESPONSIVE GRID THEME)
           ========================================================= */}
       {currentSubTab === 'dashboard' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: '2rem', alignItems: 'start' }}>
+        <div className="owner-dashboard-grid">
           {/* =========================================================
               LEFT COLUMN: CABANG LEMBAGA + AKTIVITAS HARI INI
               ========================================================= */}
-          <div>
+          <div className="owner-left-column">
             {/* 1. TOP SECTION: CABANG LEMBAGA ("My Classes .") */}
             <div style={{ marginBottom: '2.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.1rem' }}>
@@ -633,13 +624,7 @@ export default function OwnerView({
               </div>
 
               {/* Dynamic Pastel Cards Grid from Real cabangList + Add Branch Card */}
-              <div 
-                style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
-                  gap: '1.1rem' 
-                }}
-              >
+              <div className="owner-branch-cards-grid">
                 {(isAllBranches ? cabangList : cabangList.filter(c => c.id === activeBranchId)).map((cabang, idx) => {
                   // Palet warna pastel bergantian secara dinamis
                   const PALETTES = [
@@ -661,6 +646,7 @@ export default function OwnerView({
                   return (
                     <div 
                       key={cabang.id}
+                      className="owner-branch-card-item"
                       onClick={() => handleInspectBranch(cabang.id, 'ringkasan')}
                       style={{
                         background: palette.bg,
@@ -1185,7 +1171,7 @@ export default function OwnerView({
           {/* =========================================================
               RIGHT COLUMN: SEARCH BAR + CALENDAR + UPCOMING AGENDA
               ========================================================= */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="owner-right-column" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* 1. SEARCH BAR + OWNER AVATAR */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div 
@@ -2014,7 +2000,7 @@ export default function OwnerView({
                     </div>
 
                     {/* Operational Summary Grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.25rem' }}>
                       {/* Legal & Profile Card */}
                       <div style={{ background: '#ffffff', borderRadius: '20px', padding: '1.5rem', border: '1px solid #eef2f6', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -2153,7 +2139,7 @@ export default function OwnerView({
                     </div>
 
                     <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                      <table style={{ width: '100%', minWidth: '620px', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                         <thead>
                           <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
                             <th style={{ padding: '0.85rem 1rem' }}>No</th>
@@ -2257,7 +2243,7 @@ export default function OwnerView({
                     </div>
 
                     <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                      <table style={{ width: '100%', minWidth: '620px', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                         <thead>
                           <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
                             <th style={{ padding: '0.85rem 1rem' }}>No</th>
@@ -2434,7 +2420,7 @@ export default function OwnerView({
                       </div>
 
                       <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                        <table style={{ width: '100%', minWidth: '620px', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                           <thead>
                             <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
                               <th style={{ padding: '0.85rem 1rem' }}>No. Invoice</th>
@@ -2508,7 +2494,7 @@ export default function OwnerView({
 
                 {/* SUBTAB 5: AKUN ADMIN & PENGATURAN CABANG */}
                 {branchInspectorTab === 'pengaturan' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.5rem' }}>
                     {/* Super Admin Credential Box for this Branch */}
                     <div style={{ background: '#ffffff', borderRadius: '20px', padding: '1.5rem', border: '1px solid #eef2f6', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
@@ -2812,7 +2798,7 @@ export default function OwnerView({
                 </div>
 
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                     <thead>
                       <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
                         <th style={{ padding: '0.85rem 1rem' }}>No</th>
@@ -3036,7 +3022,7 @@ export default function OwnerView({
           {/* Table Super Admin */}
           <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+              <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
                     <th style={{ padding: '0.85rem 1rem' }}>No</th>
@@ -3246,7 +3232,7 @@ export default function OwnerView({
 
           <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '1.25rem', marginBottom: '1.5rem' }}>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+              <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
                     <th style={{ padding: '0.85rem' }}>Nama Cabang Lembaga</th>

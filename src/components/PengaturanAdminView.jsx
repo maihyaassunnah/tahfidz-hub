@@ -956,7 +956,7 @@ export default function PengaturanAdminView({
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
             {sesiList.map(sesi => {
               const isAktif = sesi.status === 'AKTIF' || (sesi.aktif !== false && sesi.status !== 'NONAKTIF');
               const jamMulai = sesi.mulai || sesi.jamMulai || '05:00';
@@ -1449,7 +1449,7 @@ export default function PengaturanAdminView({
       {/* 5. BACKUP & RESTORE */}
       {/* ========================================================= */}
       {activeSubTab === 'backup' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
           <div className="card">
             <h3 style={{ margin: '0 0 8px 0', fontWeight: 800, color: '#166534' }}>Cadangkan Database (Backup JSON)</h3>
             <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '16px' }}>
@@ -1503,7 +1503,7 @@ export default function PengaturanAdminView({
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(350px, 1.2fr) minmax(320px, 1fr)', gap: '24px', alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '24px', alignItems: 'start' }}>
             {/* KOLOM KIRI: FORM PENGATURAN */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               

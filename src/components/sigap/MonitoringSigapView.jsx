@@ -965,7 +965,7 @@ export default function MonitoringSigapView({ showToast, activeBranchId = 'caban
             </div>
 
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
+              <table style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse', fontSize: '12.5px' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #e2e8f0', textAlign: 'left', color: '#475569' }}>
                     <th style={{ padding: '10px 14px', width: '40px' }}>No</th>

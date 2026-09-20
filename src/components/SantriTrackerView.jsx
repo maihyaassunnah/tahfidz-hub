@@ -289,7 +289,7 @@ export default function SantriTrackerView({
       </div>
 
       {/* ══════════ MAIN 2-COLUMN LAYOUT ══════════ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: '22px', alignItems: 'start' }}>
+      <div className="tracker-main-grid">
 
         {/* ─── KOLOM KIRI: DAFTAR SANTRI HALAQAH ─── */}
         <div style={{
@@ -735,12 +735,7 @@ export default function SantriTrackerView({
             </div>
 
             {/* ─── 4 STAT METRIC CARDS ─── */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '12px',
-              marginTop: '22px'
-            }}>
+            <div className="tracker-metrics-grid">
               {/* Card 1: Mutqin */}
               <div style={{
                 background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
@@ -950,11 +945,7 @@ export default function SantriTrackerView({
             </div>
 
             {/* 🌟 THE 30 JUZ GRID CONTAINER (10 Kolom x 3 Baris) 🌟 */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(10, 1fr)',
-              gap: '10px'
-            }}>
+            <div className="tracker-juz-grid">
               {Array.from({ length: 30 }, (_, i) => i + 1).map(juzNum => {
                 const status = getJuzStatus(juzNum);
                 const isMutqin = status === 'mutqin';

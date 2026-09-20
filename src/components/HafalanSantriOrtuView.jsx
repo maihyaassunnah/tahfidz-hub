@@ -275,7 +275,7 @@ export default function HafalanSantriOrtuView({
       </div>
 
       {/* ══════════ 2. KARTU STATISTIK RINGKASAN PERIODE TERPILIH ══════════ */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '16px' }}>
         
         {/* Total Setoran */}
         <div style={{
@@ -491,7 +491,7 @@ export default function HafalanSantriOrtuView({
         {/* Baris Input Filter: Tanggal Mulai, Selesai, Pencarian, & Kategori */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))',
           gap: '12px',
           background: '#f8fafc',
           padding: '14px',
@@ -694,107 +694,171 @@ export default function HafalanSantriOrtuView({
             </button>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: '#475569' }}>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Tanggal</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Surah & Rentang Ayat</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Juz / Halaman</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Jenis Setoran</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Predikat Nilai</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Ustadz Pengampu</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Catatan & Tajwid</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSetoran.map((st, idx) => {
-                  const isZiyadah = (st.jenis === 'ZIYADAH' || st.jenis === 'SABAQ');
-                  const ayatCount = Math.max(1, ((st.ayatAkhir || st.ayatSelesai || 1) - (st.ayatAwal || st.ayatMulai || 1) + 1));
-                  const hlm = st.halaman || (ayatCount / 15).toFixed(1);
-                  const predikat = st.nilai || st.predikat || 'Mumtaz';
+          <>
+            {/* Desktop Table View */}
+            <div className="ortu-desktop-table" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left', color: '#475569' }}>
+                    <th style={{ padding: '12px 14px', fontWeight: 700 }}>Tanggal</th>
+                    <th style={{ padding: '12px 14px', fontWeight: 700 }}>Surah & Rentang Ayat</th>
+                    <th style={{ padding: '12px 14px', fontWeight: 700 }}>Juz / Halaman</th>
+                    <th style={{ padding: '12px 14px', fontWeight: 700 }}>Jenis Setoran</th>
+                    <th style={{ padding: '12px 14px', fontWeight: 700 }}>Predikat Nilai</th>
+                    <th style={{ padding: '12px 14px', fontWeight: 700 }}>Ustadz Pengampu</th>
+                    <th style={{ padding: '12px 14px', fontWeight: 700 }}>Catatan & Tajwid</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSetoran.map((st, idx) => {
+                    const isZiyadah = (st.jenis === 'ZIYADAH' || st.jenis === 'SABAQ');
+                    const ayatCount = Math.max(1, ((st.ayatAkhir || st.ayatSelesai || 1) - (st.ayatAwal || st.ayatMulai || 1) + 1));
+                    const hlm = st.halaman || (ayatCount / 15).toFixed(1);
+                    const predikat = st.nilai || st.predikat || 'Mumtaz';
 
-                  return (
-                    <tr 
-                      key={st.id || idx}
-                      style={{ 
-                        borderBottom: '1px solid #f1f5f9',
-                        transition: 'background 0.15s ease'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                    >
-                      {/* Tanggal */}
-                      <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#475569', fontWeight: 600 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Calendar size={14} color="#059669" />
-                          <span>{st.tanggal || '-'}</span>
-                        </div>
-                      </td>
+                    return (
+                      <tr 
+                        key={st.id || idx}
+                        style={{ 
+                          borderBottom: '1px solid #f1f5f9',
+                          transition: 'background 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        {/* Tanggal */}
+                        <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#475569', fontWeight: 600 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Calendar size={14} color="#059669" />
+                            <span>{st.tanggal || '-'}</span>
+                          </div>
+                        </td>
 
-                      {/* Surah & Ayat */}
-                      <td style={{ padding: '12px 14px' }}>
-                        <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.88rem' }}>
-                          QS. {st.surat || st.surahName || st.surah || 'Al-Qur\'an'}
-                        </div>
-                        <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: '2px' }}>
-                          Ayat {st.ayatAwal || st.ayatMulai || 1} - {st.ayatAkhir || st.ayatSelesai || 7} ({ayatCount} Ayat)
-                        </div>
-                      </td>
+                        {/* Surah & Ayat */}
+                        <td style={{ padding: '12px 14px' }}>
+                          <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.88rem' }}>
+                            QS. {st.surat || st.surahName || st.surah || 'Al-Qur\'an'}
+                          </div>
+                          <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: '2px' }}>
+                            Ayat {st.ayatAwal || st.ayatMulai || 1} - {st.ayatAkhir || st.ayatSelesai || 7} ({ayatCount} Ayat)
+                          </div>
+                        </td>
 
-                      {/* Juz / Hlm */}
-                      <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
-                        <div style={{ fontWeight: 700, color: '#047857' }}>
-                          Juz {st.juz || 1}
-                        </div>
-                        <div style={{ fontSize: '0.74rem', color: '#64748b' }}>
-                          ± {hlm} Halaman
-                        </div>
-                      </td>
+                        {/* Juz / Hlm */}
+                        <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontWeight: 700, color: '#047857' }}>
+                            Juz {st.juz || 1}
+                          </div>
+                          <div style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                            ± {hlm} Halaman
+                          </div>
+                        </td>
 
-                      {/* Jenis Setoran */}
-                      <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
+                        {/* Jenis Setoran */}
+                        <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
+                          <span style={{
+                            background: isZiyadah ? '#ecfdf5' : '#eff6ff',
+                            color: isZiyadah ? '#065f46' : '#1e40af',
+                            border: isZiyadah ? '1px solid #a7f3d0' : '1px solid #bfdbfe',
+                            padding: '3px 9px',
+                            borderRadius: '6px',
+                            fontWeight: 700,
+                            fontSize: '0.74rem',
+                            display: 'inline-block'
+                          }}>
+                            {st.jenis || 'ZIYADAH'}
+                          </span>
+                        </td>
+
+                        {/* Predikat Nilai */}
+                        <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Star size={13} color="#f59e0b" fill="#f59e0b" />
+                            <span style={{ fontWeight: 800, color: '#b45309', fontSize: '0.82rem' }}>
+                              {predikat}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Pengampu */}
+                        <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#334155', fontWeight: 600 }}>
+                          {st.pengampu || st.musyrif || st.pengampuNama || halaqahAnanda.musyrif || 'Ustadz Pengampu'}
+                        </td>
+
+                        {/* Catatan Tajwid */}
+                        <td style={{ padding: '12px 14px', color: '#475569', minWidth: '180px', maxWidth: '300px' }}>
+                          <div style={{ fontSize: '0.80rem', fontStyle: st.catatan ? 'normal' : 'italic', color: st.catatan ? '#334155' : '#94a3b8' }}>
+                            {st.catatan || st.keterangan || 'Tajwid lancar, makhraj fasih.'}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards View (< 768px) */}
+            <div className="ortu-mobile-cards">
+              {filteredSetoran.map((st, idx) => {
+                const isZiyadah = (st.jenis === 'ZIYADAH' || st.jenis === 'SABAQ');
+                const ayatCount = Math.max(1, ((st.ayatAkhir || st.ayatSelesai || 1) - (st.ayatAwal || st.ayatMulai || 1) + 1));
+                const hlm = st.halaman || (ayatCount / 15).toFixed(1);
+                const predikat = st.nilai || st.predikat || 'Mumtaz';
+
+                return (
+                  <div key={st.id || `m-${idx}`} className="ortu-setoran-card">
+                    {/* Header: Date + Badges */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', color: '#475569', fontWeight: 700 }}>
+                        <Calendar size={13} color="#059669" />
+                        <span>{st.tanggal || '-'}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{
                           background: isZiyadah ? '#ecfdf5' : '#eff6ff',
                           color: isZiyadah ? '#065f46' : '#1e40af',
                           border: isZiyadah ? '1px solid #a7f3d0' : '1px solid #bfdbfe',
-                          padding: '3px 9px',
+                          padding: '2px 8px',
                           borderRadius: '6px',
-                          fontWeight: 700,
-                          fontSize: '0.74rem',
-                          display: 'inline-block'
+                          fontWeight: 800,
+                          fontSize: '0.70rem'
                         }}>
                           {st.jenis || 'ZIYADAH'}
                         </span>
-                      </td>
-
-                      {/* Predikat Nilai */}
-                      <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Star size={13} color="#f59e0b" fill="#f59e0b" />
-                          <span style={{ fontWeight: 800, color: '#b45309', fontSize: '0.82rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', background: '#fffbeb', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '6px' }}>
+                          <Star size={11} color="#f59e0b" fill="#f59e0b" />
+                          <span style={{ fontWeight: 800, color: '#b45309', fontSize: '0.72rem' }}>
                             {predikat}
                           </span>
                         </div>
-                      </td>
+                      </div>
+                    </div>
 
-                      {/* Pengampu */}
-                      <td style={{ padding: '12px 14px', whiteSpace: 'nowrap', color: '#334155', fontWeight: 600 }}>
-                        {st.pengampu || st.musyrif || st.pengampuNama || halaqahAnanda.musyrif || 'Ustadz Pengampu'}
-                      </td>
+                    {/* Surah & Ayat */}
+                    <div style={{ marginTop: '2px' }}>
+                      <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.94rem' }}>
+                        QS. {st.surat || st.surahName || st.surah || 'Al-Qur\'an'}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#047857', fontWeight: 600, marginTop: '2px' }}>
+                        Ayat {st.ayatAwal || st.ayatMulai || 1} - {st.ayatAkhir || st.ayatSelesai || 7} ({ayatCount} Ayat) • Juz {st.juz || 1} (± {hlm} Hlm)
+                      </div>
+                    </div>
 
-                      {/* Catatan Tajwid */}
-                      <td style={{ padding: '12px 14px', color: '#475569', minWidth: '180px', maxWidth: '300px' }}>
-                        <div style={{ fontSize: '0.80rem', fontStyle: st.catatan ? 'normal' : 'italic', color: st.catatan ? '#334155' : '#94a3b8' }}>
-                          {st.catatan || st.keterangan || 'Tajwid lancar, makhraj fasih.'}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                    {/* Pengampu & Catatan */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#f8fafc', padding: '8px 10px', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>
+                        Pengampu: <span style={{ color: '#334155', fontWeight: 700 }}>{st.pengampu || st.musyrif || st.pengampuNama || halaqahAnanda.musyrif || 'Ustadz Pengampu'}</span>
+                      </div>
+                      <div style={{ fontSize: '0.76rem', fontStyle: st.catatan ? 'normal' : 'italic', color: st.catatan ? '#334155' : '#94a3b8' }}>
+                        💬 {st.catatan || st.keterangan || 'Tajwid lancar, makhraj fasih.'}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {/* Footer info */}

@@ -232,7 +232,7 @@ export default function DashboardView({
         </div>
 
         {/* ══════════ 4 KARTU KPI CAPAIAN HAFALAN & KEHADIRAN ANANDA ══════════ */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '16px' }}>
           
           {/* Total Halaman */}
           <div 
@@ -362,7 +362,7 @@ export default function DashboardView({
         </div>
 
         {/* ══════════ DUAL CHARTS: GRAFIK BATANG HAFALAN & GRAFIK LINGKARAN KEHADIRAN ══════════ */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
           
           {/* 1. GRAFIK PERKEMBANGAN HAFALAN SISWA KHUSUS ANANDA (BAR CHART) */}
           <div style={{
@@ -978,7 +978,7 @@ export default function DashboardView({
         })()}
 
         {/* ══════════ TAUTAN MENU CEPAT (4 MENU RESMI ORANG TUA) ══════════ */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '14px' }}>
           <div 
             onClick={() => setActiveTab('hafalan-santri')}
             style={{
@@ -1141,7 +1141,7 @@ export default function DashboardView({
         </div>
 
         {/* Global KPI 4 Cards Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '18px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '18px', marginBottom: '24px' }}>
           <div className="kpi-card-white" onClick={() => setActiveTab('santri')}>
             <div className="kpi-left">
               <div className="kpi-circle-icon green">
@@ -1192,7 +1192,7 @@ export default function DashboardView({
           <div className="sesi-header-title" style={{ marginBottom: '14px' }}>
             Menu Pintas Administrasi Pesantren
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '12px' }}>
             <button 
               className="btn btn-outline" 
               style={{ padding: '14px', justifyContent: 'flex-start', textAlign: 'left' }}
@@ -1236,7 +1236,7 @@ export default function DashboardView({
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '14px' }}>
             {halaqahList.map(h => {
               const count = santriList.filter(s => s.halaqahId === h.id).length;
               return (

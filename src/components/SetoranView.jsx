@@ -1336,8 +1336,8 @@ export default function SetoranView({
             </div>
 
             {/* Table of all setoran */}
-            <div className="table-container" style={{ border: '1px solid #e2e8f0', borderRadius: '16px', overflow: 'hidden' }}>
-              <table className="table">
+            <div className="table-container" style={{ border: '1px solid #e2e8f0', borderRadius: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table className="table" style={{ minWidth: '760px' }}>
                 <thead>
                   <tr>
                     <th>Tanggal</th>
