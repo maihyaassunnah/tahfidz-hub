@@ -4922,7 +4922,7 @@ body.dark-mode {
   }
 
   .page-content-wrapper {
-    padding: 0 12px 110px 12px !important;
+    padding: 0 18px 120px 18px !important;
     width: 100% !important;
     max-width: 100vw !important;
     box-sizing: border-box !important;
@@ -4942,7 +4942,7 @@ body.dark-mode {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    padding: 10px 14px !important;
+    padding: 12px 18px !important;
     min-height: 52px !important;
     width: 100% !important;
     box-sizing: border-box !important;
@@ -6932,8 +6932,33 @@ html, body {
   min-width: 580px;
 }
 
-/* 3. Role: Owner Yayasan Mobile Layout Classes */
+/* 3. Role: Owner Yayasan Layout Classes (Generous, Clean & Elegant Margins/Paddings) */
 .owner-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1.5rem 2.25rem 140px 2.25rem;
+}
+
+/* Ensure nested page-content-wrapper inside owner-container doesn't add double padding */
+.owner-container .page-content-wrapper {
+  padding: 0 !important;
+  max-width: 100% !important;
+}
+
+.owner-top-bar {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #eef2f6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.35rem 1.75rem;
   box-sizing: border-box;
   width: 100%;
 }
@@ -6951,7 +6976,7 @@ html, body {
   margin-bottom: 1.5rem;
   overflow-x: auto;
   white-space: nowrap;
-  padding-bottom: 6px;
+  padding: 4px 4px 10px 4px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -6962,11 +6987,31 @@ html, body {
 .owner-branch-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.1rem;
+  gap: 1.15rem;
 }
 
-/* 4. BREAKPOINT: TABLET & MOBILE (< 1024px) */
+/* 4. BREAKPOINT: LAPTOPS & TABLET LANDSCAPE (< 1200px) */
+@media (max-width: 1199px) {
+  .owner-container {
+    padding: 1.35rem 1.85rem 130px 1.85rem;
+  }
+  .owner-top-bar {
+    padding: 1.25rem 1.6rem;
+  }
+}
+
+/* 5. BREAKPOINT: TABLET & IPAD PORTRAIT (< 1024px) */
 @media (max-width: 1024px) {
+  .owner-container {
+    padding: 1.25rem 1.65rem 130px 1.65rem !important;
+  }
+
+  .owner-top-bar {
+    padding: 1.2rem 1.45rem !important;
+    border-radius: 18px !important;
+    margin-bottom: 1.25rem !important;
+  }
+
   .owner-dashboard-grid {
     display: flex !important;
     flex-direction: column !important;
@@ -6984,38 +7029,38 @@ html, body {
   }
 }
 
-/* 5. BREAKPOINT: MOBILE PHONES (< 768px) */
+/* 6. BREAKPOINT: MOBILE PHONES (< 768px) */
 @media (max-width: 768px) {
   /* Safe Bottom Spacing to Never be Covered by Floating BottomNav */
   .simtah-main,
   .page-content-wrapper,
   .owner-container {
-    padding-bottom: 120px !important;
+    padding-bottom: 125px !important;
   }
 
   .owner-container {
-    padding: 0.5rem 0.5rem 110px 0.5rem !important;
+    padding: 1rem 1.15rem 125px 1.15rem !important;
   }
 
   .owner-top-bar {
-    padding: 0.7rem 0.85rem !important;
-    border-radius: 14px !important;
-    margin-bottom: 0.55rem !important;
+    padding: 1.1rem 1.15rem !important;
+    border-radius: 16px !important;
+    margin-bottom: 0.85rem !important;
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 0.55rem !important;
+    gap: 0.75rem !important;
   }
 
   .owner-title-h1 {
-    font-size: 1.15rem !important;
-    line-height: 1.25 !important;
+    font-size: 1.2rem !important;
+    line-height: 1.3 !important;
     margin: 0 !important;
   }
 
   .owner-desc-text,
   .owner-institution-name,
   .owner-global-badge {
-    display: none !important;
+    display: block !important;
   }
 
   .owner-quick-switcher {

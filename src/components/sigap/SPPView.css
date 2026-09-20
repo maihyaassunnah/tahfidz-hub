@@ -7,8 +7,23 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding-bottom: 3rem;
+  padding: 1.5rem 2.25rem 140px 2.25rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  box-sizing: border-box;
   animation: fadeIn 0.3s ease-out;
+}
+
+@media (max-width: 1024px) {
+  .spp-container {
+    padding: 1.25rem 1.5rem 130px 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .spp-container {
+    padding: 1rem 1.15rem 120px 1.15rem;
+  }
 }
 
 @keyframes fadeIn {

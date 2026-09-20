@@ -389,7 +389,7 @@ export default function OwnerView({
   const totalGuruGlobal = displayedGurus.length;
 
   return (
-    <div className="owner-container" style={{ maxWidth: '1480px', margin: '0 auto', background: '#f8f9fc', minHeight: '100vh' }}>
+    <div className="owner-container" style={{ minHeight: '100vh' }}>
       {/* =========================================================
           1. TOP EXECUTIVE OVERVIEW BAR (CLEAN & MINIMALIST)
           ========================================================= */}
@@ -405,7 +405,8 @@ export default function OwnerView({
           flexWrap: 'wrap',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '1.25rem'
+          gap: '1.25rem',
+          padding: '1.35rem 1.75rem'
         }}
       >
         <div>
