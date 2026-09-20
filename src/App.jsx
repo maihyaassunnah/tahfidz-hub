@@ -27,6 +27,7 @@ import SPPView from './components/sigap/SPPView';
 import SetoranModal from './components/SetoranModal';
 import BottomNav from './components/BottomNav';
 import LoginView from './components/LoginView';
+import PwaInstallPrompt from './components/common/PwaInstallPrompt';
 import { storageService } from './services/storage';
 import { CheckCircle, KeyRound } from 'lucide-react';
 
@@ -891,6 +892,9 @@ export default function App() {
         activeBranchId={activeBranchId}
         onSwitchBranch={handleSwitchBranch}
       />
+
+      {/* PWA Smart Install Prompt */}
+      <PwaInstallPrompt />
     </div>
   );
 }

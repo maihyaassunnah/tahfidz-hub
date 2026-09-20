@@ -142,8 +142,14 @@ server {
         proxy_read_timeout 60s;
     }
 
-    # 3. Cache Aset Statis
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)\$ {
+    # 3. PWA Service Worker & Manifest (No-cache agar update aplikasi langsung diterima klien)
+    location ~* (sw\.js|manifest\.json)$ {
+        expires -1;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
+    }
+
+    # 4. Cache Aset Statis (Vite assets)
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
         expires 1y;
         add_header Cache-Control "public, no-transform";
     }

@@ -32,7 +32,8 @@ import {
   ChevronDown,
   Database,
   Receipt,
-  Lock
+  Lock,
+  Download
 } from 'lucide-react';
 import { storageService } from '../services/storage';
 import TahfidzHubLogo from './TahfidzHubLogo';
@@ -472,6 +473,14 @@ export default function Sidebar({
             title="Bantuan & Panduan Owner"
           >
             <HelpCircle size={17} />
+          </button>
+
+          <button 
+            className="sigap-bottom-icon-btn" 
+            onClick={() => window.dispatchEvent(new CustomEvent('trigger-pwa-install'))} 
+            title="Install Aplikasi PWA (Desktop/HP)"
+          >
+            <Download size={17} />
           </button>
 
           <button 
@@ -921,6 +930,14 @@ export default function Sidebar({
           </button>
 
           <button 
+            className="sigap-bottom-icon-btn" 
+            onClick={() => window.dispatchEvent(new CustomEvent('trigger-pwa-install'))} 
+            title="Install Aplikasi PWA (Desktop/HP)"
+          >
+            <Download size={17} />
+          </button>
+
+          <button 
             className="sigap-bottom-logout" 
             onClick={onSignOut} 
             title="Keluar dari Sistem"
@@ -1182,8 +1199,33 @@ export default function Sidebar({
         </div>
       </div>
 
-      {/* Bottom Sign Out */}
-      <div className="sidebar-bottom">
+      {/* Bottom Sign Out & Install */}
+      <div className="sidebar-bottom" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <button 
+          type="button" 
+          className="btn-pwa-install" 
+          onClick={() => window.dispatchEvent(new CustomEvent('trigger-pwa-install'))}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            width: '100%',
+            padding: '8px 12px',
+            borderRadius: '10px',
+            border: '1px solid #10b981',
+            background: 'rgba(16, 185, 129, 0.1)',
+            color: '#059669',
+            fontSize: '0.80rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >
+          <Download size={15} />
+          <span>Install Aplikasi</span>
+        </button>
+
         <button className="btn-signout" onClick={onSignOut}>
           <LogOut size={16} />
           <span>Sign Out</span>

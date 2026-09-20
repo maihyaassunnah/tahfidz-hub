@@ -197,8 +197,12 @@ export default function LoginView({ onLoginSuccess, isDarkMode }) {
 
           {/* Center Emblem & Description */}
           <div className="login-hero-body">
-            <div className="login-emblem-circle">
-              <TahfidzHubLogo size={52} variant="emerald" />
+            <div className="login-emblem-circle" style={{ padding: 0, overflow: 'hidden', background: '#ffffff', border: '3px solid rgba(255,255,255,0.85)', boxShadow: '0 8px 24px rgba(0,0,0,0.25)' }}>
+              <img 
+                src="/icons/icon-192x192.png" 
+                alt="TahfidzHub Logo" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} 
+              />
             </div>
 
             <h1 className="login-brand-name">Tahfidz HUB</h1>

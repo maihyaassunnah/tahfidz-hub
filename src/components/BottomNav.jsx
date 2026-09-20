@@ -29,7 +29,8 @@ import {
   Layers,
   UserCheck,
   Database,
-  Receipt
+  Receipt,
+  Download
 } from 'lucide-react';
 import { storageService } from '../services/storage';
 
@@ -1166,7 +1167,7 @@ export default function BottomNav({
 
             {/* 4. DRAWER FOOTER: TEMA, LOGOUT & APP VERSION (PERSIS SEPERTI GAMBAR 2) */}
             <div className="sidebar-drawer-footer">
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '12px' }}>
                 <button 
                   type="button"
                   className="sidebar-drawer-action-btn"
@@ -1174,7 +1175,7 @@ export default function BottomNav({
                   title="Ganti Tema"
                 >
                   {isDarkMode ? <Sun size={15} color="#f59e0b" /> : <Moon size={15} color="#6366f1" />}
-                  <span>{isDarkMode ? 'Mode Terang' : 'Mode Gelap'}</span>
+                  <span>{isDarkMode ? 'Terang' : 'Gelap'}</span>
                 </button>
 
                 <button 
@@ -1188,6 +1189,20 @@ export default function BottomNav({
                 >
                   <KeyRound size={15} color="#0d9488" />
                   <span>Sandi</span>
+                </button>
+
+                <button 
+                  type="button"
+                  className="sidebar-drawer-action-btn"
+                  onClick={() => {
+                    setShowDrawer(false);
+                    window.dispatchEvent(new CustomEvent('trigger-pwa-install'));
+                  }}
+                  style={{ background: '#ecfdf5', borderColor: '#a7f3d0', color: '#065f46', fontWeight: 700 }}
+                  title="Install Aplikasi TahfidzHub"
+                >
+                  <Download size={15} color="#059669" />
+                  <span>Install</span>
                 </button>
               </div>
 
