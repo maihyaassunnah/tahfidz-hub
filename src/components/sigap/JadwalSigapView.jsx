@@ -262,11 +262,25 @@ export default function JadwalSigapView({ showToast }) {
   };
 
   const handleResetHalaqohGrid = () => {
-    if (window.confirm("Kosongkan seluruh matriks jadwal sesi halaqoh?")) {
-      const updated = { ...jadwalHalaqoh, matriks: {} };
+    if (window.confirm("Kosongkan seluruh tabel jadwal sesi halaqoh? Semua slot akan direset menjadi kosong.")) {
+      const updated = {
+        ...jadwalHalaqoh,
+        matriks: {},
+        hariAktif: {}
+      };
+
+      (jadwalHalaqoh.sesiList || []).forEach(sesi => {
+        updated.matriks[sesi.id] = {};
+        HARI_LIST.forEach(hari => {
+          updated.matriks[sesi.id][hari] = { status: 'Kosong', guru: '' };
+          if (!updated.hariAktif[hari]) updated.hariAktif[hari] = {};
+          updated.hariAktif[hari][sesi.id] = false;
+        });
+      });
+
       storageService.saveJadwalHalaqoh(updated);
       setJadwalHalaqoh(updated);
-      showToast && showToast("Seluruh matriks jadwal halaqoh telah dikosongkan.");
+      showToast && showToast("Seluruh tabel jadwal halaqoh berhasil dikosongkan.");
     }
   };
 
@@ -275,7 +289,7 @@ export default function JadwalSigapView({ showToast }) {
     const rows = (jadwalHalaqoh.sesiList || []).map(sesi => {
       const dayCells = HARI_LIST.map(h => {
         const c = jadwalHalaqoh.matriks?.[sesi.id]?.[h];
-        if (!c) return '"-"';
+        if (!c || c.status === 'Kosong') return '"-"';
         const st = c.status === 'Libur' ? 'Keluar' : c.status;
         return `"${st}"`;
       });
@@ -303,7 +317,7 @@ export default function JadwalSigapView({ showToast }) {
 
   const handleUpdateHalaqoh = () => {
     storageService.saveJadwalHalaqoh(jadwalHalaqoh);
-    showToast && showToast("Jadwal Sesi Halaqoh berhasil diperbarui dan tersimpan!");
+    showToast && showToast("Jadwal Sesi Halaqoh berhasil disimpan!");
   };
 
   // Handlers untuk Edit Jam Sesi
@@ -559,75 +573,15 @@ export default function JadwalSigapView({ showToast }) {
           </div>
 
           {/* TOOLBAR HALAQOH */}
-          <div className="sigap-page-header-row" style={{ alignItems: 'flex-start', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <BookOpen size={20} color="#059669" />
-                <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#1e293b', margin: 0 }}>
-                  Jadwal Sesi Halaqoh (Semua Pengampu)
-                </h2>
-              </div>
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                background: '#ecfdf5',
-                color: '#047857',
-                border: '1px solid #a7f3d0',
-                fontSize: '11px',
-                fontWeight: 800,
-                padding: '2px 8px',
-                borderRadius: '12px',
-                width: 'fit-content'
-              }}>
-                • MODE: {scheduleModeHalaqoh.toUpperCase()}
-              </span>
+          <div className="sigap-page-header-row" style={{ alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <BookOpen size={20} color="#059669" />
+              <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#1e293b', margin: 0 }}>
+                Jadwal Sesi Halaqoh (Semua Pengampu)
+              </h2>
             </div>
 
             <div className="sigap-page-actions" style={{ gap: '8px', flexWrap: 'wrap' }}>
-              {/* Preset Cepat */}
-              
-
-              {/* Mode Normal / Ramadhan */}
-              <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                <button
-                  style={{
-                    background: scheduleModeHalaqoh === 'Normal' ? '#10b981' : 'transparent',
-                    color: scheduleModeHalaqoh === 'Normal' ? '#ffffff' : '#64748b',
-                    border: 'none',
-                    padding: '5px 10px',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => {
-                    setScheduleModeHalaqoh('Normal');
-                    showToast && showToast("Beralih ke Jadwal Halaqoh Normal");
-                  }}
-                >
-                  Normal
-                </button>
-                <button
-                  style={{
-                    background: scheduleModeHalaqoh === 'Ramadhan' ? '#10b981' : 'transparent',
-                    color: scheduleModeHalaqoh === 'Ramadhan' ? '#ffffff' : '#64748b',
-                    border: 'none',
-                    padding: '5px 10px',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => {
-                    setScheduleModeHalaqoh('Ramadhan');
-                    showToast && showToast("Beralih ke Jadwal Halaqoh Ramadhan");
-                  }}
-                >
-                  Ramadhan
-                </button>
-              </div>
-
               {/* Tambah Sesi Baru */}
               <button
                 className="sigap-btn-slate"
@@ -648,24 +602,14 @@ export default function JadwalSigapView({ showToast }) {
                 <span>Download</span>
               </button>
 
-              {/* Reset / Kosongkan */}
-              <button 
-                className="sigap-btn-action delete"
-                onClick={handleResetHalaqohGrid}
-                title="Kosongkan Jadwal Halaqoh"
-                style={{ width: '32px', height: '32px' }}
-              >
-                <Trash2 size={15} />
-              </button>
-
-              {/* Update Jadwal */}
+              {/* Simpan Jadwal */}
               <button 
                 className="sigap-btn-teal"
                 onClick={handleUpdateHalaqoh}
                 style={{ padding: '6px 14px', fontSize: '11px' }}
               >
-                <RefreshCw size={13} />
-                <span>Update Jadwal</span>
+                <Save size={13} />
+                <span>Simpan Jadwal</span>
               </button>
             </div>
           </div>
@@ -677,17 +621,17 @@ export default function JadwalSigapView({ showToast }) {
             background: '#ffffff',
             borderRadius: '16px',
             border: '1px solid #e2e8f0',
-            padding: '16px 20px',
+            padding: '14px 18px',
             marginBottom: '16px',
             boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '14px'
+            gap: '12px'
           }}>
-            {/* PILIHAN STATUS: HANYA MASUK DAN KELUAR */}
-            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            {/* PILIHAN STATUS: MASUK, LIBUR, DAN KOSONGKAN TABEL */}
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Sparkles size={16} color="#0f766e" />
                 <span style={{ fontSize: '12px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -695,7 +639,7 @@ export default function JadwalSigapView({ showToast }) {
                 </span>
               </div>
 
-              <div style={{ display: 'inline-flex', gap: '8px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 {/* OPSI 1: MASUK */}
                 <button
                   type="button"
@@ -703,12 +647,12 @@ export default function JadwalSigapView({ showToast }) {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 18px',
+                    gap: '7px',
+                    padding: '8px 16px',
                     borderRadius: '10px',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
-                    fontSize: '13px',
+                    fontSize: '12.5px',
                     fontWeight: 800,
                     background: selectedHalaqohStatus === 'Masuk' ? '#059669' : '#ffffff',
                     color: selectedHalaqohStatus === 'Masuk' ? '#ffffff' : '#047857',
@@ -727,12 +671,12 @@ export default function JadwalSigapView({ showToast }) {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 18px',
+                    gap: '7px',
+                    padding: '8px 16px',
                     borderRadius: '10px',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
-                    fontSize: '13px',
+                    fontSize: '12.5px',
                     fontWeight: 800,
                     background: selectedHalaqohStatus === 'Libur' ? '#dc2626' : '#ffffff',
                     color: selectedHalaqohStatus === 'Libur' ? '#ffffff' : '#b91c1c',
@@ -743,25 +687,43 @@ export default function JadwalSigapView({ showToast }) {
                   <CheckCircle2 size={16} color={selectedHalaqohStatus === 'Libur' ? '#ffffff' : '#dc2626'} />
                   <span>LIBUR</span>
                 </button>
+
+                {/* TOMBOL KOSONGKAN TABEL (PERSIS DI SAMPING LIBUR) */}
+                <button
+                  type="button"
+                  onClick={handleResetHalaqohGrid}
+                  title="Kosongkan seluruh tabel jadwal sesi halaqoh"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '7px',
+                    padding: '8px 16px',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    fontSize: '12.5px',
+                    fontWeight: 800,
+                    background: '#fef2f2',
+                    color: '#dc2626',
+                    border: '2px solid #fecaca'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#dc2626';
+                    e.currentTarget.style.color = '#ffffff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#fef2f2';
+                    e.currentTarget.style.color = '#dc2626';
+                  }}
+                >
+                  <Trash2 size={15} />
+                  <span>Kosongkan Tabel</span>
+                </button>
               </div>
 
               <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>
                 (Pilih <strong>MASUK</strong> atau <strong>LIBUR</strong>, lalu klik sel pada tabel jadwal di bawah)
               </span>
-            </div>
-
-            {/* AKSI CEPAT JADWAL */}
-            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={handleResetHalaqohGrid}
-                className="sigap-btn-slate"
-                style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 700, color: '#dc2626' }}
-                title="Kosongkan seluruh sel jadwal"
-              >
-                <Trash2 size={12} />
-                <span>Kosongkan Tabel</span>
-              </button>
             </div>
           </div>
 
@@ -1278,64 +1240,9 @@ export default function JadwalSigapView({ showToast }) {
                   Jadwal Pelajaran Kelas Formal (KBM)
                 </h2>
               </div>
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                background: '#ecfdf5',
-                color: '#047857',
-                border: '1px solid #a7f3d0',
-                fontSize: '11px',
-                fontWeight: 800,
-                padding: '2px 8px',
-                borderRadius: '12px',
-                width: 'fit-content'
-              }}>
-                • MODE: {scheduleMode.toUpperCase()}
-              </span>
             </div>
 
             <div className="sigap-page-actions" style={{ gap: '8px' }}>
-              {/* Mode Switch */}
-              <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                <button
-                  style={{
-                    background: scheduleMode === 'Normal' ? '#10b981' : 'transparent',
-                    color: scheduleMode === 'Normal' ? '#ffffff' : '#64748b',
-                    border: 'none',
-                    padding: '5px 10px',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => {
-                    setScheduleMode('Normal');
-                    showToast && showToast("Beralih ke Jam Normal");
-                  }}
-                >
-                  Normal
-                </button>
-                <button
-                  style={{
-                    background: scheduleMode === 'Ramadhan' ? '#10b981' : 'transparent',
-                    color: scheduleMode === 'Ramadhan' ? '#ffffff' : '#64748b',
-                    border: 'none',
-                    padding: '5px 10px',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => {
-                    setScheduleMode('Ramadhan');
-                    showToast && showToast("Beralih ke Jam Ramadhan");
-                  }}
-                >
-                  Ramadhan
-                </button>
-              </div>
-
               {/* Select Kelas */}
               <div style={{ minWidth: '160px' }}>
                 <CustomSelect 
@@ -1372,14 +1279,14 @@ export default function JadwalSigapView({ showToast }) {
                 <Trash2 size={15} />
               </button>
 
-              {/* Update Jadwal */}
+              {/* Simpan Jadwal */}
               <button 
                 className="sigap-btn-teal"
                 onClick={handleUpdateKBM}
                 style={{ padding: '6px 14px', fontSize: '11px' }}
               >
-                <RefreshCw size={13} />
-                <span>Update Jadwal</span>
+                <Save size={13} />
+                <span>Simpan Jadwal</span>
               </button>
             </div>
           </div>

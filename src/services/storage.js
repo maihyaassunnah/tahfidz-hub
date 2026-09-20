@@ -3425,12 +3425,12 @@ export const storageService = {
 
   clearHalaqohMatrixCell(sesiId, hari) {
     const data = this.getJadwalHalaqoh();
-    if (data.matriks && data.matriks[sesiId]) {
-      data.matriks[sesiId][hari] = null;
-    }
-    if (data.hariAktif && data.hariAktif[hari]) {
-      data.hariAktif[hari][sesiId] = false;
-    }
+    if (!data.matriks) data.matriks = {};
+    if (!data.matriks[sesiId]) data.matriks[sesiId] = {};
+    data.matriks[sesiId][hari] = { status: 'Kosong', guru: '' };
+    if (!data.hariAktif) data.hariAktif = {};
+    if (!data.hariAktif[hari]) data.hariAktif[hari] = {};
+    data.hariAktif[hari][sesiId] = false;
     this.saveJadwalHalaqoh(data);
   },
 
