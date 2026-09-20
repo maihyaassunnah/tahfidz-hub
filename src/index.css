@@ -6978,13 +6978,33 @@ html, body {
   }
 
   .owner-branch-cards-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
     gap: 0.75rem !important;
+    padding: 4px 2px 10px 2px !important;
+    scroll-snap-type: x mandatory;
+  }
+
+  .owner-branch-cards-grid::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .owner-branch-cards-grid::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 4px;
   }
 
   .owner-branch-card-item {
+    flex: 0 0 calc(50% - 6px) !important;
+    min-width: 155px !important;
+    max-width: 220px !important;
+    scroll-snap-align: start;
     padding: 1rem 0.75rem !important;
-    border-radius: 16px !important;
+    border-radius: 18px !important;
+    box-sizing: border-box !important;
   }
 
   /* Activity Item Cards Mobile Stacking */
@@ -7072,10 +7092,6 @@ html, body {
 
 /* 6. BREAKPOINT: EXTRA SMALL PHONES (< 400px) */
 @media (max-width: 400px) {
-  .owner-branch-cards-grid {
-    grid-template-columns: 1fr !important;
-  }
-
   .sigap-kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 6px !important;

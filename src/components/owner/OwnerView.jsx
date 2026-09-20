@@ -650,14 +650,14 @@ export default function OwnerView({
                       onClick={() => handleInspectBranch(cabang.id, 'ringkasan')}
                       style={{
                         background: palette.bg,
-                        borderRadius: '24px',
-                        padding: '1.4rem 1.25rem',
+                        borderRadius: '20px',
+                        padding: '1.15rem 1rem',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         textAlign: 'center',
                         boxShadow: isCurrentActive ? '0 6px 20px rgba(0,0,0,0.08)' : '0 4px 18px rgba(0,0,0,0.02)',
-                        border: isCurrentActive ? `2px solid ${palette.iconBg}` : '1px solid rgba(0,0,0,0.03)',
+                        border: isCurrentActive ? `2px solid ${palette.iconBg}` : '1px solid rgba(0,0,0,0.04)',
                         position: 'relative',
                         transition: 'all 0.2s ease',
                         cursor: 'pointer'
@@ -668,15 +668,15 @@ export default function OwnerView({
                         <div 
                           style={{
                             position: 'absolute',
-                            top: '10px',
-                            right: '12px',
+                            top: '8px',
+                            right: '10px',
                             background: '#ffffff',
                             color: palette.iconBg,
-                            fontSize: '0.65rem',
+                            fontSize: '0.62rem',
                             fontWeight: '800',
-                            padding: '2px 8px',
-                            borderRadius: '12px',
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
+                            padding: '2px 7px',
+                            borderRadius: '10px',
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.06)'
                           }}
                         >
                           ● AKTIF
@@ -685,25 +685,25 @@ export default function OwnerView({
 
                       <div 
                         style={{
-                          width: '54px',
-                          height: '54px',
-                          borderRadius: '16px',
+                          width: '46px',
+                          height: '46px',
+                          borderRadius: '14px',
                           background: cabang.warnaAksen || palette.iconBg,
                           color: '#ffffff',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          marginBottom: '1rem',
-                          boxShadow: `0 6px 14px ${palette.shadow}`
+                          marginBottom: '0.75rem',
+                          boxShadow: `0 4px 12px ${palette.shadow}`
                         }}
                       >
-                        <IconComp size={26} />
+                        <IconComp size={22} />
                       </div>
-                      <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#1e293b', margin: '0 0 0.25rem 0' }}>
+                      <h3 style={{ fontSize: '0.96rem', fontWeight: '800', color: '#1e293b', margin: '0 0 0.2rem 0', lineHeight: '1.25' }}>
                         {cabang.nama}
                       </h3>
-                      <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600', marginBottom: '1.25rem' }}>
-                        {branchSantri.length} Santri Terdaftar {branchGurus.length > 0 ? `• ${branchGurus.length} Guru` : ''}
+                      <div style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600', marginBottom: '0.85rem' }}>
+                        {branchSantri.length} Santri {branchGurus.length > 0 ? `• ${branchGurus.length} Guru` : ''}
                       </div>
                       <button
                         onClick={(e) => {
@@ -715,16 +715,17 @@ export default function OwnerView({
                           background: '#ffffff',
                           color: '#1e293b',
                           border: 'none',
-                          borderRadius: '24px',
-                          padding: '0.65rem 1.25rem',
-                          fontSize: '0.8rem',
+                          borderRadius: '20px',
+                          padding: '0.5rem 0.8rem',
+                          fontSize: '0.76rem',
                           fontWeight: '800',
                           cursor: 'pointer',
-                          boxShadow: '0 3px 10px rgba(0,0,0,0.05)',
-                          transition: 'all 0.2s ease'
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                          transition: 'all 0.2s ease',
+                          whiteSpace: 'nowrap'
                         }}
                       >
-                        Buka & Analisis Cabang →
+                        Buka Cabang →
                       </button>
                     </div>
                   );
@@ -733,11 +734,12 @@ export default function OwnerView({
                 {/* Companion card when filtered: Tampilkan Semua Cabang */}
                 {!isAllBranches && (
                   <div 
+                    className="owner-branch-card-item"
                     onClick={() => onSwitchBranch && onSwitchBranch('ALL')}
                     style={{
                       background: '#f8fafc',
-                      borderRadius: '24px',
-                      padding: '1.4rem 1.25rem',
+                      borderRadius: '20px',
+                      padding: '1.15rem 1rem',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -752,24 +754,24 @@ export default function OwnerView({
                   >
                     <div 
                       style={{
-                        width: '54px',
-                        height: '54px',
-                        borderRadius: '16px',
+                        width: '46px',
+                        height: '46px',
+                        borderRadius: '14px',
                         background: '#e2e8f0',
                         color: '#475569',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        marginBottom: '1rem'
+                        marginBottom: '0.75rem'
                       }}
                     >
-                      <Layers size={26} />
+                      <Layers size={22} />
                     </div>
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#1e293b', margin: '0 0 0.25rem 0' }}>
+                    <h3 style={{ fontSize: '0.96rem', fontWeight: '800', color: '#1e293b', margin: '0 0 0.2rem 0', lineHeight: '1.25' }}>
                       Semua Cabang
                     </h3>
-                    <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600', marginBottom: '1.25rem' }}>
-                      Konsolidasi {cabangList.length} Cabang Terdaftar
+                    <div style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600', marginBottom: '0.85rem' }}>
+                      Konsolidasi {cabangList.length} Cabang
                     </div>
                     <button
                       onClick={(e) => {
@@ -781,26 +783,28 @@ export default function OwnerView({
                         background: '#ffffff',
                         color: '#ff5b35',
                         border: '1px solid #ffdcd3',
-                        borderRadius: '24px',
-                        padding: '0.65rem 1.25rem',
-                        fontSize: '0.8rem',
+                        borderRadius: '20px',
+                        padding: '0.5rem 0.8rem',
+                        fontSize: '0.76rem',
                         fontWeight: '800',
                         cursor: 'pointer',
-                        boxShadow: '0 3px 10px rgba(0,0,0,0.03)',
-                        transition: 'all 0.2s ease'
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                        transition: 'all 0.2s ease',
+                        whiteSpace: 'nowrap'
                       }}
                     >
-                      🌐 Tampilkan Semua Cabang →
+                      🌐 Semua Cabang →
                     </button>
                   </div>
                 )}
 
                 {/* Always-present "+ Tambah Cabang" card */}
                 <div 
+                  className="owner-branch-card-item"
                   style={{
                     background: '#fff0ec',
-                    borderRadius: '24px',
-                    padding: '1.4rem 1.25rem',
+                    borderRadius: '20px',
+                    padding: '1.15rem 1rem',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -813,24 +817,24 @@ export default function OwnerView({
                 >
                   <div 
                     style={{
-                      width: '54px',
-                      height: '54px',
-                      borderRadius: '16px',
+                      width: '46px',
+                      height: '46px',
+                      borderRadius: '14px',
                       background: '#ff5b35',
                       color: '#ffffff',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      marginBottom: '1rem',
-                      boxShadow: '0 6px 14px rgba(255, 91, 53, 0.28)'
+                      marginBottom: '0.75rem',
+                      boxShadow: '0 4px 12px rgba(255, 91, 53, 0.28)'
                     }}
                   >
-                    <Plus size={28} />
+                    <Plus size={24} />
                   </div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#1e293b', margin: '0 0 0.25rem 0' }}>
+                  <h3 style={{ fontSize: '0.96rem', fontWeight: '800', color: '#1e293b', margin: '0 0 0.2rem 0', lineHeight: '1.25' }}>
                     Tambah Cabang
                   </h3>
-                  <div style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: '600', marginBottom: '1.25rem' }}>
+                  <div style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '600', marginBottom: '0.85rem' }}>
                     Registrasi Unit Baru
                   </div>
                   <button
@@ -853,13 +857,14 @@ export default function OwnerView({
                       background: '#ffffff',
                       color: '#ff5b35',
                       border: 'none',
-                      borderRadius: '24px',
-                      padding: '0.65rem 1.25rem',
-                      fontSize: '0.8rem',
+                      borderRadius: '20px',
+                      padding: '0.5rem 0.8rem',
+                      fontSize: '0.76rem',
                       fontWeight: '800',
                       cursor: 'pointer',
-                      boxShadow: '0 3px 10px rgba(0,0,0,0.05)',
-                      transition: 'all 0.2s ease'
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                      transition: 'all 0.2s ease',
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     + Daftarkan
