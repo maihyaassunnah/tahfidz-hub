@@ -13,6 +13,21 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Auto-migrate essential columns for santri table
+query(`
+  ALTER TABLE santri ADD COLUMN IF NOT EXISTS pengampu VARCHAR(150);
+  ALTER TABLE santri ADD COLUMN IF NOT EXISTS pengampu_id VARCHAR(64);
+  ALTER TABLE santri ADD COLUMN IF NOT EXISTS nik VARCHAR(64);
+  ALTER TABLE santri ADD COLUMN IF NOT EXISTS nisn VARCHAR(64);
+  ALTER TABLE santri ADD COLUMN IF NOT EXISTS lp VARCHAR(10);
+  ALTER TABLE santri ADD COLUMN IF NOT EXISTS tgl_lahir VARCHAR(64);
+  ALTER TABLE santri ADD COLUMN IF NOT EXISTS unit_sekolah VARCHAR(150);
+`).then(() => {
+  console.log('✔ [DB Auto-Migrate] Kolom santri (pengampu, nik, dll) terverifikasi');
+}).catch(e => {
+  console.warn('[DB Auto-Migrate] Warning check kolom santri:', e.message);
+});
+
 // Middleware
 app.use(cors({
   origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
@@ -233,14 +248,23 @@ app.get('/api/santri', async (req, res) => {
 app.post('/api/santri', async (req, res) => {
   const { 
     id, nis, nisn, nama, kelas, halaqah_id, halaqahId, status, target, 
-    kontak, kontakWali, wali, no_hp_wali, noHpWali, cabang_id, cabangId 
+    kontak, kontakWali, wali, no_hp_wali, noHpWali, cabang_id, cabangId,
+    pengampu, pengampuNama, pengampu_id, pengampuId, nik, lp, tgl_lahir, tglLahir,
+    unit_sekolah, unitSekolah
   } = req.body;
   try {
     const targetNis = nis || nisn || '';
+    const targetNisn = nisn || nis || '';
     const targetCabangId = cabang_id || cabangId || 'cabang-pusat';
     const targetHalaqahId = halaqah_id || halaqahId || null;
     const targetKontak = kontak || kontakWali || '';
     const targetNoHpWali = no_hp_wali || noHpWali || kontakWali || kontak || '';
+    const targetPengampu = pengampu || pengampuNama || '';
+    const targetPengampuId = pengampu_id || pengampuId || null;
+    const targetNik = nik || '';
+    const targetLp = lp || 'L';
+    const targetTglLahir = tgl_lahir || tglLahir || '';
+    const targetUnitSekolah = unit_sekolah || unitSekolah || '';
 
     if (targetHalaqahId) {
       await query(`
@@ -250,18 +274,21 @@ app.post('/api/santri', async (req, res) => {
       `, [targetHalaqahId, 'Halaqah Santri', targetCabangId]);
     }
     const sql = `
-      INSERT INTO santri (id, nis, nama, kelas, halaqah_id, status, target, kontak, wali, no_hp_wali, cabang_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      INSERT INTO santri (id, nis, nama, kelas, halaqah_id, status, target, kontak, wali, no_hp_wali, cabang_id, pengampu, pengampu_id, nik, nisn, lp, tgl_lahir, unit_sekolah)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       ON CONFLICT (id) DO UPDATE SET
         nis = EXCLUDED.nis, nama = EXCLUDED.nama, kelas = EXCLUDED.kelas,
         halaqah_id = EXCLUDED.halaqah_id, status = EXCLUDED.status, target = EXCLUDED.target,
         kontak = EXCLUDED.kontak, wali = EXCLUDED.wali, no_hp_wali = EXCLUDED.no_hp_wali,
-        cabang_id = EXCLUDED.cabang_id
+        cabang_id = EXCLUDED.cabang_id, pengampu = EXCLUDED.pengampu, pengampu_id = EXCLUDED.pengampu_id,
+        nik = EXCLUDED.nik, nisn = EXCLUDED.nisn, lp = EXCLUDED.lp, tgl_lahir = EXCLUDED.tgl_lahir,
+        unit_sekolah = EXCLUDED.unit_sekolah
       RETURNING *;
     `;
     const result = await query(sql, [
       id, targetNis, nama, kelas, targetHalaqahId, status || 'Aktif', 
-      target || '3 Juz / Tahun', targetKontak, wali || '', targetNoHpWali, targetCabangId
+      target || '3 Juz / Tahun', targetKontak, wali || '', targetNoHpWali, targetCabangId,
+      targetPengampu, targetPengampuId, targetNik, targetNisn, targetLp, targetTglLahir, targetUnitSekolah
     ]);
     res.json(result.rows[0]);
   } catch (err) {
@@ -1171,12 +1198,22 @@ app.post('/api/sync-all', async (req, res) => {
     if (Array.isArray(santri)) {
       for (const s of santri) {
         await client.query(`
-          INSERT INTO santri (id, nis, nama, kelas, halaqah_id, status, target, kontak, wali, no_hp_wali, cabang_id)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          INSERT INTO santri (id, nis, nama, kelas, halaqah_id, status, target, kontak, wali, no_hp_wali, cabang_id, pengampu, pengampu_id, nik, nisn, lp, tgl_lahir, unit_sekolah)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
           ON CONFLICT (id) DO UPDATE SET
             nama = EXCLUDED.nama, nis = EXCLUDED.nis, kelas = EXCLUDED.kelas,
-            status = EXCLUDED.status, target = EXCLUDED.target;
-        `, [s.id, s.nis, s.nama, s.kelas, s.halaqahId || s.halaqah_id, s.status || 'Aktif', s.target, s.kontak, s.wali, s.noHpWali || s.no_hp_wali, s.cabangId || s.cabang_id || 'cabang-pusat']);
+            status = EXCLUDED.status, target = EXCLUDED.target, pengampu = EXCLUDED.pengampu,
+            pengampu_id = EXCLUDED.pengampu_id, kontak = EXCLUDED.kontak, wali = EXCLUDED.wali,
+            no_hp_wali = EXCLUDED.no_hp_wali, cabang_id = EXCLUDED.cabang_id, nik = EXCLUDED.nik,
+            nisn = EXCLUDED.nisn, lp = EXCLUDED.lp, tgl_lahir = EXCLUDED.tgl_lahir,
+            unit_sekolah = EXCLUDED.unit_sekolah;
+        `, [
+          s.id, s.nis || s.nisn || '', s.nama, s.kelas || '', s.halaqahId || s.halaqah_id || null, 
+          s.status || 'Aktif', s.target || '3 Juz / Tahun', s.kontak || s.kontakWali || '', 
+          s.wali || '', s.noHpWali || s.kontakWali || '', s.cabangId || s.cabang_id || 'cabang-pusat',
+          s.pengampu || s.pengampuNama || '', s.pengampuId || null, s.nik || '', s.nisn || s.nis || '',
+          s.lp || 'L', s.tglLahir || s.tgl_lahir || '', s.unitSekolah || s.unit_sekolah || ''
+        ]);
       }
     }
 

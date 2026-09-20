@@ -60,14 +60,21 @@ CREATE TABLE IF NOT EXISTS halaqah (
 CREATE TABLE IF NOT EXISTS santri (
   id VARCHAR(64) PRIMARY KEY,
   nis VARCHAR(64),
+  nisn VARCHAR(64),
+  nik VARCHAR(64),
   nama VARCHAR(150) NOT NULL,
+  lp VARCHAR(10) DEFAULT 'L',
   kelas VARCHAR(50),
+  unit_sekolah VARCHAR(150),
+  pengampu VARCHAR(150),
+  pengampu_id VARCHAR(64),
   halaqah_id VARCHAR(64) REFERENCES halaqah(id) ON DELETE SET NULL,
   status VARCHAR(32) DEFAULT 'Aktif',
   target VARCHAR(100),
   kontak VARCHAR(50),
   wali VARCHAR(150),
   no_hp_wali VARCHAR(50),
+  tgl_lahir VARCHAR(64),
   cabang_id VARCHAR(64) REFERENCES cabang(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

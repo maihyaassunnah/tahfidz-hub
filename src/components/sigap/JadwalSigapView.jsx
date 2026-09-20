@@ -57,7 +57,7 @@ const LIST_MAPEL = [
 
 const HARI_LIST = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Ahad'];
 
-export default function JadwalSigapView({ showToast }) {
+export default function JadwalSigapView({ showToast, activeBranchId }) {
   // Navigation Tabs: 'halaqoh' (Utama) atau 'kbm' (Kelas Formal)
   const [activeTab, setActiveTab] = useState('halaqoh');
 
@@ -86,12 +86,29 @@ export default function JadwalSigapView({ showToast }) {
 
   // Data Jadwal Halaqoh dari Storage
   const [jadwalHalaqoh, setJadwalHalaqoh] = useState(storageService.getJadwalHalaqoh());
-  const guruList = storageService.getSigapGuru();
-  const lokasiQRList = storageService.getSigapLokasiQR();
+  const [guruList, setGuruList] = useState(() => storageService.getSigapGuru(activeBranchId));
+  const [lokasiQRList, setLokasiQRList] = useState(() => storageService.getSigapLokasiQR(activeBranchId));
+  const [kelasList, setKelasList] = useState(() => storageService.getSigapKelas(activeBranchId) || []);
+
+  useEffect(() => {
+    const updatedGurus = storageService.getSigapGuru(activeBranchId);
+    const updatedLokasi = storageService.getSigapLokasiQR(activeBranchId);
+    const updatedKelas = storageService.getSigapKelas(activeBranchId) || [];
+    setGuruList(updatedGurus);
+    setLokasiQRList(updatedLokasi);
+    setKelasList(updatedKelas);
+    if (updatedKelas.length > 0 && !updatedKelas.find(k => k.nama === selectedKelas)) {
+      setSelectedKelas(updatedKelas[0].nama);
+    }
+  }, [activeBranchId]);
 
   // State Pilihan Status Halaqoh: HANYA DUA PILIHAN ('Masuk' atau 'Keluar')
   const [selectedHalaqohStatus, setSelectedHalaqohStatus] = useState('Masuk');
   const [scheduleModeHalaqoh, setScheduleModeHalaqoh] = useState('Normal');
+
+  // State Pop Up Sukses Simpan Jadwal
+  const [showSavePopup, setShowSavePopup] = useState(false);
+  const [savePopupDetails, setSavePopupDetails] = useState({ title: '', message: '' });
 
   // Modals State untuk Halaqoh
   const [editingSesi, setEditingSesi] = useState(null);
@@ -124,7 +141,10 @@ export default function JadwalSigapView({ showToast }) {
 
   // State Jadwal KBM (Pelajaran Formal)
   const [jadwalKBM, setJadwalKBM] = useState(storageService.getSigapJadwal());
-  const [selectedKelas, setSelectedKelas] = useState('X A');
+  const [selectedKelas, setSelectedKelas] = useState(() => {
+    const initialKelas = storageService.getSigapKelas(activeBranchId) || [];
+    return initialKelas[0]?.nama || (activeBranchId === 'cabang-smp' ? 'VII SMP IT' : 'X A');
+  });
   const [scheduleMode, setScheduleMode] = useState('Normal');
   const [selectedGuru, setSelectedGuru] = useState('-- Tanpa Guru --');
   const [selectedMapel, setSelectedMapel] = useState('Nahwu');
@@ -317,6 +337,11 @@ export default function JadwalSigapView({ showToast }) {
 
   const handleUpdateHalaqoh = () => {
     storageService.saveJadwalHalaqoh(jadwalHalaqoh);
+    setSavePopupDetails({
+      title: 'Jadwal Sesi Halaqoh Tersimpan!',
+      message: 'Perubahan jadwal sesi halaqoh telah berhasil disimpan ke sistem dan aktif untuk seluruh pengampu.'
+    });
+    setShowSavePopup(true);
     showToast && showToast("Jadwal Sesi Halaqoh berhasil disimpan!");
   };
 
@@ -485,6 +510,11 @@ export default function JadwalSigapView({ showToast }) {
 
   const handleUpdateKBM = () => {
     storageService.saveSigapJadwal(jadwalKBM);
+    setSavePopupDetails({
+      title: 'Jadwal Pelajaran Tersimpan!',
+      message: `Jadwal Pelajaran KBM untuk kelas ${selectedKelas} telah berhasil diperbarui dan disimpan.`
+    });
+    setShowSavePopup(true);
     showToast && showToast(`Jadwal Pelajaran kelas ${selectedKelas} berhasil diperbarui!`);
   };
 
@@ -631,99 +661,117 @@ export default function JadwalSigapView({ showToast }) {
             gap: '12px'
           }}>
             {/* PILIHAN STATUS: MASUK, LIBUR, DAN KOSONGKAN TABEL */}
-            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Sparkles size={16} color="#0f766e" />
-                <span style={{ fontSize: '12px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Status Sesi:
-                </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                  <Sparkles size={16} color="#0f766e" />
+                  <span style={{ fontSize: '12px', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Status Sesi:
+                  </span>
+                </div>
+
+                {/* CONTAINER TOMBOL HARUS SATU BARIS (PERSIS DI SAMPING LIBUR) */}
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  flexWrap: 'nowrap',
+                  overflowX: 'auto',
+                  WebkitOverflowScrolling: 'touch',
+                  maxWidth: '100%',
+                  paddingBottom: '2px'
+                }}>
+                  {/* OPSI 1: MASUK */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedHalaqohStatus('Masuk')}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      background: selectedHalaqohStatus === 'Masuk' ? '#059669' : '#ffffff',
+                      color: selectedHalaqohStatus === 'Masuk' ? '#ffffff' : '#047857',
+                      border: selectedHalaqohStatus === 'Masuk' ? '2px solid #059669' : '2px solid #a7f3d0',
+                      boxShadow: selectedHalaqohStatus === 'Masuk' ? '0 2px 8px rgba(5,150,105,0.2)' : 'none',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0
+                    }}
+                  >
+                    <CheckCircle2 size={15} color={selectedHalaqohStatus === 'Masuk' ? '#ffffff' : '#059669'} />
+                    <span>MASUK</span>
+                  </button>
+
+                  {/* OPSI 2: LIBUR */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedHalaqohStatus('Libur')}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      background: selectedHalaqohStatus === 'Libur' ? '#dc2626' : '#ffffff',
+                      color: selectedHalaqohStatus === 'Libur' ? '#ffffff' : '#b91c1c',
+                      border: selectedHalaqohStatus === 'Libur' ? '2px solid #dc2626' : '2px solid #fecaca',
+                      boxShadow: selectedHalaqohStatus === 'Libur' ? '0 2px 8px rgba(220,38,38,0.2)' : 'none',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0
+                    }}
+                  >
+                    <CheckCircle2 size={15} color={selectedHalaqohStatus === 'Libur' ? '#ffffff' : '#dc2626'} />
+                    <span>LIBUR</span>
+                  </button>
+
+                  {/* TOMBOL KOSONGKAN TABEL (PERSIS DI SAMPING LIBUR, TIDAK BOLD) */}
+                  <button
+                    type="button"
+                    onClick={handleResetHalaqohGrid}
+                    title="Kosongkan seluruh tabel jadwal sesi halaqoh"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      fontSize: '12px',
+                      fontWeight: 400,
+                      background: '#fef2f2',
+                      color: '#dc2626',
+                      border: '1px solid #fecaca',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#dc2626';
+                      e.currentTarget.style.color = '#ffffff';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#fef2f2';
+                      e.currentTarget.style.color = '#dc2626';
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    <span style={{ fontWeight: 400 }}>Kosongkan Tabel</span>
+                  </button>
+                </div>
               </div>
 
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                {/* OPSI 1: MASUK */}
-                <button
-                  type="button"
-                  onClick={() => setSelectedHalaqohStatus('Masuk')}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    padding: '8px 16px',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    fontSize: '12.5px',
-                    fontWeight: 800,
-                    background: selectedHalaqohStatus === 'Masuk' ? '#059669' : '#ffffff',
-                    color: selectedHalaqohStatus === 'Masuk' ? '#ffffff' : '#047857',
-                    border: selectedHalaqohStatus === 'Masuk' ? '2px solid #059669' : '2px solid #a7f3d0',
-                    boxShadow: selectedHalaqohStatus === 'Masuk' ? '0 4px 12px rgba(5,150,105,0.22)' : 'none'
-                  }}
-                >
-                  <CheckCircle2 size={16} color={selectedHalaqohStatus === 'Masuk' ? '#ffffff' : '#059669'} />
-                  <span>MASUK</span>
-                </button>
-
-                {/* OPSI 2: LIBUR */}
-                <button
-                  type="button"
-                  onClick={() => setSelectedHalaqohStatus('Libur')}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    padding: '8px 16px',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    fontSize: '12.5px',
-                    fontWeight: 800,
-                    background: selectedHalaqohStatus === 'Libur' ? '#dc2626' : '#ffffff',
-                    color: selectedHalaqohStatus === 'Libur' ? '#ffffff' : '#b91c1c',
-                    border: selectedHalaqohStatus === 'Libur' ? '2px solid #dc2626' : '2px solid #fecaca',
-                    boxShadow: selectedHalaqohStatus === 'Libur' ? '0 4px 12px rgba(220,38,38,0.22)' : 'none'
-                  }}
-                >
-                  <CheckCircle2 size={16} color={selectedHalaqohStatus === 'Libur' ? '#ffffff' : '#dc2626'} />
-                  <span>LIBUR</span>
-                </button>
-
-                {/* TOMBOL KOSONGKAN TABEL (PERSIS DI SAMPING LIBUR) */}
-                <button
-                  type="button"
-                  onClick={handleResetHalaqohGrid}
-                  title="Kosongkan seluruh tabel jadwal sesi halaqoh"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    padding: '8px 16px',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    fontSize: '12.5px',
-                    fontWeight: 800,
-                    background: '#fef2f2',
-                    color: '#dc2626',
-                    border: '2px solid #fecaca'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#dc2626';
-                    e.currentTarget.style.color = '#ffffff';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#fef2f2';
-                    e.currentTarget.style.color = '#dc2626';
-                  }}
-                >
-                  <Trash2 size={15} />
-                  <span>Kosongkan Tabel</span>
-                </button>
-              </div>
-
-              <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>
+              <div style={{ fontSize: '11px', color: '#64748b' }}>
                 (Pilih <strong>MASUK</strong> atau <strong>LIBUR</strong>, lalu klik sel pada tabel jadwal di bawah)
-              </span>
+              </div>
             </div>
           </div>
 
@@ -1250,12 +1298,9 @@ export default function JadwalSigapView({ showToast }) {
                   onChange={(e) => setSelectedKelas(e.target.value)}
                   triggerStyle={{ minHeight: '38px', borderRadius: '12px', fontSize: '12px', fontWeight: 700 }}
                 >
-                  <option value="X A">Kelas: X A</option>
-                  <option value="X B">Kelas: X B</option>
-                  <option value="XI A">Kelas: XI A</option>
-                  <option value="XI B">Kelas: XI B</option>
-                  <option value="XII A">Kelas: XII A</option>
-                  <option value="XII B">Kelas: XII B</option>
+                  {(kelasList.length > 0 ? kelasList : [{ id: 'k-fallback', nama: selectedKelas }]).map(k => (
+                    <option key={k.id || k.nama} value={k.nama}>Kelas: {k.nama}</option>
+                  ))}
                 </CustomSelect>
               </div>
 
@@ -2548,6 +2593,89 @@ export default function JadwalSigapView({ showToast }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* POP UP SUKSES SIMPAN JADWAL (MUNCUL SAAT KLIK SIMPAN JADWAL) */}
+      {/* ======================================================== */}
+      {showSavePopup && (
+        <div 
+          className="sigap-modal-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '16px'
+          }}
+          onClick={() => setShowSavePopup(false)}
+        >
+          <div 
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#ffffff',
+              borderRadius: '24px',
+              maxWidth: '380px',
+              width: '100%',
+              padding: '24px 20px',
+              textAlign: 'center',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #e2e8f0',
+              animation: 'modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
+          >
+            <div style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              background: '#ecfdf5',
+              border: '2px solid #a7f3d0',
+              color: '#059669',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 14px auto'
+            }}>
+              <CheckCircle2 size={34} strokeWidth={2.4} />
+            </div>
+
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>
+              {savePopupDetails.title || 'Jadwal Berhasil Disimpan!'}
+            </h3>
+
+            <p style={{ fontSize: '0.84rem', color: '#64748b', margin: '0 0 20px 0', lineHeight: 1.5, fontWeight: 400 }}>
+              {savePopupDetails.message}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setShowSavePopup(false)}
+              style={{
+                width: '100%',
+                padding: '11px 16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #0f766e, #10b981)',
+                color: '#ffffff',
+                fontSize: '0.88rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Alhamdulillah, Siap
+            </button>
           </div>
         </div>
       )}

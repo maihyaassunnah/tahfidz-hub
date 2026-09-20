@@ -527,6 +527,7 @@ export default function App() {
                   settings={settings}
                   halaqahList={halaqahList}
                   santriList={santriList}
+                  activeBranchId={activeBranchId}
                   onSaveSettings={(newSettings) => {
                     storageService.saveSettings(newSettings);
                     loadData();
@@ -551,6 +552,7 @@ export default function App() {
                 <DashboardSigapView 
                   setActiveTab={setActiveTab} 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
 
@@ -558,6 +560,7 @@ export default function App() {
               {activeTab === 'sigap-siswa' && (
                 <DataSiswaSigapView 
                   showToast={showToast} 
+                  activeBranchId={activeBranchId}
                 />
               )}
 
@@ -631,6 +634,7 @@ export default function App() {
                   settings={settings}
                   halaqahList={halaqahList}
                   santriList={santriList}
+                  activeBranchId={activeBranchId}
                   onSaveSettings={(newSettings) => {
                     storageService.saveSettings(newSettings);
                     loadData();
@@ -804,6 +808,7 @@ export default function App() {
               settings={settings}
               halaqahList={halaqahList}
               santriList={santriList}
+              activeBranchId={activeBranchId}
               onSaveSettings={(newSettings) => {
                 setSettings(newSettings);
                 loadData();

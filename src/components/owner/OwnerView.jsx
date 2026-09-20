@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { storageService } from '../../services/storage';
 import PengaturanAdminView from '../PengaturanAdminView';
+import CustomSelect from '../common/CustomSelect';
 
 export default function OwnerView({ 
   activeBranchId, 
@@ -359,7 +360,7 @@ export default function OwnerView({
       onSwitchBranch(branchId);
     }
     if (onSwitchRole) {
-      onSwitchRole('superadmin');
+      onSwitchRole('superadmin', branchId);
     }
     const matched = cabangList.find(c => c.id === branchId);
     showToast?.(`Beralih mengelola "${matched?.nama || branchId}" sebagai Super Admin!`);
@@ -485,36 +486,37 @@ export default function OwnerView({
               gap: '0.6rem'
             }}
           >
-            <MapPin size={15} color="#ff5b35" />
-            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Pilihan Cabang:</span>
-            <select
-              value={activeBranchId || 'ALL'}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (onSwitchBranch) onSwitchBranch(val);
-                if (val !== 'ALL') {
-                  setSelectedBranchId(val);
-                }
-              }}
-              style={{
-                background: '#ffffff',
-                color: '#1e293b',
-                border: '1px solid #cbd5e1',
-                borderRadius: '16px',
-                padding: '0.3rem 0.65rem',
-                fontSize: '0.78rem',
-                fontWeight: '700',
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option value="ALL">🌐 Semua Cabang (Pusat & Ranting)</option>
-              {cabangList.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.nama} ({c.kode})
-                </option>
-              ))}
-            </select>
+            <MapPin size={15} color="#ff5b35" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>Pilihan Cabang:</span>
+            <div style={{ minWidth: '220px', flex: 1 }}>
+              <CustomSelect
+                value={activeBranchId || 'ALL'}
+                onChange={(val) => {
+                  if (onSwitchBranch) onSwitchBranch(val);
+                  if (val !== 'ALL') {
+                    setSelectedBranchId(val);
+                  }
+                }}
+                options={[
+                  { value: 'ALL', label: '🌐 Semua Cabang (Pusat & Ranting)' },
+                  ...cabangList.map(c => ({
+                    value: c.id,
+                    label: `${c.nama} (${c.kode || c.id})`
+                  }))
+                ]}
+                triggerStyle={{
+                  minHeight: '34px',
+                  height: '34px',
+                  borderRadius: '16px',
+                  border: '1.5px solid #10b981',
+                  padding: '0 12px',
+                  fontSize: '0.78rem',
+                  fontWeight: 500,
+                  background: '#ffffff',
+                  color: '#1e293b'
+                }}
+              />
+            </div>
           </div>
 
           <button
@@ -875,19 +877,19 @@ export default function OwnerView({
 
             {/* 2. MIDDLE SECTION: TODAY TASKS ("Aktivitas & Monitoring Hari Ini .") */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h2 style={{ fontSize: '1.35rem', fontWeight: '900', color: '#1e293b', margin: 0, letterSpacing: '-0.02em' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <h2 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#1e293b', margin: 0, letterSpacing: '-0.01em' }}>
                   Aktivitas & Monitoring Hari Ini<span style={{ color: '#ff5b35', marginLeft: '2px' }}>.</span>
                 </h2>
               </div>
 
-              {/* Filter Tabs matching reference: Forum | To - do | Members */}
+              {/* Filter Tabs matching reference */}
               <div 
                 style={{ 
                   display: 'flex', 
-                  gap: '1.75rem', 
+                  gap: '1.25rem', 
                   borderBottom: '1.5px solid #eef2f6', 
-                  marginBottom: '1.25rem',
+                  marginBottom: '0.85rem',
                   overflowX: 'auto',
                   whiteSpace: 'nowrap'
                 }}
@@ -907,11 +909,11 @@ export default function OwnerView({
                       style={{
                         background: 'none',
                         border: 'none',
-                        padding: '6px 2px 12px 2px',
+                        padding: '4px 2px 8px 2px',
                         cursor: 'pointer',
-                        fontSize: '0.9rem',
-                        fontWeight: isActive ? '800' : '600',
-                        color: isActive ? '#ff5b35' : '#94a3b8',
+                        fontSize: '0.84rem',
+                        fontWeight: isActive ? '600' : '400',
+                        color: isActive ? '#ff5b35' : '#64748b',
                         position: 'relative',
                         transition: 'all 0.2s ease'
                       }}
@@ -924,7 +926,7 @@ export default function OwnerView({
                             bottom: '-1.5px',
                             left: 0,
                             right: 0,
-                            height: '3px',
+                            height: '2.5px',
                             background: '#ff5b35',
                             borderRadius: '3px'
                           }}
@@ -935,8 +937,8 @@ export default function OwnerView({
                 })}
               </div>
 
-              {/* Task Items List matching reference card format */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {/* Task Items List (Simple, Ringkas & 1 Baris Sesuai Permintaan) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '2.5rem' }}>
                 {(() => {
                   const rawActivities = [
                     {
@@ -973,26 +975,26 @@ export default function OwnerView({
                       cabangNama: 'MA Ihya As-Sunnah',
                       type: 'izin',
                       title: "Pengajuan Izin Sakit • Ustadz Pengampu",
-                      subtitle: "MA Ihya As-Sunnah • Durasi 2 Hari (Surat Terlampir)",
+                      subtitle: "MA Ihya As-Sunnah • Tugas Pengganti Siap",
                       tag: "Izin",
-                      icon: Clock,
+                      icon: CheckSquare,
                       iconBg: "#fef8e7",
-                      iconColor: "#f59e0b",
-                      primaryBtn: { label: "+ Setujui", style: "coral", action: () => showToast?.("Permohonan izin disetujui") },
-                      secondaryBtn: { label: "Detail", style: "peach", action: () => showToast?.("Menampilkan detail izin") }
+                      iconColor: "#d97706",
+                      primaryBtn: { label: "Tinjau Izin", style: "peach", action: () => showToast?.("Membuka permohonan izin ustadz") },
+                      secondaryBtn: null
                     },
                     {
                       id: 'act-4',
                       cabangId: 'cabang-pusat',
                       cabangNama: 'MA Ihya As-Sunnah',
                       type: 'spp',
-                      title: "Pembayaran Syahriah Lunas • Rp 350.000",
-                      subtitle: "MA Ihya As-Sunnah • Santri: Rayhan Al-Fatih",
+                      title: "Pembayaran Syahriah SPP Terverifikasi (Fulan - X MA)",
+                      subtitle: "MA Ihya As-Sunnah • Kas Yayasan Masuk",
                       tag: "SPP",
                       icon: Receipt,
-                      iconBg: "#fef8e7",
-                      iconColor: "#f59e0b",
-                      primaryBtn: { label: "Kuitansi", style: "peach", action: () => showToast?.("Mencetak kuitansi SPP santri") },
+                      iconBg: "#ecfdf5",
+                      iconColor: "#059669",
+                      primaryBtn: { label: "Kwitansi", style: "peach", action: () => showToast?.("Membuka bukti kwitansi syahriah") },
                       secondaryBtn: null
                     },
                     {
@@ -1040,8 +1042,8 @@ export default function OwnerView({
                       <div 
                         style={{
                           background: '#ffffff',
-                          borderRadius: '20px',
-                          padding: '2.5rem 1.5rem',
+                          borderRadius: '16px',
+                          padding: '2rem 1.25rem',
                           textAlign: 'center',
                           border: '1.5px dashed #e2e8f0',
                           boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
@@ -1049,23 +1051,23 @@ export default function OwnerView({
                       >
                         <div 
                           style={{ 
-                            width: '50px', 
-                            height: '50px', 
+                            width: '44px', 
+                            height: '44px', 
                             borderRadius: '50%', 
                             background: '#fff0ec', 
                             color: '#ff5b35', 
                             display: 'inline-flex', 
                             alignItems: 'center', 
                             justifyContent: 'center', 
-                            marginBottom: '0.75rem' 
+                            marginBottom: '0.65rem' 
                           }}
                         >
-                          <CheckCircle2 size={26} />
+                          <CheckCircle2 size={22} />
                         </div>
-                        <h4 style={{ margin: '0 0 0.35rem 0', fontSize: '1rem', fontWeight: '800', color: '#1e293b' }}>
+                        <h4 style={{ margin: '0 0 0.3rem 0', fontSize: '0.92rem', fontWeight: '700', color: '#1e293b' }}>
                           Belum Ada Aktivitas untuk Cabang {currentActiveBranch.nama}
                         </h4>
-                        <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.8rem', color: '#64748b', maxWidth: '440px', marginInline: 'auto', lineHeight: '1.5' }}>
+                        <p style={{ margin: '0 0 1rem 0', fontSize: '0.78rem', color: '#64748b', maxWidth: '440px', marginInline: 'auto', lineHeight: '1.4' }}>
                           Cabang ini belum memiliki catatan setoran atau absensi aktif hari ini. Aktivitas akan tercatat otomatis saat santri atau pengampu beraktivitas di cabang ini.
                         </p>
                         <button
@@ -1075,11 +1077,11 @@ export default function OwnerView({
                             color: '#ffffff',
                             border: 'none',
                             borderRadius: '20px',
-                            padding: '0.55rem 1.25rem',
-                            fontSize: '0.82rem',
-                            fontWeight: '800',
+                            padding: '0.45rem 1.15rem',
+                            fontSize: '0.78rem',
+                            fontWeight: '600',
                             cursor: 'pointer',
-                            boxShadow: '0 4px 12px rgba(255, 91, 53, 0.28)'
+                            boxShadow: '0 3px 10px rgba(255, 91, 53, 0.25)'
                           }}
                         >
                           🌐 Tampilkan Aktivitas Seluruh Cabang
@@ -1093,64 +1095,70 @@ export default function OwnerView({
                     return (
                       <div 
                         key={task.id}
+                        className="owner-activity-item"
                         style={{
                           background: '#ffffff',
-                          borderRadius: '18px',
-                          padding: '0.95rem 1.25rem',
-                          border: '1px solid #f1f3f9',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                          borderRadius: '10px',
+                          padding: '0.35rem 0.75rem',
+                          border: '1px solid #f1f5f9',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          gap: '1rem',
-                          flexWrap: 'wrap'
+                          gap: '0.5rem',
+                          minHeight: '38px'
                         }}
                       >
-                        {/* Left: Pastel Icon + Content */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: 0, flex: 1 }}>
+                        {/* Left: Compact Icon + Single-line Content */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', minWidth: 0, flex: 1, overflow: 'hidden' }}>
                           <div 
                             style={{
-                              width: '42px',
-                              height: '42px',
-                              borderRadius: '12px',
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '6px',
                               background: task.iconBg,
                               color: task.iconColor,
-                              display: 'flex',
+                              display: 'inline-flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               flexShrink: 0
                             }}
                           >
-                            <IconComp size={20} />
+                            <IconComp size={13} />
                           </div>
 
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: '800', color: '#1e293b' }}>
-                                {task.title}
-                              </h4>
-                              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: '600' }}>
-                                • {task.tag}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                            <span style={{ fontSize: '0.78rem', fontWeight: 500, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {task.title}
+                            </span>
+                            
+                            {task.tag && (
+                              <span style={{ fontSize: '0.64rem', background: '#f1f5f9', color: '#475569', padding: '1px 5px', borderRadius: '4px', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                {task.tag}
                               </span>
-                              {isAllBranches && task.cabangNama && (
-                                <span style={{ fontSize: '0.68rem', background: '#fff0ec', color: '#ff5b35', padding: '1px 6px', borderRadius: '8px', fontWeight: '700' }}>
-                                  {task.cabangNama}
-                                </span>
-                              )}
-                            </div>
-                            <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: '2px' }}>
-                              {task.subtitle}
-                            </div>
+                            )}
+
+                            {isAllBranches && task.cabangNama && (
+                              <span style={{ fontSize: '0.64rem', background: '#fff0ec', color: '#ff5b35', padding: '1px 5px', borderRadius: '4px', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                {task.cabangNama}
+                              </span>
+                            )}
+
+                            {task.subtitle && (
+                              <span style={{ fontSize: '0.70rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 400 }}>
+                                • {task.subtitle}
+                              </span>
+                            )}
                           </div>
                         </div>
 
-                        {/* Right: Pill Action Buttons */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                        {/* Right: Compact Action Buttons */}
+                        <div className="owner-activity-item-actions" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0, whiteSpace: 'nowrap' }}>
                           {task.secondaryBtn && (
                             <button
                               onClick={task.secondaryBtn.action}
                               className="owner-theme-peach-btn"
-                              style={{ padding: '6px 14px', fontSize: '0.76rem' }}
+                              style={{ padding: '2px 8px', fontSize: '0.70rem', borderRadius: '10px', whiteSpace: 'nowrap', fontWeight: 500 }}
                             >
                               {task.secondaryBtn.label}
                             </button>
@@ -1159,7 +1167,7 @@ export default function OwnerView({
                             <button
                               onClick={task.primaryBtn.action}
                               className={task.primaryBtn.style === 'coral' ? 'owner-theme-coral-btn' : 'owner-theme-peach-btn'}
-                              style={{ padding: '6px 16px', fontSize: '0.76rem' }}
+                              style={{ padding: '2px 10px', fontSize: '0.70rem', borderRadius: '10px', whiteSpace: 'nowrap', fontWeight: 500 }}
                             >
                               {task.primaryBtn.label}
                             </button>
@@ -1626,13 +1634,15 @@ export default function OwnerView({
               </div>
             </div>
 
-            {/* Quick Branch Switcher Pill Bar */}
+            {/* Quick Branch Switcher Pill Bar (Sebaris Saja & Scroll Halus) */}
             <div 
               style={{ 
                 display: 'flex', 
+                flexWrap: 'nowrap',
                 gap: '0.6rem', 
                 marginBottom: '1.5rem', 
                 overflowX: 'auto', 
+                WebkitOverflowScrolling: 'touch',
                 paddingBottom: '4px',
                 whiteSpace: 'nowrap' 
               }}
@@ -1653,15 +1663,16 @@ export default function OwnerView({
                   border: effectiveViewMode === 'list' ? '1.5px solid #ff5b35' : '1px solid #e2e8f0',
                   background: effectiveViewMode === 'list' ? '#fff0ec' : '#ffffff',
                   color: effectiveViewMode === 'list' ? '#ff5b35' : '#334155',
-                  fontWeight: effectiveViewMode === 'list' ? '800' : '600',
+                  fontWeight: effectiveViewMode === 'list' ? '600' : '500',
                   fontSize: '0.82rem',
                   cursor: 'pointer',
                   boxShadow: effectiveViewMode === 'list' ? '0 3px 10px rgba(255, 91, 53, 0.12)' : '0 1px 3px rgba(0,0,0,0.02)',
                   transition: 'all 0.15s ease',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap'
                 }}
               >
-                <span>🌐 Semua Cabang</span>
+                <span style={{ whiteSpace: 'nowrap' }}>🌐 Semua Cabang</span>
                 <span 
                   style={{ 
                     fontSize: '0.72rem', 
@@ -1669,7 +1680,9 @@ export default function OwnerView({
                     borderRadius: '12px', 
                     background: effectiveViewMode === 'list' ? '#ff5b35' : '#f1f5f9',
                     color: effectiveViewMode === 'list' ? '#ffffff' : '#64748b',
-                    fontWeight: '700'
+                    fontWeight: '500',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
                   }}
                 >
                   {cabangList.length} Cabang
@@ -1696,12 +1709,13 @@ export default function OwnerView({
                       border: isSelected ? '1.5px solid #ff5b35' : '1px solid #e2e8f0',
                       background: isSelected ? '#fff0ec' : '#ffffff',
                       color: isSelected ? '#ff5b35' : '#334155',
-                      fontWeight: isSelected ? '800' : '600',
+                      fontWeight: isSelected ? '600' : '500',
                       fontSize: '0.82rem',
                       cursor: 'pointer',
                       boxShadow: isSelected ? '0 3px 10px rgba(255, 91, 53, 0.12)' : '0 1px 3px rgba(0,0,0,0.02)',
                       transition: 'all 0.15s ease',
-                      flexShrink: 0
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap'
                     }}
                   >
                     <span 
@@ -1709,10 +1723,11 @@ export default function OwnerView({
                         width: '8px', 
                         height: '8px', 
                         borderRadius: '50%', 
-                        background: c.warnaAksen || '#ff5b35' 
+                        background: c.warnaAksen || '#ff5b35',
+                        flexShrink: 0
                       }} 
                     />
-                    <span>{c.nama}</span>
+                    <span style={{ whiteSpace: 'nowrap' }}>{c.nama}</span>
                     <span 
                       style={{ 
                         fontSize: '0.72rem', 
@@ -1720,7 +1735,9 @@ export default function OwnerView({
                         borderRadius: '12px', 
                         background: isSelected ? '#ff5b35' : '#f1f5f9',
                         color: isSelected ? '#ffffff' : '#64748b',
-                        fontWeight: '700'
+                        fontWeight: '500',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
                       }}
                     >
                       {cSantri.length} Santri
@@ -2384,24 +2401,27 @@ export default function OwnerView({
                         </div>
 
                         <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <select
-                            value={filterSPPStatus}
-                            onChange={(e) => setFilterSPPStatus(e.target.value)}
-                            style={{
-                              padding: '0.45rem 0.75rem',
-                              borderRadius: '20px',
-                              border: '1px solid #e2e8f0',
-                              fontSize: '0.8rem',
-                              outline: 'none',
-                              background: '#f8fafc',
-                              color: '#334155',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <option value="all">Semua Status</option>
-                            <option value="Lunas">Lunas</option>
-                            <option value="Belum Lunas">Belum Lunas</option>
-                          </select>
+                          <div style={{ width: '160px', flexShrink: 0 }}>
+                            <CustomSelect
+                              value={filterSPPStatus}
+                              onChange={(val) => setFilterSPPStatus(val)}
+                              options={[
+                                { value: 'all', label: 'Semua Status' },
+                                { value: 'Lunas', label: 'Lunas' },
+                                { value: 'Belum Lunas', label: 'Belum Lunas' }
+                              ]}
+                              triggerStyle={{
+                                minHeight: '34px',
+                                height: '34px',
+                                borderRadius: '18px',
+                                border: '1.5px solid #10b981',
+                                padding: '0 12px',
+                                fontSize: '0.78rem',
+                                fontWeight: 500,
+                                background: '#fff'
+                              }}
+                            />
+                          </div>
 
                           <div style={{ position: 'relative' }}>
                             <Search size={15} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '9px' }} />
@@ -2802,17 +2822,17 @@ export default function OwnerView({
                   </div>
                 </div>
 
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                  <table style={{ width: '100%', minWidth: '780px', borderCollapse: 'collapse', fontSize: '0.84rem', whiteSpace: 'nowrap' }}>
                     <thead>
-                      <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
-                        <th style={{ padding: '0.85rem 1rem' }}>No</th>
-                        <th style={{ padding: '0.85rem 1rem' }}>Nama Cabang</th>
-                        <th style={{ padding: '0.85rem 1rem' }}>Kode Unit</th>
-                        <th style={{ padding: '0.85rem 1rem' }}>Penanggung Jawab</th>
-                        <th style={{ padding: '0.85rem 1rem' }}>Kontak & Email</th>
-                        <th style={{ padding: '0.85rem 1rem' }}>Santri / Guru</th>
-                        <th style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>Aksi</th>
+                      <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>
+                        <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap', fontWeight: 500 }}>No</th>
+                        <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap', fontWeight: 500 }}>Nama Cabang</th>
+                        <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap', fontWeight: 500 }}>Kode Unit</th>
+                        <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap', fontWeight: 500 }}>Penanggung Jawab</th>
+                        <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap', fontWeight: 500 }}>Kontak & Email</th>
+                        <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap', fontWeight: 500 }}>Santri / Guru</th>
+                        <th style={{ padding: '0.65rem 0.85rem', textAlign: 'center', whiteSpace: 'nowrap', fontWeight: 500 }}>Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2830,53 +2850,54 @@ export default function OwnerView({
                           }).length;
 
                           return (
-                            <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                              <td style={{ padding: '0.85rem 1rem', color: '#64748b' }}>{idx + 1}</td>
-                              <td style={{ padding: '0.85rem 1rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9', whiteSpace: 'nowrap' }}>
+                              <td style={{ padding: '0.65rem 0.85rem', color: '#64748b', whiteSpace: 'nowrap' }}>{idx + 1}</td>
+                              <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', whiteSpace: 'nowrap', flexWrap: 'nowrap' }}>
                                   <span 
                                     style={{ 
-                                      width: '10px', 
-                                      height: '10px', 
+                                      width: '9px', 
+                                      height: '9px', 
                                       borderRadius: '50%', 
-                                      background: c.warnaAksen || '#ff5b35' 
+                                      background: c.warnaAksen || '#ff5b35',
+                                      flexShrink: 0 
                                     }} 
                                   />
-                                  <div>
-                                    <div 
-                                      onClick={() => handleInspectBranch(c.id, 'ringkasan')}
-                                      style={{ fontWeight: '800', color: '#1e293b', cursor: 'pointer' }}
-                                      title="Klik untuk membuka detail cabang"
-                                    >
-                                      {c.nama}
-                                    </div>
-                                    {c.id === 'cabang-pusat' && (
-                                      <span style={{ fontSize: '0.68rem', color: '#15803d', fontWeight: '700' }}>★ Cabang Pusat</span>
-                                    )}
-                                  </div>
+                                  <span 
+                                    onClick={() => handleInspectBranch(c.id, 'ringkasan')}
+                                    style={{ fontWeight: 500, color: '#1e293b', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+                                    title="Klik untuk membuka detail cabang"
+                                  >
+                                    {c.nama}
+                                  </span>
+                                  {c.id === 'cabang-pusat' && (
+                                    <span style={{ fontSize: '0.68rem', color: '#15803d', fontWeight: 500, background: '#dcfce7', padding: '1px 6px', borderRadius: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                      ★ Cabang Pusat
+                                    </span>
+                                  )}
                                 </div>
                               </td>
-                              <td style={{ padding: '0.85rem 1rem' }}>
-                                <span style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontWeight: '600', color: '#334155' }}>
+                              <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
+                                <span style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontWeight: 500, color: '#334155', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
                                   {c.kode || c.id}
                                 </span>
                               </td>
-                              <td style={{ padding: '0.85rem 1rem', fontWeight: '500' }}>
+                              <td style={{ padding: '0.65rem 0.85rem', fontWeight: 500, whiteSpace: 'nowrap' }}>
                                 {c.penanggungJawab || '-'}
                               </td>
-                              <td style={{ padding: '0.85rem 1rem', fontSize: '0.78rem', color: '#64748b' }}>
-                                <div>{c.noHp || '-'}</div>
-                                <div style={{ color: '#0284c7' }}>{c.email || '-'}</div>
+                              <td style={{ padding: '0.65rem 0.85rem', fontSize: '0.78rem', color: '#64748b', whiteSpace: 'nowrap' }}>
+                                <span style={{ whiteSpace: 'nowrap' }}>{c.noHp || '-'}</span>
+                                {c.email && <span style={{ color: '#0284c7', marginLeft: '6px', whiteSpace: 'nowrap' }}>• {c.email}</span>}
                               </td>
-                              <td style={{ padding: '0.85rem 1rem' }}>
-                                <span style={{ fontWeight: '800', color: '#047857' }}>{branchSantriCount}</span> Santri • <span style={{ fontWeight: '800', color: '#2563eb' }}>{branchGuruCount}</span> Guru
+                              <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
+                                <span style={{ fontWeight: 600, color: '#047857', whiteSpace: 'nowrap' }}>{branchSantriCount}</span> Santri • <span style={{ fontWeight: 600, color: '#2563eb', whiteSpace: 'nowrap' }}>{branchGuruCount}</span> Guru
                               </td>
-                              <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.4rem' }}>
+                              <td style={{ padding: '0.65rem 0.85rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}>
                                   <button
                                     onClick={() => handleInspectBranch(c.id, 'ringkasan')}
                                     className="owner-theme-coral-btn"
-                                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
+                                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
                                     title="Analisis & buka seluruh data cabang ini"
                                   >
                                     Buka Detail →
@@ -2890,7 +2911,9 @@ export default function OwnerView({
                                       borderRadius: '6px',
                                       padding: '0.35rem 0.55rem',
                                       cursor: 'pointer',
-                                      color: '#334155'
+                                      color: '#334155',
+                                      display: 'inline-flex',
+                                      alignItems: 'center'
                                     }}
                                     title="Edit Cabang"
                                   >
@@ -2906,7 +2929,9 @@ export default function OwnerView({
                                         borderRadius: '6px',
                                         padding: '0.35rem 0.55rem',
                                         cursor: 'pointer',
-                                        color: '#dc2626'
+                                        color: '#dc2626',
+                                        display: 'inline-flex',
+                                        alignItems: 'center'
                                       }}
                                       title="Hapus Cabang"
                                     >
@@ -2932,77 +2957,64 @@ export default function OwnerView({
           ========================================================= */}
       {currentSubTab === 'superadmin' && (
         <div>
-          {/* Info Banner */}
+          {/* Action & Filter Bar (Satu Baris: Cari + Filter Cabang + Buat Super Admin Baru) */}
           <div 
             style={{ 
-              background: '#fff0ec', 
-              border: '1px solid #ffdcd3', 
-              borderRadius: '16px', 
-              padding: '1.1rem 1.35rem', 
-              marginBottom: '1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.85rem'
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.65rem', 
+              marginBottom: '1rem',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              whiteSpace: 'nowrap',
+              paddingBottom: '4px'
             }}
           >
-            <div style={{ background: '#ff5b35', color: '#ffffff', borderRadius: '50%', padding: '0.45rem', display: 'flex', boxShadow: '0 4px 12px rgba(255, 91, 53, 0.25)' }}>
-              <ShieldCheck size={20} />
-            </div>
-            <div>
-              <div style={{ fontWeight: '800', color: '#9a2408', fontSize: '0.95rem' }}>
-                Otoritas Super Admin Cabang & Manajemen Kredensial<span style={{ color: '#ff5b35', marginLeft: '2px' }}>.</span>
-              </div>
-              <div style={{ color: '#c2410c', fontSize: '0.825rem', marginTop: '0.15rem' }}>
-                Owner dapat membuat akun Super Admin baru untuk setiap cabang lembaga PPIAS, menginspeksi password login, dan mereset password secara langsung jika admin cabang lupa kredensial.
-              </div>
-            </div>
-          </div>
-
-          {/* Action & Filter Bar */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ position: 'relative' }}>
-                <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '10px' }} />
-                <input
-                  type="text"
-                  placeholder="Cari Super Admin..."
-                  value={searchSA}
-                  onChange={(e) => setSearchSA(e.target.value)}
-                  style={{
-                    padding: '0.5rem 0.85rem 0.5rem 2.2rem',
-                    borderRadius: '24px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.82rem',
-                    outline: 'none',
-                    minWidth: '220px',
-                    background: '#ffffff'
-                  }}
-                />
-              </div>
-
-              {/* Filter by Cabang */}
-              <select
-                value={filterSACabang}
-                onChange={(e) => setFilterSACabang(e.target.value)}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <Search size={15} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '9px' }} />
+              <input
+                type="text"
+                placeholder="Cari Super Admin..."
+                value={searchSA}
+                onChange={(e) => setSearchSA(e.target.value)}
                 style={{
-                  padding: '0.5rem 0.85rem',
+                  padding: '0.45rem 0.85rem 0.45rem 2.2rem',
                   borderRadius: '24px',
                   border: '1px solid #cbd5e1',
                   fontSize: '0.82rem',
                   outline: 'none',
-                  background: '#fff',
-                  fontWeight: '600'
+                  minWidth: '200px',
+                  background: '#ffffff'
                 }}
-              >
-                <option value="ALL">Semua Cabang Penugasan</option>
-                {cabangList.map(c => (
-                  <option key={c.id} value={c.id}>
-                    Cabang: {c.nama}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
+            {/* Filter by Cabang */}
+            <div style={{ minWidth: '220px', flexShrink: 0 }}>
+              <CustomSelect
+                value={filterSACabang}
+                onChange={(val) => setFilterSACabang(val)}
+                options={[
+                  { value: 'ALL', label: 'Semua Cabang Penugasan' },
+                  ...cabangList.map(c => ({
+                    value: c.id,
+                    label: `Cabang: ${c.nama}`
+                  }))
+                ]}
+                triggerStyle={{
+                  minHeight: '34px',
+                  height: '34px',
+                  borderRadius: '20px',
+                  border: '1.5px solid #10b981',
+                  padding: '0 12px',
+                  fontSize: '0.80rem',
+                  fontWeight: 500,
+                  background: '#fff'
+                }}
+              />
+            </div>
+
+            {/* Tombol Buat Super Admin Baru di samping Filter Cabang */}
             <button
               onClick={() => {
                 setEditingSA(null);
@@ -3018,26 +3030,35 @@ export default function OwnerView({
                 setShowAddSAModal(true);
               }}
               className="owner-theme-coral-btn"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.45rem 0.95rem',
+                fontSize: '0.82rem',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
+              }}
             >
-              <Plus size={16} />
+              <Plus size={15} />
               <span>+ Buat Super Admin Baru</span>
             </button>
           </div>
 
-          {/* Table Super Admin */}
+          {/* Table Super Admin (Satu Baris per Data) */}
           <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+              <table style={{ width: '100%', minWidth: '780px', borderCollapse: 'collapse', fontSize: '0.84rem', whiteSpace: 'nowrap' }}>
                 <thead>
-                  <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
-                    <th style={{ padding: '0.85rem 1rem' }}>No</th>
-                    <th style={{ padding: '0.85rem 1rem' }}>Nama Super Admin</th>
-                    <th style={{ padding: '0.85rem 1rem' }}>Cabang Penugasan</th>
-                    <th style={{ padding: '0.85rem 1rem' }}>Username & Email</th>
-                    <th style={{ padding: '0.85rem 1rem' }}>Password Akun</th>
-                    <th style={{ padding: '0.85rem 1rem' }}>No. HP / WhatsApp</th>
-                    <th style={{ padding: '0.85rem 1rem' }}>Status</th>
-                    <th style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>Aksi</th>
+                  <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>
+                    <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>No</th>
+                    <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>Nama Super Admin</th>
+                    <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>Cabang Penugasan</th>
+                    <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>Username & Email</th>
+                    <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>Password Akun</th>
+                    <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>No. HP / WhatsApp</th>
+                    <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>Status</th>
+                    <th style={{ padding: '0.65rem 0.85rem', textAlign: 'center', whiteSpace: 'nowrap' }}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -3055,92 +3076,98 @@ export default function OwnerView({
                       const isPwdVisible = visiblePasswords[sa.id];
 
                       return (
-                        <tr key={sa.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '0.85rem 1rem', color: '#64748b' }}>{idx + 1}</td>
-                          <td style={{ padding: '0.85rem 1rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <tr key={sa.id} style={{ borderBottom: '1px solid #f1f5f9', whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '0.65rem 0.85rem', color: '#64748b', whiteSpace: 'nowrap' }}>{idx + 1}</td>
+                          <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
                               <div 
                                 style={{ 
-                                  width: '34px', 
-                                  height: '34px', 
+                                  width: '28px', 
+                                  height: '28px', 
                                   borderRadius: '50%', 
                                   background: '#e0f2fe', 
                                   color: '#0284c7', 
-                                  display: 'flex', 
+                                  display: 'inline-flex', 
                                   alignItems: 'center', 
-                                  justifyContent: 'center',
-                                  fontWeight: '700'
+                                  justifyContent: 'center', 
+                                  fontWeight: '700',
+                                  fontSize: '0.78rem',
+                                  flexShrink: 0
                                 }}
                               >
                                 {sa.nama ? sa.nama.charAt(0).toUpperCase() : 'A'}
                               </div>
-                              <div>
-                                <div style={{ fontWeight: '700', color: '#1e293b' }}>{sa.nama}</div>
-                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{sa.role || 'Super Admin Cabang'}</div>
-                              </div>
+                              <span style={{ fontWeight: '700', color: '#1e293b', whiteSpace: 'nowrap' }}>{sa.nama}</span>
+                              <span style={{ fontSize: '0.72rem', color: '#64748b', whiteSpace: 'nowrap' }}>({sa.role || 'Super Admin'})</span>
                             </div>
                           </td>
-                          <td style={{ padding: '0.85rem 1rem' }}>
+                          <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
                             <span 
                               style={{ 
                                 background: `${matchedCabang?.warnaAksen || '#0d9488'}15`, 
                                 color: matchedCabang?.warnaAksen || '#0d9488', 
-                                padding: '0.25rem 0.65rem', 
+                                padding: '0.2rem 0.55rem', 
                                 borderRadius: '6px', 
                                 fontWeight: '700', 
-                                fontSize: '0.775rem',
+                                fontSize: '0.75rem',
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: '0.35rem'
+                                gap: '0.35rem',
+                                whiteSpace: 'nowrap'
                               }}
                             >
                               <Building2 size={12} />
                               {sa.cabangNama || matchedCabang?.nama || 'Cabang'}
                             </span>
                           </td>
-                          <td style={{ padding: '0.85rem 1rem' }}>
-                            <div style={{ fontFamily: 'monospace', fontWeight: '600', color: '#0369a1' }}>
-                              @{sa.username}
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                              {sa.email || '-'}
+                          <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}>
+                              <span style={{ fontFamily: 'monospace', fontWeight: '700', color: '#0369a1', whiteSpace: 'nowrap' }}>
+                                @{sa.username}
+                              </span>
+                              {sa.email && sa.email !== '-' && (
+                                <span style={{ fontSize: '0.75rem', color: '#64748b', whiteSpace: 'nowrap' }}>
+                                  • {sa.email}
+                                </span>
+                              )}
                             </div>
                           </td>
-                          <td style={{ padding: '0.85rem 1rem' }}>
+                          <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
                             <div 
                               style={{ 
                                 display: 'inline-flex', 
                                 alignItems: 'center', 
-                                gap: '0.5rem', 
+                                gap: '0.4rem', 
                                 background: '#f8fafc', 
-                                padding: '0.25rem 0.5rem', 
+                                padding: '0.2rem 0.45rem', 
                                 borderRadius: '6px', 
-                                border: '1px solid #e2e8f0' 
+                                border: '1px solid #e2e8f0',
+                                whiteSpace: 'nowrap'
                               }}
                             >
-                              <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '0.85rem', color: isPwdVisible ? '#0f172a' : '#94a3b8' }}>
+                              <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '0.82rem', color: isPwdVisible ? '#0f172a' : '#94a3b8' }}>
                                 {isPwdVisible ? sa.password : '••••••••'}
                               </span>
                               <button
                                 onClick={() => toggleShowPassword(sa.id)}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '0.1rem' }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '0.1rem', display: 'inline-flex' }}
                                 title={isPwdVisible ? "Sembunyikan Password" : "Lihat Password"}
                               >
-                                {isPwdVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+                                {isPwdVisible ? <EyeOff size={13} /> : <Eye size={13} />}
                               </button>
                               <button
                                 onClick={() => handleCopyPassword(sa)}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedSAId === sa.id ? '#10b981' : '#64748b', padding: '0.1rem' }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedSAId === sa.id ? '#10b981' : '#64748b', padding: '0.1rem', display: 'inline-flex' }}
                                 title="Salin Password"
                               >
-                                {copiedSAId === sa.id ? <Check size={14} /> : <Copy size={14} />}
+                                {copiedSAId === sa.id ? <Check size={13} /> : <Copy size={13} />}
                               </button>
                             </div>
                           </td>
-                          <td style={{ padding: '0.85rem 1rem', fontSize: '0.825rem', color: '#475569' }}>
+                          <td style={{ padding: '0.65rem 0.85rem', fontSize: '0.82rem', color: '#475569', whiteSpace: 'nowrap' }}>
                             {sa.noHp || '-'}
                           </td>
-                          <td style={{ padding: '0.85rem 1rem' }}>
+                          <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
                             <span 
                               style={{ 
                                 background: sa.status === 'Aktif' ? '#dcfce7' : '#fee2e2', 
@@ -3148,14 +3175,15 @@ export default function OwnerView({
                                 padding: '0.2rem 0.55rem', 
                                 borderRadius: '12px', 
                                 fontWeight: '600', 
-                                fontSize: '0.75rem' 
+                                fontSize: '0.75rem',
+                                whiteSpace: 'nowrap'
                               }}
                             >
                               {sa.status || 'Aktif'}
                             </span>
                           </td>
-                          <td style={{ padding: '0.85rem 1rem', textAlign: 'center' }}>
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.4rem' }}>
+                          <td style={{ padding: '0.65rem 0.85rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}>
                               <button
                                 onClick={() => {
                                   setResetSAPasswordTarget(sa);
@@ -3165,14 +3193,15 @@ export default function OwnerView({
                                   background: '#f0fdf4',
                                   border: '1px solid #bbf7d0',
                                   borderRadius: '6px',
-                                  padding: '0.35rem 0.6rem',
+                                  padding: '0.3rem 0.55rem',
                                   cursor: 'pointer',
                                   color: '#166534',
-                                  fontSize: '0.75rem',
+                                  fontSize: '0.74rem',
                                   fontWeight: '600',
-                                  display: 'flex',
+                                  display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: '0.3rem'
+                                  gap: '0.3rem',
+                                  whiteSpace: 'nowrap'
                                 }}
                                 title="Reset Password ke Default"
                               >
@@ -3186,13 +3215,15 @@ export default function OwnerView({
                                   background: '#f8fafc',
                                   border: '1px solid #cbd5e1',
                                   borderRadius: '6px',
-                                  padding: '0.35rem 0.55rem',
+                                  padding: '0.3rem 0.5rem',
                                   cursor: 'pointer',
-                                  color: '#334155'
+                                  color: '#334155',
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
                                 }}
                                 title="Edit Akun"
                               >
-                                <Edit2 size={14} />
+                                <Edit2 size={13} />
                               </button>
 
                               <button
@@ -3201,13 +3232,15 @@ export default function OwnerView({
                                   background: '#fef2f2',
                                   border: '1px solid #fecaca',
                                   borderRadius: '6px',
-                                  padding: '0.35rem 0.55rem',
+                                  padding: '0.3rem 0.5rem',
                                   cursor: 'pointer',
-                                  color: '#dc2626'
+                                  color: '#dc2626',
+                                  display: 'inline-flex',
+                                  alignItems: 'center'
                                 }}
                                 title="Hapus Akun Super Admin"
                               >
-                                <Trash2 size={14} />
+                                <Trash2 size={13} />
                               </button>
                             </div>
                           </td>
@@ -3227,10 +3260,10 @@ export default function OwnerView({
       {currentSubTab === 'rekap' && (
         <div>
           <div style={{ marginBottom: '1rem' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '900', color: '#1e293b', margin: 0, letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1e293b', margin: 0, letterSpacing: '-0.01em' }}>
               Konsolidasi Seluruh Cabang<span style={{ color: '#ff5b35', marginLeft: '2px' }}>.</span>
             </h2>
-            <p className="owner-desc-text" style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+            <p className="owner-desc-text" style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#64748b', fontWeight: 400 }}>
               Perbandingan distribusi santri, ustadz pengampu, halaqah bimbingan, dan perolehan syahriah di setiap cabang lembaga PPIAS.
             </p>
           </div>
@@ -3247,8 +3280,8 @@ export default function OwnerView({
                 <Building2 size={16} />
               </div>
               <div>
-                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Cabang</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0f172a', lineHeight: 1.1 }}>{cabangList.length}</div>
+                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '500', textTransform: 'uppercase' }}>Cabang</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#0f172a', lineHeight: 1.1 }}>{cabangList.length}</div>
               </div>
             </div>
 
@@ -3257,8 +3290,8 @@ export default function OwnerView({
                 <GraduationCap size={16} />
               </div>
               <div>
-                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Santri</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0f172a', lineHeight: 1.1 }}>{allSantri.length}</div>
+                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '500', textTransform: 'uppercase' }}>Santri</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#0f172a', lineHeight: 1.1 }}>{allSantri.length}</div>
               </div>
             </div>
 
@@ -3267,8 +3300,8 @@ export default function OwnerView({
                 <Users size={16} />
               </div>
               <div>
-                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Guru & TU</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0f172a', lineHeight: 1.1 }}>{allGurus.length}</div>
+                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '500', textTransform: 'uppercase' }}>Guru & TU</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#0f172a', lineHeight: 1.1 }}>{allGurus.length}</div>
               </div>
             </div>
 
@@ -3277,25 +3310,26 @@ export default function OwnerView({
                 <ShieldCheck size={16} />
               </div>
               <div>
-                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Super Admin</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0f172a', lineHeight: 1.1 }}>{superAdminList.length}</div>
+                <div style={{ fontSize: '0.66rem', color: '#64748b', fontWeight: '500', textTransform: 'uppercase' }}>Super Admin</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: '600', color: '#0f172a', lineHeight: 1.1 }}>{superAdminList.length}</div>
               </div>
             </div>
           </div>
 
-          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '0.9rem', marginBottom: '1.25rem' }}>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+          {/* Tabel Data Cabang (Selalu Sebaris Saja, Tidak Wrapping/Pecah) */}
+          <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '0.85rem', marginBottom: '1.25rem' }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', minWidth: '750px', borderCollapse: 'collapse', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
                 <thead>
-                  <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
-                    <th style={{ padding: '0.85rem' }}>Nama Cabang Lembaga</th>
-                    <th style={{ padding: '0.85rem' }}>Kode Unit</th>
-                    <th style={{ padding: '0.85rem', textAlign: 'center' }}>Jumlah Santri</th>
-                    <th style={{ padding: '0.85rem', textAlign: 'center' }}>Jumlah Guru / Ust</th>
-                    <th style={{ padding: '0.85rem', textAlign: 'center' }}>Super Admin</th>
-                    <th style={{ padding: '0.85rem' }}>Penanggung Jawab</th>
-                    <th style={{ padding: '0.85rem', textAlign: 'center' }}>Rasio Guru : Santri</th>
-                    <th style={{ padding: '0.85rem', textAlign: 'center' }}>Aksi</th>
+                  <tr style={{ background: '#f8fafc', color: '#475569', textAlign: 'left', borderBottom: '2px solid #e2e8f0', whiteSpace: 'nowrap' }}>
+                    <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap', fontSize: '0.78rem', fontWeight: 500 }}>Nama Cabang Lembaga</th>
+                    <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap', fontSize: '0.78rem', fontWeight: 500 }}>Kode Unit</th>
+                    <th style={{ padding: '0.65rem 0.85rem', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '0.78rem', fontWeight: 500 }}>Jumlah Santri</th>
+                    <th style={{ padding: '0.65rem 0.85rem', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '0.78rem', fontWeight: 500 }}>Jumlah Guru / Ust</th>
+                    <th style={{ padding: '0.65rem 0.85rem', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '0.78rem', fontWeight: 500 }}>Super Admin</th>
+                    <th style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap', fontSize: '0.78rem', fontWeight: 500 }}>Penanggung Jawab</th>
+                    <th style={{ padding: '0.65rem 0.85rem', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '0.78rem', fontWeight: 500 }}>Rasio Guru : Santri</th>
+                    <th style={{ padding: '0.65rem 0.85rem', textAlign: 'center', whiteSpace: 'nowrap', fontSize: '0.78rem', fontWeight: 500 }}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -3309,36 +3343,36 @@ export default function OwnerView({
                     const rasio = guruCabang.length > 0 ? (santriCabang.length / guruCabang.length).toFixed(1) : '-';
 
                     return (
-                      <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '0.85rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: c.warnaAksen || '#0d9488' }} />
-                            <strong style={{ color: '#1e293b' }}>{c.nama}</strong>
+                      <tr key={c.id} style={{ borderBottom: '1px solid #f1f5f9', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap', flexWrap: 'nowrap' }}>
+                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: c.warnaAksen || '#0d9488', flexShrink: 0 }} />
+                            <span style={{ color: '#1e293b', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>{c.nama}</span>
                           </div>
                         </td>
-                        <td style={{ padding: '0.85rem' }}>
-                          <span style={{ background: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: '600' }}>
+                        <td style={{ padding: '0.65rem 0.85rem', whiteSpace: 'nowrap' }}>
+                          <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontWeight: 500, color: '#475569', fontSize: '0.76rem', whiteSpace: 'nowrap' }}>
                             {c.kode}
                           </span>
                         </td>
-                        <td style={{ padding: '0.85rem', textAlign: 'center', fontWeight: '700', color: '#0d9488' }}>
+                        <td style={{ padding: '0.65rem 0.85rem', textAlign: 'center', fontWeight: 500, color: '#0d9488', whiteSpace: 'nowrap' }}>
                           {santriCabang.length}
                         </td>
-                        <td style={{ padding: '0.85rem', textAlign: 'center', fontWeight: '700', color: '#2563eb' }}>
+                        <td style={{ padding: '0.65rem 0.85rem', textAlign: 'center', fontWeight: 500, color: '#2563eb', whiteSpace: 'nowrap' }}>
                           {guruCabang.length}
                         </td>
-                        <td style={{ padding: '0.85rem', textAlign: 'center', fontWeight: '700', color: '#7c3aed' }}>
+                        <td style={{ padding: '0.65rem 0.85rem', textAlign: 'center', fontWeight: 500, color: '#7c3aed', whiteSpace: 'nowrap' }}>
                           {saCabang.length}
                         </td>
-                        <td style={{ padding: '0.85rem' }}>
+                        <td style={{ padding: '0.65rem 0.85rem', color: '#64748b', whiteSpace: 'nowrap', fontSize: '0.80rem' }}>
                           {c.penanggungJawab || '-'}
                         </td>
-                        <td style={{ padding: '0.85rem', textAlign: 'center' }}>
-                          <span style={{ background: '#f0fdf4', color: '#15803d', padding: '0.2rem 0.5rem', borderRadius: '6px', fontWeight: '600' }}>
+                        <td style={{ padding: '0.65rem 0.85rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          <span style={{ background: '#f0fdf4', color: '#15803d', padding: '2px 8px', borderRadius: '6px', fontWeight: 500, fontSize: '0.76rem', whiteSpace: 'nowrap' }}>
                             1 : {rasio}
                           </span>
                         </td>
-                        <td style={{ padding: '0.85rem', textAlign: 'center' }}>
+                        <td style={{ padding: '0.65rem 0.85rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
                           <button
                             onClick={() => handleEnterBranchAsAdmin(c.id)}
                             style={{
@@ -3347,12 +3381,13 @@ export default function OwnerView({
                               border: 'none',
                               borderRadius: '6px',
                               padding: '0.35rem 0.75rem',
-                              fontSize: '0.75rem',
-                              fontWeight: '600',
+                              fontSize: '0.74rem',
+                              fontWeight: 500,
                               cursor: 'pointer',
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '0.3rem'
+                              gap: '0.3rem',
+                              whiteSpace: 'nowrap'
                             }}
                           >
                             <span>Buka Data</span>
@@ -3367,7 +3402,7 @@ export default function OwnerView({
             </div>
           </div>
 
-          {/* Visualisasi Finansial & Komparasi SPP Antar Cabang */}
+          {/* Visualisasi Finansial & Komparasi SPP Antar Cabang (Gambar 2: Non-Bold & Rapi) */}
           {(() => {
             const allSPP = storageService.getPembayaranSPP() || [];
             const financialData = cabangList.map(c => {
@@ -3391,58 +3426,58 @@ export default function OwnerView({
             const grandTotalTerkumpul = financialData.reduce((acc, curr) => acc + curr.totalNominal, 0);
 
             return (
-              <div style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '1.4rem', marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+              <div style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '1.25rem 1.4rem', marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <BarChart3 size={22} />
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <BarChart3 size={20} />
                     </div>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: '1.10rem', fontWeight: 800, color: '#1e293b' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 500, color: '#1e293b' }}>
                         Komparasi Realisasi Penerimaan SPP & Syahriah Antar Cabang
                       </h3>
-                      <p className="owner-desc-text" style={{ margin: '0.2rem 0 0 0', fontSize: '0.80rem', color: '#64748b' }}>
+                      <p className="owner-desc-text" style={{ margin: '0.2rem 0 0 0', fontSize: '0.80rem', color: '#64748b', fontWeight: 400 }}>
                         Monitoring terpadu arus kas syahriah dari seluruh unit lembaga & cabang yayasan
                       </p>
                     </div>
                   </div>
 
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
+                    <div style={{ fontSize: '0.70rem', fontWeight: 500, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                       Total Terkumpul Yayasan
                     </div>
-                    <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#059669' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#059669' }}>
                       Rp {grandTotalTerkumpul.toLocaleString('id-ID')}
                     </div>
                   </div>
                 </div>
 
                 {/* Comparative Horizontal Bar Charts */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {financialData.map(({ cabang, totalNominal, lunasCount, pendingCount }) => {
                     const widthPercent = Math.min(100, Math.max(10, Math.round((totalNominal / maxNominal) * 100)));
                     return (
-                      <div key={cabang.id} style={{ padding: '0.85rem 1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: cabang.warnaAksen || '#0d9488' }} />
-                            <strong style={{ fontSize: '0.88rem', color: '#0f172a' }}>{cabang.nama}</strong>
-                            <span style={{ fontSize: '0.70rem', background: '#e2e8f0', color: '#475569', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                      <div key={cabang.id} style={{ padding: '0.75rem 0.95rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem', flexWrap: 'nowrap', gap: '0.5rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch', whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: cabang.warnaAksen || '#0d9488', flexShrink: 0 }} />
+                            <span style={{ fontSize: '0.86rem', color: '#0f172a', fontWeight: 500, whiteSpace: 'nowrap' }}>{cabang.nama}</span>
+                            <span style={{ fontSize: '0.68rem', background: '#e2e8f0', color: '#475569', padding: '1px 6px', borderRadius: '4px', fontWeight: 500, whiteSpace: 'nowrap' }}>
                               {cabang.kode}
                             </span>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <span style={{ fontSize: '0.76rem', color: '#64748b' }}>
-                              Lunas: <strong style={{ color: '#059669' }}>{lunasCount}</strong> • Tertunda: <strong style={{ color: '#d97706' }}>{pendingCount}</strong>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400, whiteSpace: 'nowrap' }}>
+                              Lunas: <span style={{ color: '#059669', fontWeight: 500 }}>{lunasCount}</span> • Tertunda: <span style={{ color: '#d97706', fontWeight: 500 }}>{pendingCount}</span>
                             </span>
-                            <span style={{ fontSize: '0.90rem', fontWeight: 800, color: '#0f172a' }}>
+                            <span style={{ fontSize: '0.86rem', fontWeight: 500, color: '#0f172a', whiteSpace: 'nowrap' }}>
                               Rp {totalNominal.toLocaleString('id-ID')}
                             </span>
                           </div>
                         </div>
 
                         {/* Bar */}
-                        <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ width: '100%', height: '7px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
                           <div style={{
                             width: `${widthPercent}%`,
                             height: '100%',
@@ -3477,6 +3512,7 @@ export default function OwnerView({
             }}
             onReload={reloadData}
             showToast={showToast}
+            activeBranchId={selectedBranchId}
             currentRole="owner"
             isOwner={true}
           />
@@ -3488,6 +3524,7 @@ export default function OwnerView({
           ========================================================= */}
       {showAddCabangModal && (
         <div 
+          className="modal-overlay"
           style={{
             position: 'fixed',
             inset: 0,
@@ -3496,7 +3533,7 @@ export default function OwnerView({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1000,
+            zIndex: 99999,
             padding: '1rem'
           }}
         >
@@ -3679,6 +3716,7 @@ export default function OwnerView({
           ========================================================= */}
       {showAddSAModal && (
         <div 
+          className="modal-overlay"
           style={{
             position: 'fixed',
             inset: 0,
@@ -3687,7 +3725,7 @@ export default function OwnerView({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1000,
+            zIndex: 99999,
             padding: '1rem'
           }}
         >
@@ -3723,18 +3761,26 @@ export default function OwnerView({
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: '#334155', marginBottom: '0.3rem' }}>
                   Cabang Penugasan *
                 </label>
-                <select
-                  required
+                <CustomSelect
                   value={saForm.cabangId}
-                  onChange={(e) => setSaForm({ ...saForm, cabangId: e.target.value })}
-                  style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.875rem', background: '#fff' }}
-                >
-                  {cabangList.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.nama} ({c.kode})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => {
+                    const finalVal = typeof val === 'object' && val?.target ? val.target.value : val;
+                    setSaForm({ ...saForm, cabangId: finalVal });
+                  }}
+                  options={cabangList.map(c => ({
+                    value: c.id,
+                    label: `${c.nama} (${c.kode || c.id})`
+                  }))}
+                  triggerStyle={{
+                    minHeight: '40px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #10b981',
+                    padding: '0 12px',
+                    fontSize: '0.84rem',
+                    fontWeight: 500,
+                    background: '#fff'
+                  }}
+                />
                 <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.2rem' }}>
                   Akun Super Admin ini hanya dapat mengakses dan mengelola data di cabang ini.
                 </div>
@@ -3837,6 +3883,7 @@ export default function OwnerView({
           ========================================================= */}
       {resetSAPasswordTarget && (
         <div 
+          className="modal-overlay"
           style={{
             position: 'fixed',
             inset: 0,
@@ -3845,7 +3892,7 @@ export default function OwnerView({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1000,
+            zIndex: 99999,
             padding: '1rem'
           }}
         >

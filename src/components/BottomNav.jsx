@@ -65,6 +65,29 @@ export default function BottomNav({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Deteksi jika ada modal/popup dialog yang sedang terbuka di layar untuk menyembunyikan bottom navigation bar
+  const [hasActiveModal, setHasActiveModal] = useState(false);
+
+  useEffect(() => {
+    const checkModalState = () => {
+      const activeModal = document.querySelector(
+        '.modal-overlay, .sigap-modal-overlay, .login-modal-overlay, .invoice-modal-overlay, [class*="modal-overlay"]'
+      );
+      const isVisible = !!activeModal && window.getComputedStyle(activeModal).display !== 'none';
+      setHasActiveModal(isVisible);
+      document.body.classList.toggle('has-open-modal', isVisible);
+    };
+
+    checkModalState();
+    const observer = new MutationObserver(checkModalState);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+
+    return () => {
+      observer.disconnect();
+      document.body.classList.remove('has-open-modal');
+    };
+  }, []);
+
   // Prevent background scroll when drawer is open
   useEffect(() => {
     if (showDrawer) {
@@ -383,7 +406,11 @@ export default function BottomNav({
       {/* =========================================================================
           FLOATING CURVED NOTCH BOTTOM NAVIGATION BAR (5 TABS: HOME, SISWA, JADWAL, REKAP, LAINNYA)
           ========================================================================= */}
-      <nav className="bottom-nav-root no-print" aria-label="Mobile Navigation">
+      <nav 
+        className="bottom-nav-root no-print" 
+        aria-label="Mobile Navigation"
+        style={hasActiveModal ? { display: 'none', visibility: 'hidden', pointerEvents: 'none' } : undefined}
+      >
         <div className="bottom-nav-wrapper">
           {/* 1. SLIDING ELEVATED BUBBLE & SMOOTH SCOOP HILL */}
           <div 

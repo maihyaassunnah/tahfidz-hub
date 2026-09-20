@@ -289,28 +289,6 @@ export default function MonitoringSigapView({ showToast, activeBranchId = 'caban
           </div>
           <p className="sigap-page-subtitle">Pusat data kehadiran KBM (Guru/Ustadz) dan Santri/Siswa terpadu.</p>
         </div>
-
-        {/* Tombol Aksi Kanan */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button 
-            className="sigap-btn-secondary"
-            onClick={reloadAllData}
-            title="Muat ulang data terkini"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 12px' }}
-          >
-            <RefreshCw size={14} />
-            <span>Refresh</span>
-          </button>
-          
-          <button 
-            className="sigap-btn-emergency"
-            onClick={handleModeDarurat}
-            title="Auto-fill presensi jika terjadi gangguan teknis"
-          >
-            <AlertTriangle size={14} />
-            <span>Mode Darurat</span>
-          </button>
-        </div>
       </div>
 
       {/* Tabs: Monitoring KBM vs Presensi Siswa */}
@@ -376,66 +354,84 @@ export default function MonitoringSigapView({ showToast, activeBranchId = 'caban
             gap: '14px',
             boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
           }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
-                  DARI TANGGAL
-                </label>
-                <input 
-                  type="date" 
-                  className="form-input" 
-                  value={dariTanggal}
-                  onChange={(e) => setDariTanggal(e.target.value)}
-                  style={{ fontSize: '13px', padding: '8px 12px', width: '100%' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
-                  SAMPAI TANGGAL
-                </label>
-                <input 
-                  type="date" 
-                  className="form-input" 
-                  value={sampaiTanggal}
-                  onChange={(e) => setSampaiTanggal(e.target.value)}
-                  style={{ fontSize: '13px', padding: '8px 12px', width: '100%' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
-                  STATUS FILTER
-                </label>
-                <select
-                  className="form-select"
-                  value={statusFilterKbm}
-                  onChange={(e) => setStatusFilterKbm(e.target.value)}
-                  style={{ fontSize: '13px', padding: '8px 12px', width: '100%' }}
-                >
-                  <option value="Semua">Semua Status</option>
-                  <option value="Hadir">Semua Hadir</option>
-                  <option value="Tepat Waktu">Tepat Waktu</option>
-                  <option value="Terlambat">Terlambat</option>
-                  <option value="Izin">Izin / Sakit</option>
-                  <option value="Alpa">Alpa</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
-                  CARI GURU / MAPEL
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Nama ustadz / mata pelajaran..."
-                    value={searchKbm}
-                    onChange={(e) => setSearchKbm(e.target.value)}
-                    style={{ fontSize: '13px', padding: '8px 12px 8px 30px', width: '100%' }}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '12px',
+              alignItems: 'end'
+            }}>
+              {/* DARI TANGGAL & SAMPAI TANGGAL — SELALU 1 BARIS PAS LAYAR */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '8px',
+                width: '100%',
+                minWidth: 0,
+                boxSizing: 'border-box'
+              }}>
+                <div style={{ minWidth: 0 }}>
+                  <label style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    DARI TANGGAL
+                  </label>
+                  <input 
+                    type="date" 
+                    className="form-input" 
+                    value={dariTanggal}
+                    onChange={(e) => setDariTanggal(e.target.value)}
+                    style={{ fontSize: '12px', padding: '6px 8px', width: '100%', minWidth: 0, boxSizing: 'border-box', borderRadius: '10px' }}
                   />
+                </div>
+
+                <div style={{ minWidth: 0 }}>
+                  <label style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    SAMPAI TANGGAL
+                  </label>
+                  <input 
+                    type="date" 
+                    className="form-input" 
+                    value={sampaiTanggal}
+                    onChange={(e) => setSampaiTanggal(e.target.value)}
+                    style={{ fontSize: '12px', padding: '6px 8px', width: '100%', minWidth: 0, boxSizing: 'border-box', borderRadius: '10px' }}
+                  />
+                </div>
+              </div>
+
+              {/* STATUS FILTER & CARI GURU / MAPEL */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', minWidth: 0 }}>
+                <div style={{ minWidth: 0 }}>
+                  <label style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap' }}>
+                    STATUS FILTER
+                  </label>
+                  <select
+                    className="form-select"
+                    value={statusFilterKbm}
+                    onChange={(e) => setStatusFilterKbm(e.target.value)}
+                    style={{ fontSize: '12px', padding: '6px 10px', width: '100%', minWidth: 0, boxSizing: 'border-box', borderRadius: '10px', minHeight: '35px' }}
+                  >
+                    <option value="Semua">Semua Status</option>
+                    <option value="Hadir">Semua Hadir</option>
+                    <option value="Tepat Waktu">Tepat Waktu</option>
+                    <option value="Terlambat">Terlambat</option>
+                    <option value="Izin">Izin / Sakit</option>
+                    <option value="Alpa">Alpa</option>
+                  </select>
+                </div>
+
+                <div style={{ minWidth: 0 }}>
+                  <label style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap' }}>
+                    CARI GURU / MAPEL
+                  </label>
+                  <div style={{ position: 'relative', minWidth: 0 }}>
+                    <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Nama ustadz / mapel..."
+                      value={searchKbm}
+                      onChange={(e) => setSearchKbm(e.target.value)}
+                      style={{ fontSize: '12px', padding: '6px 10px 6px 28px', width: '100%', minWidth: 0, boxSizing: 'border-box', borderRadius: '10px', height: '35px' }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -819,39 +815,54 @@ export default function MonitoringSigapView({ showToast, activeBranchId = 'caban
             gap: '14px',
             boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
           }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
-                  DARI TANGGAL
-                </label>
-                <input 
-                  type="date" 
-                  className="form-input" 
-                  value={dariTanggal}
-                  onChange={(e) => setDariTanggal(e.target.value)}
-                  style={{ fontSize: '13px', padding: '8px 12px', width: '100%' }}
-                />
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '12px',
+              alignItems: 'end'
+            }}>
+              {/* DARI TANGGAL & SAMPAI TANGGAL — SELALU 1 BARIS PAS LAYAR */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '8px',
+                width: '100%',
+                minWidth: 0,
+                boxSizing: 'border-box'
+              }}>
+                <div style={{ minWidth: 0 }}>
+                  <label style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    DARI TANGGAL
+                  </label>
+                  <input 
+                    type="date" 
+                    className="form-input" 
+                    value={dariTanggal}
+                    onChange={(e) => setDariTanggal(e.target.value)}
+                    style={{ fontSize: '12px', padding: '6px 8px', width: '100%', minWidth: 0, boxSizing: 'border-box', borderRadius: '10px' }}
+                  />
+                </div>
+
+                <div style={{ minWidth: 0 }}>
+                  <label style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    SAMPAI TANGGAL
+                  </label>
+                  <input 
+                    type="date" 
+                    className="form-input" 
+                    value={sampaiTanggal}
+                    onChange={(e) => setSampaiTanggal(e.target.value)}
+                    style={{ fontSize: '12px', padding: '6px 8px', width: '100%', minWidth: 0, boxSizing: 'border-box', borderRadius: '10px' }}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
-                  SAMPAI TANGGAL
-                </label>
-                <input 
-                  type="date" 
-                  className="form-input" 
-                  value={sampaiTanggal}
-                  onChange={(e) => setSampaiTanggal(e.target.value)}
-                  style={{ fontSize: '13px', padding: '8px 12px', width: '100%' }}
-                />
-              </div>
-
-
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+              {/* CARI SANTRI */}
+              <div style={{ minWidth: 0 }}>
+                <label style={{ fontSize: '10.5px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '4px', whiteSpace: 'nowrap' }}>
                   CARI SANTRI (NAMA / NIS)
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div style={{ position: 'relative', minWidth: 0 }}>
                   <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                   <input
                     type="text"
@@ -859,7 +870,7 @@ export default function MonitoringSigapView({ showToast, activeBranchId = 'caban
                     placeholder="Nama santri atau NIS..."
                     value={searchSiswa}
                     onChange={(e) => setSearchSiswa(e.target.value)}
-                    style={{ fontSize: '13px', padding: '8px 12px 8px 30px', width: '100%' }}
+                    style={{ fontSize: '12px', padding: '6px 10px 6px 28px', width: '100%', minWidth: 0, boxSizing: 'border-box', borderRadius: '10px', height: '35px' }}
                   />
                 </div>
               </div>

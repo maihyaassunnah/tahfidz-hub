@@ -42,10 +42,16 @@ export default function PengaturanAdminView({
   onSaveSettings, 
   onReload, 
   showToast,
+  activeBranchId,
   initialSubTab,
   currentRole,
   isOwner
 }) {
+  const effectiveBranchId = activeBranchId || storageService.getActiveBranchId();
+  const currentBranch = (storageService.getCabang() || []).find(c => c.id === effectiveBranchId) || storageService.getActiveBranch() || { nama: "MA Ihya As-Sunnah" };
+  const isBranchSmp = effectiveBranchId === 'cabang-smp';
+  const defaultUnitSekolah = isBranchSmp ? "SMP IT IHYA' AS-SUNNAH" : "MA IHYA' AS-SUNNAH";
+
   const [activeSubTab, setActiveSubTab] = useState(initialSubTab || 'pengampu-akun');
 
   useEffect(() => {
@@ -56,10 +62,17 @@ export default function PengaturanAdminView({
 
   const [formData, setFormData] = useState({ ...settings });
 
-  const [guruList, setGuruList] = useState(storageService.getSigapGuru());
-  const [pengampuList, setPengampuList] = useState(storageService.getPengampu());
-  const [siswaList, setSiswaList] = useState(storageService.getSigapSiswa());
-  const [sesiList, setSesiList] = useState(storageService.getSesi());
+  const [guruList, setGuruList] = useState(() => storageService.getSigapGuru(effectiveBranchId));
+  const [pengampuList, setPengampuList] = useState(() => storageService.getPengampu(effectiveBranchId));
+  const [siswaList, setSiswaList] = useState(() => storageService.getSigapSiswa(effectiveBranchId));
+  const [sesiList, setSesiList] = useState(() => storageService.getSesi(effectiveBranchId));
+
+  useEffect(() => {
+    setGuruList(storageService.getSigapGuru(effectiveBranchId));
+    setPengampuList(storageService.getPengampu(effectiveBranchId));
+    setSiswaList(storageService.getSigapSiswa(effectiveBranchId));
+    setSesiList(storageService.getSesi(effectiveBranchId));
+  }, [effectiveBranchId]);
 
   const [searchTermGuru, setSearchTermGuru] = useState('');
   const [searchTermSiswa, setSearchTermSiswa] = useState('');
@@ -72,10 +85,10 @@ export default function PengaturanAdminView({
     username: '',
     email: '',
     noHp: '',
-    unitSekolah: "MA IHYA' AS-SUNNAH",
+    unitSekolah: defaultUnitSekolah,
     jabatan: 'Guru / Pengampu',
     halaqahNama: '',
-    lokasi: 'Pesantren Persatuan Islam As-Sunnah',
+    lokasi: isBranchSmp ? 'SMP IT Raudhotul Huffaz' : 'Pesantren Persatuan Islam As-Sunnah',
     role: 'Pengampu',
     password: 'bismillah123'
   });
@@ -132,9 +145,9 @@ export default function PengaturanAdminView({
     nik: '',
     lp: 'L',
     nisn: '',
-    kelas: 'X A',
-    unitSekolah: "MA IHYA' AS-SUNNAH",
-    pengampu: 'Wahyudin Hafiz, S.Pd',
+    kelas: isBranchSmp ? 'VII SMP IT' : 'X A',
+    unitSekolah: defaultUnitSekolah,
+    pengampu: isBranchSmp ? 'Aminudin, A.Md' : 'Wahyudin Hafiz, S.Pd',
     tglLahir: '',
     wali: '',
     kontakWali: '',
@@ -191,17 +204,17 @@ export default function PengaturanAdminView({
   };
 
   const reloadData = () => {
-    setGuruList(storageService.getSigapGuru());
-    setPengampuList(storageService.getPengampu());
-    setSiswaList(storageService.getSigapSiswa());
-    setSesiList(storageService.getSesi());
+    setGuruList(storageService.getSigapGuru(effectiveBranchId));
+    setPengampuList(storageService.getPengampu(effectiveBranchId));
+    setSiswaList(storageService.getSigapSiswa(effectiveBranchId));
+    setSesiList(storageService.getSesi(effectiveBranchId));
     if (onReload) onReload();
   };
 
   // Real-time synchronization when schedule/session is updated from Jadwal menu or other views
   useEffect(() => {
     const handleSync = () => {
-      setSesiList(storageService.getSesi());
+      setSesiList(storageService.getSesi(effectiveBranchId));
     };
     window.addEventListener('sigap_jadwal_updated', handleSync);
     window.addEventListener('storage', handleSync);
@@ -209,7 +222,7 @@ export default function PengaturanAdminView({
       window.removeEventListener('sigap_jadwal_updated', handleSync);
       window.removeEventListener('storage', handleSync);
     };
-  }, []);
+  }, [effectiveBranchId]);
 
   const daftarNamaPengampu = Array.from(
     new Set([
@@ -231,15 +244,16 @@ export default function PengaturanAdminView({
 
     const email = newPengampu.email || (newPengampu.username ? `${newPengampu.username.toLowerCase()}@ihya.sch.id` : `${newPengampu.nama.toLowerCase().replace(/\s+/g, '')}@ihya.sch.id`);
     const username = newPengampu.username || email.split('@')[0];
-    const unit = newPengampu.unitSekolah || "MA IHYA' AS-SUNNAH";
+    const unit = newPengampu.unitSekolah || defaultUnitSekolah;
     const jabatan = newPengampu.jabatan || 'Guru / Pengampu';
 
     const guruItem = {
       nama: newPengampu.nama,
       nip: newPengampu.nip || 'NON-NIP',
+      cabangId: effectiveBranchId,
       unit,
       unitSekolah: unit,
-      unitTag: unit === "MA IHYA' AS-SUNNAH" ? 'MA' : (unit === "SMP IT IHYA' AS-SUNNAH" ? 'SMP' : 'PONPES'),
+      unitTag: unit.includes('SMP') ? 'SMP' : (unit.includes('MA') ? 'MA' : 'PONPES'),
       jabatan,
       role: jabatan,
       statusPegawai: 'GTY',
@@ -250,7 +264,7 @@ export default function PengaturanAdminView({
       noHp: newPengampu.noHp || '',
       kontak: newPengampu.noHp || '',
       halaqahNama: newPengampu.halaqahNama || `Halaqah ${newPengampu.nama}`,
-      lokasi: newPengampu.lokasi || 'Pesantren Persatuan Islam As-Sunnah',
+      lokasi: newPengampu.lokasi || (isBranchSmp ? 'SMP IT Raudhotul Huffaz' : 'Pesantren Persatuan Islam As-Sunnah'),
       avatarBg: '#dcfce7',
       initial: newPengampu.nama.charAt(0).toUpperCase()
     };
@@ -264,10 +278,10 @@ export default function PengaturanAdminView({
       username: '',
       email: '',
       noHp: '',
-      unitSekolah: "MA IHYA' AS-SUNNAH",
+      unitSekolah: defaultUnitSekolah,
       jabatan: 'Guru / Pengampu',
       halaqahNama: '',
-      lokasi: 'Pesantren Persatuan Islam As-Sunnah',
+      lokasi: isBranchSmp ? 'SMP IT Raudhotul Huffaz' : 'Pesantren Persatuan Islam As-Sunnah',
       role: 'Pengampu',
       password: 'bismillah123'
     });
@@ -418,13 +432,14 @@ export default function PengaturanAdminView({
 
     const payload = {
       ...newSiswa,
+      cabangId: effectiveBranchId,
       nama: newSiswa.nama.trim(),
       nisn: newSiswa.nisn.trim(),
       nik: newSiswa.nik || '',
       lp: newSiswa.lp || 'L',
-      kelas: '',
-      unitSekolah: newSiswa.unitSekolah || "MA IHYA' AS-SUNNAH",
-      pengampu: newSiswa.pengampu || daftarNamaPengampu[0] || '',
+      kelas: newSiswa.kelas || (isBranchSmp ? 'VII SMP IT' : 'X A'),
+      unitSekolah: newSiswa.unitSekolah || defaultUnitSekolah,
+      pengampu: newSiswa.pengampu || daftarNamaPengampu[0] || (isBranchSmp ? 'Aminudin, A.Md' : 'Wahyudin Hafiz, S.Pd'),
       status: 'Aktif'
     };
 
@@ -436,9 +451,9 @@ export default function PengaturanAdminView({
       nik: '',
       lp: 'L',
       nisn: '',
-      kelas: '',
-      unitSekolah: "MA IHYA' AS-SUNNAH",
-      pengampu: daftarNamaPengampu[0] || 'Wahyudin Hafiz, S.Pd',
+      kelas: isBranchSmp ? 'VII SMP IT' : 'X A',
+      unitSekolah: defaultUnitSekolah,
+      pengampu: daftarNamaPengampu[0] || (isBranchSmp ? 'Aminudin, A.Md' : 'Wahyudin Hafiz, S.Pd'),
       tglLahir: '',
       wali: '',
       kontakWali: '',
@@ -564,7 +579,7 @@ export default function PengaturanAdminView({
               <Settings size={26} />
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.22rem', fontWeight: 800, color: '#0f172a' }}>
+              <h2 style={{ margin: 0, fontSize: '1.22rem', fontWeight: 500, color: '#0f172a' }}>
                 Konfigurasi Unit & Database
               </h2>
               <p className="owner-desc-text" style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
@@ -670,15 +685,7 @@ export default function PengaturanAdminView({
       {/* ========================================================= */}
       {activeSubTab === 'pengampu-akun' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-            <div>
-              <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.15rem', color: '#0f172a' }}>
-                Daftar Akun Pengampu & Pegawai ({filteredGuruList.length})
-              </h3>
-              <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
-                Tersinkronisasi langsung dengan Menu <strong>Data Pegawai</strong>. Admin dapat mengelola penugasan unit, NIP, status akun, dan kata sandi.
-              </p>
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '14px' }}>
             <button className="btn btn-primary btn-sm" onClick={() => setShowAddPengampuModal(true)}>
               <Plus size={16} />
               <span>+ Tambah Akun Pengampu Baru</span>
@@ -708,9 +715,9 @@ export default function PengaturanAdminView({
                 style={{ height: '38px', fontSize: '0.85rem', minWidth: '180px' }}
               >
                 <option value="Semua Unit">Semua Unit ({guruList.length})</option>
-                <option value="MA IHYA' AS-SUNNAH">MA IHYA' AS-SUNNAH</option>
-                <option value="SMP IT IHYA' AS-SUNNAH">SMP IT IHYA' AS-SUNNAH</option>
-                <option value="Pondok Pesantren PPIAS">Pondok Pesantren PPIAS</option>
+                {Array.from(new Set(guruList.map(g => g.unitSekolah || g.unitTag || g.unit).filter(Boolean))).map(u => (
+                  <option key={u} value={u}>{u}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -945,7 +952,7 @@ export default function PengaturanAdminView({
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
             <div>
-              <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.15rem' }}>Master Jadwal Sesi Presensi</h3>
+              <h3 style={{ margin: 0, fontWeight: 500, fontSize: '1.15rem' }}>Master Jadwal Sesi Presensi</h3>
               <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
                 Atur rentang jam kerja dan shift presensi Ustadz Pembina. Sesi nonaktif tidak akan muncul di form absensi.
               </p>
@@ -1072,7 +1079,7 @@ export default function PengaturanAdminView({
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.15rem', color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontWeight: 500, fontSize: '1.15rem', color: '#0f172a' }}>
                 Kelola Data Siswa Unit ({filteredSiswaList.length})
               </h3>
               <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>

@@ -1560,24 +1560,35 @@ body.dark-mode .table td {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 99999 !important;
   padding: 20px;
 }
 
 .modal-content {
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 20px;
   max-width: 640px;
   width: 100%;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
+}
+
+.modal-content > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 body.dark-mode .modal-content {
@@ -1591,19 +1602,30 @@ body.dark-mode .modal-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .modal-body {
-  padding: 24px;
+  padding: 20px 24px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .modal-footer {
-  padding: 16px 24px;
+  padding: 14px 24px;
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 10px;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));
 }
 
 body.dark-mode .modal-footer {
@@ -1611,26 +1633,67 @@ body.dark-mode .modal-footer {
   border-color: #334155;
 }
 
-/* Toast */
+/* Sembunyikan floating bottom nav bar saat ada modal overlay terbuka */
+body:has(.modal-overlay) .bottom-nav-root,
+body:has(.sigap-modal-overlay) .bottom-nav-root,
+body:has(.login-modal-overlay) .bottom-nav-root,
+body:has(.invoice-modal-overlay) .bottom-nav-root,
+body:has(.sidebar-drawer-overlay) .bottom-nav-root,
+body:has([class*="modal-overlay"]) .bottom-nav-root,
+body.has-open-modal .bottom-nav-root {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+/* Toast Notification: Floats cleanly above the bottom navbar on mobile and stays on top of all elements */
 .toast-container {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 200;
+  bottom: 95px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
+  z-index: 999999 !important;
+  max-width: calc(100vw - 32px);
+  width: max-content;
+  pointer-events: auto;
+  animation: toastFloatUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 851px) {
+  .toast-container {
+    bottom: 28px !important;
+    right: 28px !important;
+    left: auto !important;
+    transform: none !important;
+  }
 }
 
 .toast {
   background: #0f172a;
   color: #ffffff;
-  padding: 12px 18px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 24px;
+  font-size: 0.84rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 10px;
-  border-left: 4px solid #10b981;
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+}
+
+@keyframes toastFloatUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
 }
 
 /* Print Rules */
@@ -6681,7 +6744,7 @@ select,
   background-size: 16px !important;
   padding: 8px 38px 8px 14px !important;
   font-size: 0.88rem !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   color: #0f172a !important;
   min-height: 42px !important;
   cursor: pointer !important;
@@ -6727,7 +6790,7 @@ select option:checked,
 .spp-select option:checked {
   background: #ecfdf5 !important;
   color: #047857 !important;
-  font-weight: 700 !important;
+  font-weight: 500 !important;
 }
 
 /* Dark Mode for Native Selects */
@@ -7035,16 +7098,19 @@ html, body {
     box-sizing: border-box !important;
   }
 
-  /* Activity Item Cards Mobile Stacking */
+  /* Activity Item Cards Mobile: Keep Single Line (Simple & Ringkas 1 Baris) */
   .owner-activity-item {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 0.75rem !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.5rem !important;
+    min-height: 40px !important;
+    padding: 0.4rem 0.65rem !important;
   }
 
   .owner-activity-item-actions {
-    width: 100% !important;
-    justify-content: flex-end !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
   }
 
   /* SIGAP KPI Grid: Always 2 Columns on Mobile for Clean Legibility */
@@ -7091,6 +7157,7 @@ html, body {
   .modal-overlay {
     padding: 10px !important;
     align-items: flex-end !important;
+    z-index: 99999 !important;
   }
 
   .modal-content,
@@ -7101,6 +7168,21 @@ html, body {
     max-height: 90vh !important;
     border-radius: 20px 20px 0 0 !important;
     margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  .modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 20 !important;
+    background: #f8fafc !important;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
+  }
+
+  body.dark-mode .modal-footer {
+    background: #0f172a !important;
   }
 
   /* Halaqah Green Banner on Mobile */

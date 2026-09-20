@@ -470,7 +470,7 @@ const INITIAL_SIGAP_SISWA = [
   { id: 'ss-20', nama: 'Maryam Khairunnisa', nik: '1605062512080010', lp: 'P', nisn: '0089012345', kelas: 'XII B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Defit Purwaningsih, S.Pd', tglLahir: '25 Desember 2008', wali: 'Khairul Anwar', kontakWali: '081234567810' },
   { id: 'ss-smp-1', nama: 'Fatih Rizqullah (SMP)', nik: '1605062512080081', lp: 'L', nisn: '0089012381', kelas: 'VII SMP IT', unitSekolah: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', pengampu: 'Aminudin, A.Md', tglLahir: '10 Januari 2011', wali: 'H. Abdullah', kontakWali: '08128899001' },
   { id: 'ss-smp-2', nama: 'Ziyad Al-Farisi (SMP)', nik: '1605062512080082', lp: 'L', nisn: '0089012382', kelas: 'VIII SMP IT', unitSekolah: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', pengampu: 'Aminudin, A.Md', tglLahir: '12 Maret 2010', wali: 'Drs. Syarif', kontakWali: '08128899002' },
-  { id: 'ss-ponpes-1', nama: 'Salman Al-Farisi (Ponpes)', nik: '1605062512080091', lp: 'L', nisn: '0089012391', kelas: "I'dad Lughowi", unitSekolah: "Pondok Pesantren PPIAS", cabangId: 'cabang-ponpes', pengampu: 'Wahyudin Hafiz, S.Pd', tglLahir: '05 Mei 2009', wali: 'Ustadz Mahmud', kontakWali: '08123344556' }
+  { id: 'ss-ponpes-1', nama: 'Salman Al-Farisi', nik: '1605062512080091', lp: 'L', nisn: '0089012391', kelas: "X A", unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', pengampu: 'Wahyudin Hafiz, S.Pd', tglLahir: '05 Mei 2009', wali: 'Ustadz Mahmud', kontakWali: '08123344556' }
 ];
 
 // GAMBAR 3: DATA GURU & PEGAWAI (PENGAMPU) MULTI-CABANG
@@ -514,8 +514,7 @@ const INITIAL_SIGAP_KELAS = [
   { id: 'k-xiia', nama: 'XII A', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', waliKelas: 'Feri Hermawan, S.Pd', aktif: true },
   { id: 'k-xiib', nama: 'XII B', unitSekolah: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', waliKelas: 'Defit Purwaningsih, S.Pd', aktif: true },
   { id: 'k-smp-7', nama: 'VII SMP IT', unitSekolah: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', waliKelas: 'Aminudin, A.Md', aktif: true },
-  { id: 'k-smp-8', nama: 'VIII SMP IT', unitSekolah: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', waliKelas: 'Ajizah Ikhda Sulmi, S.Pd', aktif: true },
-  { id: 'k-ponpes-idad', nama: "I'dad Lughowi", unitSekolah: "Pondok Pesantren PPIAS", cabangId: 'cabang-ponpes', waliKelas: 'Wahyudin Hafiz, S.Pd', aktif: true }
+  { id: 'k-smp-8', nama: 'VIII SMP IT', unitSekolah: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', waliKelas: 'Ajizah Ikhda Sulmi, S.Pd', aktif: true }
 ];
 
 // GAMBAR 2 (LANJUTAN): DATA JADWAL PELAJARAN
@@ -904,24 +903,37 @@ export const storageService = {
           cabangId: h.cabang_id || h.cabangId || 'cabang-pusat'
         }));
 
-        this._cache.santri = (santri || []).map(s => ({
-          ...s,
-          id: s.id,
-          nis: s.nis,
-          nama: s.nama,
-          kelas: s.kelas,
-          halaqahId: s.halaqah_id || s.halaqahId || 'hq-1',
-          status: s.status || 'Aktif',
-          target: s.target || '3 Juz / Tahun',
-          kontak: s.kontak || s.no_hp_wali || '',
-          wali: s.wali || '',
-          noHpWali: s.no_hp_wali || s.noHpWali || s.kontak || '',
-          cabangId: s.cabang_id || s.cabangId || 'cabang-pusat',
-          totalHalaman: s.totalHalaman || 0,
-          rincianHalaman: s.rincianHalaman || '0 Hlm 0 Brs',
-          juzMutqin: s.juzMutqin || [],
-          juzZiyadah: s.juzZiyadah || []
-        }));
+        this._cache.santri = (santri || []).map(s => {
+          const pengampuName = s.pengampu || s.pengampu_nama || s.pengampuNama || (
+            (this._cache.pengampu || []).find(p => p.halaqahId === (s.halaqah_id || s.halaqahId))?.nama
+          ) || '';
+          return {
+            ...s,
+            id: s.id,
+            nis: s.nis,
+            nisn: s.nisn || s.nis,
+            nik: s.nik || '',
+            nama: s.nama,
+            lp: s.lp || 'L',
+            kelas: s.kelas || '',
+            halaqahId: s.halaqah_id || s.halaqahId || 'hq-1',
+            status: s.status || 'Aktif',
+            target: s.target || '3 Juz / Tahun',
+            kontak: s.kontak || s.no_hp_wali || '',
+            wali: s.wali || '',
+            noHpWali: s.no_hp_wali || s.noHpWali || s.kontak || '',
+            cabangId: s.cabang_id || s.cabangId || 'cabang-pusat',
+            totalHalaman: s.totalHalaman || 0,
+            rincianHalaman: s.rincianHalaman || '0 Hlm 0 Brs',
+            juzMutqin: s.juzMutqin || [],
+            juzZiyadah: s.juzZiyadah || [],
+            pengampu: pengampuName,
+            pengampuNama: pengampuName,
+            pengampuId: s.pengampu_id || s.pengampuId || null,
+            unitSekolah: s.unit_sekolah || s.unitSekolah || "MA IHYA' AS-SUNNAH",
+            tglLahir: s.tgl_lahir || s.tglLahir || ''
+          };
+        });
 
         this._cache.sesi = (sesi || []).map(s => ({
           ...s,
@@ -1016,9 +1028,14 @@ export const storageService = {
           const pId = m.pengampu_id || m.pengampuId || 'p-1';
           const sNama = m.sesiNama || m.sesi || "Ba'da Subuh";
           const sId = m.sesiId || m.sesi_id || '';
+          const guruCabang = m.cabangId || m.cabang_id || (
+            INITIAL_SIGAP_GURU.find(g => g.id === pId || g.nama === guruNama)?.cabangId || 'cabang-pusat'
+          );
           return {
             ...m,
             id: m.id,
+            cabangId: guruCabang,
+            cabang_id: guruCabang,
             tanggal: tglStr,
             pengampuId: pId,
             pengampu_id: pId,
@@ -1783,12 +1800,17 @@ export const storageService = {
     const item = { ...santriData };
     item.nis = item.nis || item.nisn || '';
     item.nisn = item.nisn || item.nis || '';
+    item.nik = item.nik || '';
+    item.lp = item.lp || 'L';
+    item.tglLahir = item.tglLahir || item.tgl_lahir || '';
     item.kontak = item.kontak || item.kontakWali || '';
     item.noHpWali = item.noHpWali || item.kontakWali || item.no_hp_wali || item.kontak || '';
     item.kontakWali = item.kontakWali || item.noHpWali || item.kontak || '';
     item.target = item.target || '3 Juz / Tahun';
     item.status = item.status || 'Aktif';
     item.cabangId = item.cabangId || item.cabang_id || this.getActiveBranchId();
+    item.pengampu = item.pengampu || item.pengampuNama || '';
+    item.pengampuNama = item.pengampu;
 
     const list = this._cache.santri || [];
     const idx = list.findIndex(s => s.id === item.id || (s.nis && item.nis && String(s.nis) === String(item.nis)));
@@ -1804,15 +1826,23 @@ export const storageService = {
     apiService.saveSantri({
       id: item.id,
       nis: item.nis,
+      nisn: item.nisn,
+      nik: item.nik,
       nama: item.nama,
-      kelas: item.kelas,
+      kelas: item.kelas || '',
       halaqah_id: item.halaqahId || item.halaqah_id || null,
       status: item.status || 'Aktif',
       target: item.target,
       kontak: item.kontak,
       wali: item.wali || '',
       no_hp_wali: item.noHpWali,
-      cabang_id: item.cabangId
+      cabang_id: item.cabangId,
+      pengampu: item.pengampu,
+      pengampu_nama: item.pengampu,
+      pengampu_id: item.pengampuId || null,
+      unit_sekolah: item.unitSekolah || item.unit_sekolah || '',
+      lp: item.lp,
+      tgl_lahir: item.tglLahir
     }).catch(e => console.warn('[API] saveSantri error:', e.message));
 
     return item;
@@ -1842,6 +1872,25 @@ export const storageService = {
       merged.kontak = merged.kontak || merged.kontakWali || '';
       merged.noHpWali = merged.noHpWali || merged.kontakWali || merged.kontak || '';
       merged.kontakWali = merged.kontakWali || merged.noHpWali || merged.kontak || '';
+      if (updatedFields.pengampu !== undefined) {
+        merged.pengampu = updatedFields.pengampu;
+        merged.pengampuNama = updatedFields.pengampu;
+      }
+      if (updatedFields.pengampuId !== undefined) {
+        merged.pengampuId = updatedFields.pengampuId;
+      }
+      if (updatedFields.unitSekolah !== undefined) {
+        merged.unitSekolah = updatedFields.unitSekolah;
+      }
+      if (updatedFields.nik !== undefined) {
+        merged.nik = updatedFields.nik;
+      }
+      if (updatedFields.lp !== undefined) {
+        merged.lp = updatedFields.lp;
+      }
+      if (updatedFields.tglLahir !== undefined) {
+        merged.tglLahir = updatedFields.tglLahir;
+      }
       list[idx] = merged;
       this._cache.santri = list;
       this.emitUpdate();
@@ -1849,15 +1898,23 @@ export const storageService = {
       apiService.saveSantri({
         id: list[idx].id,
         nis: list[idx].nis,
+        nisn: list[idx].nisn || list[idx].nis,
+        nik: list[idx].nik || '',
         nama: list[idx].nama,
-        kelas: list[idx].kelas,
+        kelas: list[idx].kelas || '',
         halaqah_id: list[idx].halaqahId || list[idx].halaqah_id || null,
         status: list[idx].status || 'Aktif',
         target: list[idx].target,
         kontak: list[idx].kontak,
         wali: list[idx].wali || '',
         no_hp_wali: list[idx].noHpWali,
-        cabang_id: list[idx].cabangId
+        cabang_id: list[idx].cabangId,
+        pengampu: list[idx].pengampu || list[idx].pengampuNama || '',
+        pengampu_nama: list[idx].pengampu || list[idx].pengampuNama || '',
+        pengampu_id: list[idx].pengampuId || null,
+        unit_sekolah: list[idx].unitSekolah || list[idx].unit_sekolah || '',
+        lp: list[idx].lp || 'L',
+        tgl_lahir: list[idx].tglLahir || list[idx].tgl_lahir || ''
       }).catch(e => console.warn('[API] updateSantri error:', e.message));
 
       return list[idx];
@@ -2239,8 +2296,16 @@ export const storageService = {
   // ==========================================
   // PRESENSI KEHADIRAN GURU PENGAMPU (100% DIRECT FROM POSTGRESQL DATABASE VIA _cache)
   // ==========================================
-  getPengampuPresensiList() {
-    return this._cache.monitoring || [];
+  getPengampuPresensiList(branchId = null) {
+    const list = this._cache.monitoring || [];
+    const target = branchId !== null ? branchId : this.getActiveBranchId();
+    if (!target || target === 'ALL') return list;
+    return list.filter(m => {
+      const c = m.cabangId || m.cabang_id;
+      if (c) return c === target;
+      const matched = INITIAL_SIGAP_GURU.find(g => g.id === (m.pengampuId || m.pengampu_id) || g.nama === (m.namaGuru || m.nama));
+      return (matched?.cabangId || 'cabang-pusat') === target;
+    });
   },
 
   // Helper mendapatkan tanggal hari ini dalam format YYYY-MM-DD (Zona Waktu Indonesia/Jakarta)
@@ -2352,6 +2417,8 @@ export const storageService = {
       id: 'pres-' + Date.now(),
       nama: actualGuruNama,
       namaGuru: actualGuruNama,
+      cabangId: matchedP.cabangId || this.getActiveBranchId() || 'cabang-pusat',
+      cabang_id: matchedP.cabangId || this.getActiveBranchId() || 'cabang-pusat',
       pengampuId: matchedP.id || 'p-1',
       pengampu_id: matchedP.id || 'p-1',
       nip: matchedP.nip || 'NON-NIP',
@@ -2698,36 +2765,39 @@ export const storageService = {
   },
 
   // JADWAL SESI PRESENSI (100% DIRECT FROM POSTGRESQL DATABASE VIA _cache)
-  getSesi() {
+  getSesi(branchId = null) {
     this.init();
-    if (this._cache.sesi && this._cache.sesi.length > 0) {
-      return this._cache.sesi.map(s => {
-        const jamMulai = s.jamMulai || s.jam_mulai || s.mulai || '05:00';
-        const jamSelesai = s.jamSelesai || s.jam_selesai || s.selesai || '06:30';
-        const bukaScan = s.bukaScan || s.buka_scan || jamMulai;
-        const batasScan = s.batasScan || s.batas_scan || jamSelesai;
-        const isAktif = s.status === 'Aktif' || s.status === 'AKTIF' || s.aktif !== false;
-        return {
-          ...s,
-          id: s.id,
-          nama: s.nama,
-          mulai: jamMulai,
-          selesai: jamSelesai,
-          jamMulai: jamMulai,
-          jamSelesai: jamSelesai,
-          bukaScan: bukaScan,
-          batasScan: batasScan,
-          toleransiMenit: s.toleransiMenit ?? s.toleransi_menit ?? 15,
-          aktif: isAktif,
-          status: isAktif ? 'AKTIF' : 'NONAKTIF',
-          isActive: isAktif,
-          badgeType: isAktif ? 'success' : 'danger',
-          keterangan: `Jam Operasional: ${jamMulai} - ${jamSelesai}`,
-          labelWaktu: `${s.nama} (${jamMulai} - ${jamSelesai})`
-        };
-      });
-    }
-    return INITIAL_SESI;
+    const rawList = (this._cache.sesi && this._cache.sesi.length > 0) ? this._cache.sesi : INITIAL_SESI;
+    const target = branchId !== null ? branchId : this.getActiveBranchId();
+    const filtered = (target && target !== 'ALL')
+      ? rawList.filter(s => !s.cabangId || s.cabangId === target || s.cabangId === 'ALL')
+      : rawList;
+
+    return filtered.map(s => {
+      const jamMulai = s.jamMulai || s.jam_mulai || s.mulai || '05:00';
+      const jamSelesai = s.jamSelesai || s.jam_selesai || s.selesai || '06:30';
+      const bukaScan = s.bukaScan || s.buka_scan || jamMulai;
+      const batasScan = s.batasScan || s.batas_scan || jamSelesai;
+      const isAktif = s.status === 'Aktif' || s.status === 'AKTIF' || s.aktif !== false;
+      return {
+        ...s,
+        id: s.id,
+        nama: s.nama,
+        mulai: jamMulai,
+        selesai: jamSelesai,
+        jamMulai: jamMulai,
+        jamSelesai: jamSelesai,
+        bukaScan: bukaScan,
+        batasScan: batasScan,
+        toleransiMenit: s.toleransiMenit ?? s.toleransi_menit ?? 15,
+        aktif: isAktif,
+        status: isAktif ? 'AKTIF' : 'NONAKTIF',
+        isActive: isAktif,
+        badgeType: isAktif ? 'success' : 'danger',
+        keterangan: `Jam Operasional: ${jamMulai} - ${jamSelesai}`,
+        labelWaktu: `${s.nama} (${jamMulai} - ${jamSelesai})`
+      };
+    });
   },
 
   saveSesi(list) {
@@ -2802,14 +2872,17 @@ export const storageService = {
       ...s,
       id: s.id,
       nis: s.nis,
-      nisn: s.nis,
+      nisn: s.nisn || s.nis,
+      nik: s.nik || '',
       nama: s.nama,
       kelas: s.kelas,
+      lp: s.lp || 'L',
+      tglLahir: s.tglLahir || s.tgl_lahir || '',
       wali: s.wali || '',
       kontakWali: s.kontak || s.noHpWali || '',
       cabangId: s.cabangId || 'cabang-pusat',
-      unitSekolah: "MA IHYA' AS-SUNNAH",
-      pengampu: s.pengampuNama || s.pengampu || ''
+      unitSekolah: s.unitSekolah || s.unit_sekolah || (s.cabangId === 'cabang-smp' ? "SMP IT IHYA' AS-SUNNAH" : "MA IHYA' AS-SUNNAH"),
+      pengampu: s.pengampu || s.pengampuNama || ''
     }));
   },
 
@@ -3130,12 +3203,20 @@ export const storageService = {
   // ==========================================
   // SIGAP: PERSETUJUAN IZIN GURU (100% DIRECT FROM POSTGRESQL DATABASE VIA _cache)
   // ==========================================
-  getSigapIzinGuru() {
-    return (this._cache.izin || []).filter(i => (i.tipePemohon === 'Pengampu' || i.tipe_pemohon === 'Pengampu' || !i.tipePemohon));
+  getSigapIzinGuru(branchId = null) {
+    const list = (this._cache.izin || []).filter(i => (i.tipePemohon === 'Pengampu' || i.tipe_pemohon === 'Pengampu' || !i.tipePemohon));
+    const target = branchId !== null ? branchId : this.getActiveBranchId();
+    if (!target || target === 'ALL') return list;
+    return list.filter(i => {
+      const c = i.cabangId || i.cabang_id;
+      if (c) return c === target;
+      const matched = INITIAL_SIGAP_GURU.find(g => g.id === i.pemohonId || g.nama === i.nama || g.nama === i.namaPengampu);
+      return (matched?.cabangId || 'cabang-pusat') === target;
+    });
   },
 
-  getPendingSigapIzinCount() {
-    const list = this.getSigapIzinGuru();
+  getPendingSigapIzinCount(branchId = null) {
+    const list = this.getSigapIzinGuru(branchId);
     return list.filter(i => i.status === 'Perlu Persetujuan' || i.status === 'Menunggu' || i.status === 'Menunggu Persetujuan' || i.statusApproval === 'Menunggu').length;
   },
 
@@ -3279,11 +3360,11 @@ export const storageService = {
   // ==========================================
   // SIGAP: MONITORING & REKAPITULASI (100% DIRECT FROM POSTGRESQL DATABASE VIA _cache)
   // ==========================================
-  getSigapMonitoring() {
+  getSigapMonitoring(branchId = null) {
     return {
       kpi: INITIAL_SIGAP_MONITORING.kpi,
       rankings: INITIAL_SIGAP_MONITORING.rankings,
-      liveFeed: this._cache.monitoring || []
+      liveFeed: this.getPengampuPresensiList(branchId)
     };
   },
 

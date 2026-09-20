@@ -218,8 +218,8 @@ export default function CustomSelect({
             </span>
           )}
           <span style={{
-            fontSize: '0.90rem',
-            fontWeight: currentOption ? 600 : 500,
+            fontSize: '0.88rem',
+            fontWeight: 500,
             color: currentOption ? '#0f172a' : '#94a3b8',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -327,8 +327,8 @@ export default function CustomSelect({
                       cursor: opt.disabled ? 'not-allowed' : 'pointer',
                       background: isSelected ? '#ecfdf5' : 'transparent',
                       color: isSelected ? '#047857' : '#334155',
-                      fontWeight: isSelected ? 700 : 500,
-                      fontSize: '0.88rem',
+                      fontWeight: isSelected ? 500 : 400,
+                      fontSize: '0.86rem',
                       marginBottom: '2px',
                       opacity: opt.disabled ? 0.4 : 1,
                       transition: 'all 0.12s ease'

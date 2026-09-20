@@ -742,7 +742,7 @@ export default function RaporView({
       {/* MODAL INPUT NILAI ASPEK SANTRI (PENGAMPU) - SESUAI GAMBAR 2 */}
       {/* ========================================================= */}
       {showInputModal && (
-        <div className="modal-overlay no-print" style={{ zIndex: 1000 }}>
+        <div className="modal-overlay no-print" style={{ zIndex: 99999 }}>
           <div className="modal-content" style={{ maxWidth: '680px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="modal-header" style={{ background: '#ecfdf5', borderBottom: '1px solid #a7f3d0' }}>
               <div>

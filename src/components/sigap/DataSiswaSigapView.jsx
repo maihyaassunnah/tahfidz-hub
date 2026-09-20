@@ -34,7 +34,7 @@ export default function DataSiswaSigapView({ showToast, activeBranchId }) {
 
   // Ambil data guru & pegawai yang sudah terdaftar di sistem
   const guruPegawaiList = storageService.getSigapGuru(activeBranchId) || [];
-  const ustadzPengampuList = storageService.getPengampu() || [];
+  const ustadzPengampuList = storageService.getPengampu(activeBranchId) || [];
   const daftarPengampu = Array.from(
     new Set([
       ...guruPegawaiList.map(g => g.nama),
@@ -70,10 +70,17 @@ export default function DataSiswaSigapView({ showToast, activeBranchId }) {
     }
 
     if (editingSiswa) {
-      storageService.updateSigapSiswa(editingSiswa.id, formData);
+      storageService.updateSigapSiswa(editingSiswa.id, {
+        ...formData,
+        cabangId: editingSiswa.cabangId || activeBranchId
+      });
       showToast && showToast(`Data siswa ${formData.nama} berhasil diperbarui!`);
     } else {
-      storageService.addSigapSiswa(formData);
+      storageService.addSigapSiswa({
+        ...formData,
+        cabangId: activeBranchId,
+        unitSekolah: currentBranch?.nama || (activeBranchId === 'cabang-smp' ? "SMP IT IHYA' AS-SUNNAH" : "MA IHYA' AS-SUNNAH")
+      });
       showToast && showToast(`Siswa ${formData.nama} berhasil ditambahkan!`);
     }
 
@@ -186,7 +193,7 @@ export default function DataSiswaSigapView({ showToast, activeBranchId }) {
             title="Tambah Siswa Baru"
           >
             <Plus size={17} />
-            <span>+ Tambah Siswa</span>
+            <span>Tambah Siswa</span>
           </button>
 
           {/* Download Data (Blue) */}

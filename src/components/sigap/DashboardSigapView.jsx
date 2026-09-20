@@ -42,14 +42,14 @@ export default function DashboardSigapView({ setActiveTab, showToast, activeBran
 
   const currentBranch = (storageService.getCabang() || []).find(c => c.id === activeBranchId) || storageService.getActiveBranch() || { nama: "MA Ihya As-Sunnah" };
 
-  const [monitoringData, setMonitoringData] = useState(() => storageService.getSigapMonitoring());
-  const [izinList, setIzinList] = useState(() => storageService.getSigapIzinGuru());
-  const [pengampuPresensiList, setPengampuPresensiList] = useState(() => storageService.getPengampuPresensiList());
-  const [allPengampu, setAllPengampu] = useState(() => storageService.getAllUniquePengampu('ALL'));
-  const [sesiList, setSesiList] = useState(() => storageService.getSesi());
+  const [monitoringData, setMonitoringData] = useState(() => storageService.getSigapMonitoring(activeBranchId));
+  const [izinList, setIzinList] = useState(() => storageService.getSigapIzinGuru(activeBranchId));
+  const [pengampuPresensiList, setPengampuPresensiList] = useState(() => storageService.getPengampuPresensiList(activeBranchId));
+  const [allPengampu, setAllPengampu] = useState(() => storageService.getAllUniquePengampu(activeBranchId));
+  const [sesiList, setSesiList] = useState(() => storageService.getSesi(activeBranchId));
 
   const [totalSetoran, setTotalSetoran] = useState(() => {
-    return (storageService.getAllSetoranRaw ? storageService.getAllSetoranRaw().length : (storageService.getSetoran('ALL') || []).length) || 0;
+    return (storageService.getSetoran ? (storageService.getSetoran(activeBranchId) || []).length : 0);
   });
 
   const [siswaList, setSiswaList] = useState(() => storageService.getSigapSiswa(activeBranchId));
@@ -58,6 +58,12 @@ export default function DashboardSigapView({ setActiveTab, showToast, activeBran
   useEffect(() => {
     setSiswaList(storageService.getSigapSiswa(activeBranchId));
     setGuruList(storageService.getSigapGuru(activeBranchId));
+    setMonitoringData(storageService.getSigapMonitoring(activeBranchId));
+    setIzinList(storageService.getSigapIzinGuru(activeBranchId));
+    setPengampuPresensiList(storageService.getPengampuPresensiList(activeBranchId));
+    setAllPengampu(storageService.getAllUniquePengampu(activeBranchId));
+    setSesiList(storageService.getSesi(activeBranchId));
+    setTotalSetoran(storageService.getSetoran ? (storageService.getSetoran(activeBranchId) || []).length : 0);
   }, [activeBranchId]);
 
   // State Filter Presensi Pengampu (Filter Sesi: 'aktif' [default], 'subuh', 'pagi', 'ashar', 'malam', 'semua')
@@ -84,12 +90,12 @@ export default function DashboardSigapView({ setActiveTab, showToast, activeBran
   }, []);
 
   const reloadData = () => {
-    setMonitoringData(storageService.getSigapMonitoring());
-    setIzinList(storageService.getSigapIzinGuru());
-    setPengampuPresensiList(storageService.getPengampuPresensiList());
-    setAllPengampu(storageService.getAllUniquePengampu('ALL'));
-    setSesiList(storageService.getSesi());
-    setTotalSetoran((storageService.getAllSetoranRaw ? storageService.getAllSetoranRaw().length : (storageService.getSetoran('ALL') || []).length) || 0);
+    setMonitoringData(storageService.getSigapMonitoring(activeBranchId));
+    setIzinList(storageService.getSigapIzinGuru(activeBranchId));
+    setPengampuPresensiList(storageService.getPengampuPresensiList(activeBranchId));
+    setAllPengampu(storageService.getAllUniquePengampu(activeBranchId));
+    setSesiList(storageService.getSesi(activeBranchId));
+    setTotalSetoran(storageService.getSetoran ? (storageService.getSetoran(activeBranchId) || []).length : 0);
     setSiswaList(storageService.getSigapSiswa(activeBranchId));
     setGuruList(storageService.getSigapGuru(activeBranchId));
   };
