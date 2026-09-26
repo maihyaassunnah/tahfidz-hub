@@ -444,8 +444,8 @@ export default function App() {
               ========================================================= */}
           {currentRole === 'owner' && (
             <>
-              {/* PORTAL OWNER TABS (Selalu render OwnerView jika tab diawali owner- atau dashboard konsolidasi global) */}
-              {(activeTab?.startsWith('owner-') || activeTab === 'owner' || (activeTab === 'dashboard' && (!activeBranchId || activeBranchId === 'ALL'))) && (
+              {/* PORTAL OWNER TABS (Selalu render OwnerView untuk role owner secara konsisten) */}
+              {(activeTab?.startsWith('owner-') || activeTab === 'owner' || activeTab === 'dashboard' || activeTab === 'sigap-konfigurasi' || !activeTab) && (
                 <OwnerView 
                   activeBranchId={activeBranchId}
                   onSwitchBranch={handleSwitchBranch}
@@ -453,11 +453,12 @@ export default function App() {
                   setActiveTab={setActiveTab}
                   showToast={showToast}
                   onSwitchRole={handleSwitchRole}
+                  isDarkMode={isDarkMode}
                 />
               )}
 
               {/* DASHBOARD CABANG KETIKA MEMILIH SATU CABANG */}
-              {(activeTab === 'sigap-dashboard' || (activeTab === 'dashboard' && activeBranchId && activeBranchId !== 'ALL')) && (
+              {activeTab === 'sigap-dashboard' && (
                 <DashboardSigapView 
                   setActiveTab={setActiveTab} 
                   showToast={showToast} 
@@ -521,24 +522,7 @@ export default function App() {
                 />
               )}
 
-              {/* KONFIGURASI UNIT UNTUK ROLE OWNER */}
-              {(activeTab === 'sigap-konfigurasi' || activeTab === 'owner-konfigurasi') && (
-                <PengaturanAdminView 
-                  settings={settings}
-                  halaqahList={halaqahList}
-                  santriList={santriList}
-                  activeBranchId={activeBranchId}
-                  onSaveSettings={(newSettings) => {
-                    storageService.saveSettings(newSettings);
-                    loadData();
-                    showToast("Pengaturan sistem berhasil diperbarui!");
-                  }}
-                  onReload={loadData}
-                  showToast={showToast}
-                  currentRole="owner"
-                  isOwner={true}
-                />
-              )}
+              {/* KONFIGURASI UNIT UNTUK ROLE OWNER (Dikelola terpusat oleh OwnerView) */}
             </>
           )}
 

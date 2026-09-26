@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Shield, Award, User, BookOpen, Building2, MapPin, LogOut, Lock } from 'lucide-react';
+import { Moon, Sun, Shield, Award, User, BookOpen, Building2, MapPin, LogOut, Lock, Menu } from 'lucide-react';
 import { storageService } from '../services/storage';
 import TahfidzHubLogo from './TahfidzHubLogo';
 
@@ -108,6 +108,17 @@ export default function Header({
           zIndex: 10
         }} 
       />
+      {/* Mobile Hamburger Toggle */}
+      <button 
+        type="button" 
+        className="header-mobile-menu-btn" 
+        onClick={() => window.dispatchEvent(new CustomEvent('toggle_mobile_sidebar'))}
+        title="Buka Menu Sidebar"
+        aria-label="Buka Menu Sidebar"
+      >
+        <Menu size={20} />
+      </button>
+
       <div className="page-title header-desktop-title">
         {getTabTitle()}
       </div>
@@ -207,6 +218,7 @@ export default function Header({
               </span>
             ) : (
               <select
+                className="header-branch-select"
                 value={activeBranchId || 'ALL'}
                 onChange={(e) => onSwitchBranch && onSwitchBranch(e.target.value)}
                 style={{

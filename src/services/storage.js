@@ -416,7 +416,155 @@ const INITIAL_IZIN = [];
 
 const INITIAL_ABSENSI = [];
 
-const INITIAL_SPP = [];
+const INITIAL_SPP = [
+  // Cabang Pusat: MA Ihya As-Sunnah
+  {
+    id: 'spp-ma-001',
+    invoiceNo: 'INV-SPP/202609/1001',
+    santriId: 'ss-1',
+    santriNama: 'Adila Syakira',
+    nis: '131215030022260008',
+    kelas: 'X B',
+    cabangId: 'cabang-pusat',
+    bulan: 'September 2026',
+    tahun: 2026,
+    nominal: 350000,
+    status: 'Lunas',
+    tanggalBayar: '2026-09-08',
+    metodeBayar: 'Transfer Bank BSI',
+    nomorRef: 'BSI-984421',
+    catatan: 'SPP Syahriah September 2026',
+    namaPetugas: 'Ustadz Wahyudin'
+  },
+  {
+    id: 'spp-ma-002',
+    invoiceNo: 'INV-SPP/202609/1002',
+    santriId: 'ss-2',
+    santriNama: 'AHMAD DINEJAD',
+    nis: '0097997681',
+    kelas: 'XII A',
+    cabangId: 'cabang-pusat',
+    bulan: 'September 2026',
+    tahun: 2026,
+    nominal: 350000,
+    status: 'Lunas',
+    tanggalBayar: '2026-09-10',
+    metodeBayar: 'Transfer Bank BSI',
+    nomorRef: 'BSI-773129',
+    catatan: 'SPP Syahriah September 2026',
+    namaPetugas: 'Ustadz Wahyudin'
+  },
+  {
+    id: 'spp-ma-003',
+    invoiceNo: 'INV-SPP/202609/1003',
+    santriId: 'ss-3',
+    santriNama: 'AINI JELINA',
+    nis: '0081690952',
+    kelas: 'XII B',
+    cabangId: 'cabang-pusat',
+    bulan: 'September 2026',
+    tahun: 2026,
+    nominal: 350000,
+    status: 'Belum Lunas',
+    tanggalBayar: null,
+    metodeBayar: '-',
+    nomorRef: '-',
+    catatan: 'Tagihan SPP September 2026',
+    namaPetugas: 'Ustadz Wahyudin'
+  },
+  {
+    id: 'spp-ma-004',
+    invoiceNo: 'INV-SPP/202609/1004',
+    santriId: 'ss-6',
+    santriNama: 'Aljha Afriandi',
+    nis: '131215030022260001',
+    kelas: 'X A',
+    cabangId: 'cabang-pusat',
+    bulan: 'September 2026',
+    tahun: 2026,
+    nominal: 350000,
+    status: 'Lunas',
+    tanggalBayar: '2026-09-11',
+    metodeBayar: 'Tunai di Kantor',
+    nomorRef: 'CASH-089',
+    catatan: 'SPP Syahriah September 2026',
+    namaPetugas: 'Ustadz Wahyudin'
+  },
+  {
+    id: 'spp-ma-005',
+    invoiceNo: 'INV-SPP/202609/1005',
+    santriId: 'ss-1789300033909',
+    santriNama: 'Adilla',
+    nis: '39938383',
+    kelas: 'X A',
+    cabangId: 'cabang-pusat',
+    bulan: 'September 2026',
+    tahun: 2026,
+    nominal: 350000,
+    status: 'Lunas',
+    tanggalBayar: '2026-09-12',
+    metodeBayar: 'Transfer Bank Mandiri',
+    nomorRef: 'MDR-554129',
+    catatan: 'SPP Syahriah September 2026',
+    namaPetugas: 'Ustadz Wahyudin'
+  },
+  {
+    id: 'spp-ma-006',
+    invoiceNo: 'INV-SPP/202609/1006',
+    santriId: 'ss-zaidan-01',
+    santriNama: 'Zaidan Al-Farisi',
+    nis: '20260901',
+    kelas: 'VII B',
+    cabangId: 'cabang-pusat',
+    bulan: 'September 2026',
+    tahun: 2026,
+    nominal: 350000,
+    status: 'Belum Lunas',
+    tanggalBayar: null,
+    metodeBayar: '-',
+    nomorRef: '-',
+    catatan: 'Tagihan SPP September 2026',
+    namaPetugas: 'Ustadz Wahyudin'
+  },
+
+  // Cabang SMP / Raudhotul Huffaz (RDT-HFZ)
+  {
+    id: 'spp-rdt-001',
+    invoiceNo: 'INV-SPP/202609/2001',
+    santriId: 'ss-smp-1',
+    santriNama: 'Fatih Rizqullah (SMP)',
+    nis: '0089012381',
+    kelas: 'VII SMP IT',
+    cabangId: 'cabang-smp',
+    bulan: 'September 2026',
+    tahun: 2026,
+    nominal: 350000,
+    status: 'Lunas',
+    tanggalBayar: '2026-09-09',
+    metodeBayar: 'Transfer Bank BSI',
+    nomorRef: 'BSI-220194',
+    catatan: 'SPP September 2026 Raudhotul Huffaz',
+    namaPetugas: 'Admin Raudhotul Huffaz'
+  },
+  {
+    id: 'spp-rdt-002',
+    invoiceNo: 'INV-SPP/202609/2002',
+    santriId: 'ss-smp-2',
+    santriNama: 'Ziyad Al-Farisi (SMP)',
+    nis: '0089012382',
+    kelas: 'VIII SMP IT',
+    cabangId: 'cabang-smp',
+    bulan: 'September 2026',
+    tahun: 2026,
+    nominal: 350000,
+    status: 'Belum Lunas',
+    tanggalBayar: null,
+    metodeBayar: '-',
+    nomorRef: '-',
+    catatan: 'Tagihan SPP September 2026 Raudhotul Huffaz',
+    namaPetugas: 'Admin Raudhotul Huffaz'
+  }
+];
 
 const INITIAL_SETTINGS = {
   namaMadrasah: "Pesantren Persatuan Islam As-Sunnah (PPIAS)",
@@ -475,8 +623,6 @@ const INITIAL_SIGAP_SISWA = [
 
 // GAMBAR 3: DATA GURU & PEGAWAI (PENGAMPU) MULTI-CABANG
 const INITIAL_SIGAP_GURU = [
-  { id: 'sg-1', nama: 'AAZ', nip: 'NON-NIP', lp: 'L', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Pengampu Tahfidz', email: 'agus.rinaldi23@sttmadani.ac.id', password: 'bismillah123', noHp: '0812-7890-1122', avatarBg: '#dcfce7', initial: 'A' },
-  { id: 'sg-2', nama: 'aazeed', nip: 'NON-NIP', lp: 'L', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Pengampu Tahfidz', email: 'agus98rinaldi@gmail.com', password: 'bismillah123', noHp: '0812-7890-1133', avatarBg: '#ccfbf1', initial: 'a' },
   { id: 'sg-3', nama: 'Agus Rinaldi', nip: '19982025007011180', lp: 'L', status: 'GTY', unit: "MA IHYA' AS-SUNNAH", cabangId: 'cabang-pusat', jabatan: 'Staff TU Pondok & Wali Kelas XI A', email: 'hastagcoretansantri@gmail.com', password: 'bismillah123', noHp: '6282279990521', avatarBg: '#fee2e2', initial: 'A' },
   { id: 'sg-4', nama: 'Ainun Hamidah, S.Pd', nip: '200020182091', lp: 'P', status: 'GTY', unit: '2 Unit', unitTag: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', jabatan: 'Wali Kelas XI B & Pengampu Tahfidz', email: 'kholid.arfandani@gmail.com', password: 'bismillah123', noHp: '6285764038355', avatarBg: '#dcfce7', initial: 'A' },
   { id: 'sg-5', nama: "Ajizah Ikhda Sulmi, S.Pd", nip: '199820222132', lp: 'P', status: 'GTY', unit: '2 Unit', unitTag: "SMP IT IHYA' AS-SUNNAH", cabangId: 'cabang-smp', jabatan: 'Pengampu Tahfidz', email: 'ajizshikhda0389@gmail.com', password: 'bismillah123', noHp: '6285181428518', avatarBg: '#ccfbf1', initial: 'A' },
@@ -774,7 +920,7 @@ export const storageService = {
     absensi: [],
     setoran: [],
     izin: [],
-    spp: [],
+    spp: [...INITIAL_SPP],
     monitoring: [],
     kelas: [...INITIAL_SIGAP_KELAS],
     alumni: [...INITIAL_SIGAP_ALUMNI],
@@ -801,17 +947,125 @@ export const storageService = {
     }
   },
 
+  _getDeletedKeys(storageKey) {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const saved = localStorage.getItem(storageKey);
+        const set = saved ? new Set((JSON.parse(saved) || []).map(k => String(k).toLowerCase().trim())) : new Set();
+        if (storageKey === 'simtah_deleted_pengampu_keys_v1') {
+          set.add('sg-1');
+          set.add('sg-2');
+          set.add('aaz');
+          set.add('aazeed');
+          set.add('agus.rinaldi23@sttmadani.ac.id');
+          set.add('agus98rinaldi@gmail.com');
+        }
+        return set;
+      }
+    } catch (e) {}
+    const defaultSet = new Set();
+    if (storageKey === 'simtah_deleted_pengampu_keys_v1') {
+      defaultSet.add('sg-1');
+      defaultSet.add('sg-2');
+      defaultSet.add('aaz');
+      defaultSet.add('aazeed');
+      defaultSet.add('agus.rinaldi23@sttmadani.ac.id');
+      defaultSet.add('agus98rinaldi@gmail.com');
+    }
+    return defaultSet;
+  },
+
+  _addDeletedKeys(storageKey, keys) {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const current = this._getDeletedKeys(storageKey);
+        (keys || []).forEach(k => {
+          if (k !== null && k !== undefined && k !== '') {
+            current.add(String(k).toLowerCase().trim());
+          }
+        });
+        localStorage.setItem(storageKey, JSON.stringify([...current]));
+      }
+    } catch (e) {}
+  },
+
   init() {
+    if (this._isInitialized) return;
+    this._isInitialized = true;
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
         const savedPhotos = localStorage.getItem('tahfidz_foto_cache');
-        localStorage.clear();
         if (savedPhotos) {
           try {
             const parsed = JSON.parse(savedPhotos);
             if (Array.isArray(parsed) && parsed.length > 0) {
               this._cache.fotoProfil = parsed;
-              localStorage.setItem('tahfidz_foto_cache', JSON.stringify(parsed));
+            }
+          } catch (e) {}
+        }
+
+        // Restore custom pengampu from localStorage if exists
+        const savedPengampu = localStorage.getItem('simtah_custom_pengampu_v5');
+        const delP = this._getDeletedKeys('simtah_deleted_pengampu_keys_v1');
+        if (savedPengampu) {
+          try {
+            const parsedP = JSON.parse(savedPengampu);
+            if (Array.isArray(parsedP)) {
+              this._cache.pengampu = parsedP.filter(u => {
+                const uId = String(u.id || '').toLowerCase().trim();
+                const uNama = String(u.nama || '').toLowerCase().trim();
+                const uEmail = String(u.email || '').toLowerCase().trim();
+                const uUser = String(u.username || '').toLowerCase().trim();
+                const uNip = String(u.nip || '').toLowerCase().trim();
+                if (delP.has(uId) || delP.has(uNama) || delP.has(uEmail) || delP.has(uUser)) return false;
+                if (uNip && uNip !== 'non-nip' && delP.has(uNip)) return false;
+                return true;
+              });
+            }
+          } catch (e) {}
+        } else {
+          this._cache.pengampu = INITIAL_SIGAP_GURU.filter(u => {
+            const uId = String(u.id || '').toLowerCase().trim();
+            const uNama = String(u.nama || '').toLowerCase().trim();
+            const uEmail = String(u.email || '').toLowerCase().trim();
+            const uUser = String(u.username || '').toLowerCase().trim();
+            if (delP.has(uId) || delP.has(uNama) || delP.has(uEmail) || delP.has(uUser)) return false;
+            return true;
+          });
+        }
+
+        // Restore custom santri from localStorage if exists
+        const savedSantri = localStorage.getItem('simtah_custom_santri_v5');
+        const delS = this._getDeletedKeys('simtah_deleted_santri_keys_v1');
+        if (savedSantri) {
+          try {
+            const parsedS = JSON.parse(savedSantri);
+            if (Array.isArray(parsedS)) {
+              this._cache.santri = parsedS.filter(s => {
+                const sId = String(s.id || '').toLowerCase().trim();
+                const sNama = String(s.nama || '').toLowerCase().trim();
+                const sNis = String(s.nis || '').toLowerCase().trim();
+                const sNisn = String(s.nisn || '').toLowerCase().trim();
+                if (delS.has(sId) || delS.has(sNama) || (sNis && delS.has(sNis)) || (sNisn && delS.has(sNisn))) return false;
+                return true;
+              });
+            }
+          } catch (e) {}
+        }
+
+        // Restore custom sesi from localStorage if exists
+        const savedSesi = localStorage.getItem('simtah_custom_sesi_v5');
+        const delSe = this._getDeletedKeys('simtah_deleted_sesi_keys_v1');
+        if (savedSesi) {
+          try {
+            const parsedSe = JSON.parse(savedSesi);
+            if (Array.isArray(parsedSe)) {
+              this._cache.sesi = parsedSe.filter(s => {
+                const sId = String(s.id || '').toLowerCase().trim();
+                const sNama = String(s.nama || '').toLowerCase().trim();
+                if (delSe.has(sId) || delSe.has(sNama)) return false;
+                return true;
+              });
             }
           } catch (e) {}
         }
@@ -881,7 +1135,17 @@ export const storageService = {
           }
         });
 
-        this._cache.pengampu = (pengampu || []).map(p => ({
+        const delP = this._getDeletedKeys('simtah_deleted_pengampu_keys_v1');
+        this._cache.pengampu = (pengampu || []).filter(p => {
+          const pId = String(p.id || '').toLowerCase().trim();
+          const pNama = String(p.nama || '').toLowerCase().trim();
+          const pEmail = String(p.email || '').toLowerCase().trim();
+          const pUser = String(p.username || '').toLowerCase().trim();
+          const pNip = String(p.nip || '').toLowerCase().trim();
+          if (delP.has(pId) || delP.has(pNama) || delP.has(pEmail) || delP.has(pUser)) return false;
+          if (pNip && pNip !== 'non-nip' && delP.has(pNip)) return false;
+          return true;
+        }).map(p => ({
           ...p,
           id: p.id,
           nip: p.nip || '',
@@ -892,6 +1156,9 @@ export const storageService = {
           halaqahId: p.halaqah_id || p.halaqahId || 'hq-1',
           cabangId: p.cabang_id || p.cabangId || 'cabang-pusat'
         }));
+        try {
+          localStorage.setItem('simtah_custom_pengampu_v5', JSON.stringify(this._cache.pengampu));
+        } catch (e) {}
 
         this._cache.halaqah = (halaqah || []).map(h => ({
           ...h,
@@ -903,7 +1170,15 @@ export const storageService = {
           cabangId: h.cabang_id || h.cabangId || 'cabang-pusat'
         }));
 
-        this._cache.santri = (santri || []).map(s => {
+        const delS = this._getDeletedKeys('simtah_deleted_santri_keys_v1');
+        this._cache.santri = (santri || []).filter(s => {
+          const sId = String(s.id || '').toLowerCase().trim();
+          const sNama = String(s.nama || '').toLowerCase().trim();
+          const sNis = String(s.nis || '').toLowerCase().trim();
+          const sNisn = String(s.nisn || '').toLowerCase().trim();
+          if (delS.has(sId) || delS.has(sNama) || (sNis && delS.has(sNis)) || (sNisn && delS.has(sNisn))) return false;
+          return true;
+        }).map(s => {
           const pengampuName = s.pengampu || s.pengampu_nama || s.pengampuNama || (
             (this._cache.pengampu || []).find(p => p.halaqahId === (s.halaqah_id || s.halaqahId))?.nama
           ) || '';
@@ -934,8 +1209,17 @@ export const storageService = {
             tglLahir: s.tgl_lahir || s.tglLahir || ''
           };
         });
+        try {
+          localStorage.setItem('simtah_custom_santri_v5', JSON.stringify(this._cache.santri));
+        } catch (e) {}
 
-        this._cache.sesi = (sesi || []).map(s => ({
+        const delSe = this._getDeletedKeys('simtah_deleted_sesi_keys_v1');
+        this._cache.sesi = (sesi || []).filter(s => {
+          const sId = String(s.id || '').toLowerCase().trim();
+          const sNama = String(s.nama || '').toLowerCase().trim();
+          if (delSe.has(sId) || delSe.has(sNama)) return false;
+          return true;
+        }).map(s => ({
           ...s,
           id: s.id,
           nama: s.nama,
@@ -946,6 +1230,9 @@ export const storageService = {
           status: s.status || 'Aktif',
           cabangId: s.cabang_id || s.cabangId || 'cabang-pusat'
         }));
+        try {
+          localStorage.setItem('simtah_custom_sesi_v5', JSON.stringify(this._cache.sesi));
+        } catch (e) {}
 
         this._cache.absensi = (absensi || []).map(a => ({
           ...a,
@@ -989,25 +1276,29 @@ export const storageService = {
           buktiUrl: iz.bukti_url || iz.buktiUrl || null
         }));
 
-        this._cache.spp = (spp || []).map(item => ({
-          ...item,
-          id: item.id,
-          invoiceNo: item.invoice_no || item.invoiceNo,
-          santriId: item.santri_id || item.santriId,
-          santriNama: item.santri_nama || item.santriNama,
-          nis: item.nis,
-          kelas: item.kelas,
-          cabangId: item.cabang_id || item.cabangId || 'cabang-pusat',
-          bulan: item.bulan,
-          tahun: item.tahun,
-          nominal: item.nominal,
-          status: item.status,
-          tanggalBayar: item.tanggal_bayar || item.tanggalBayar,
-          metodeBayar: item.metode_bayar || item.metodeBayar,
-          nomorRef: item.nomor_ref || item.nomorRef,
-          catatan: item.catatan,
-          namaPetugas: item.nama_petugas || item.namaPetugas
-        }));
+        if (spp && spp.length > 0) {
+          this._cache.spp = (spp || []).map(item => ({
+            ...item,
+            id: item.id,
+            invoiceNo: item.invoice_no || item.invoiceNo,
+            santriId: item.santri_id || item.santriId,
+            santriNama: item.santri_nama || item.santriNama,
+            nis: item.nis,
+            kelas: item.kelas,
+            cabangId: item.cabang_id || item.cabangId || 'cabang-pusat',
+            bulan: item.bulan,
+            tahun: item.tahun,
+            nominal: item.nominal,
+            status: item.status,
+            tanggalBayar: item.tanggal_bayar || item.tanggalBayar,
+            metodeBayar: item.metode_bayar || item.metodeBayar,
+            nomorRef: item.nomor_ref || item.nomorRef,
+            catatan: item.catatan,
+            namaPetugas: item.nama_petugas || item.namaPetugas
+          }));
+        } else if (!this._cache.spp || this._cache.spp.length === 0) {
+          this._cache.spp = [...INITIAL_SPP];
+        }
 
         this._cache.monitoring = (monitoring || []).map(m => {
           let tglStr = '';
@@ -1261,13 +1552,24 @@ export const storageService = {
     return this.getCabang();
   },
 
-  saveCabang(list) {
-    this._cache.cabang = list;
+  saveCabang(listOrItem) {
+    if (Array.isArray(listOrItem)) {
+      this._cache.cabang = listOrItem;
+    } else if (listOrItem && typeof listOrItem === 'object') {
+      const current = [...this.getCabang()];
+      const idx = current.findIndex(c => c.id === listOrItem.id);
+      if (idx !== -1) {
+        current[idx] = { ...current[idx], ...listOrItem };
+      } else {
+        current.push(listOrItem);
+      }
+      this._cache.cabang = current;
+    }
     this.emitUpdate();
   },
 
   addCabang(item) {
-    const list = this.getCabang();
+    const list = [...this.getCabang()];
     const created = {
       ...item,
       id: item.id || ('cabang-' + Date.now()),
@@ -1308,7 +1610,7 @@ export const storageService = {
   },
 
   updateCabang(id, fields) {
-    const list = this._cache.cabang || [];
+    const list = [...this.getCabang()];
     const idx = list.findIndex(c => c.id === id);
     if (idx !== -1) {
       list[idx] = { ...list[idx], ...fields };
@@ -1786,7 +2088,26 @@ export const storageService = {
 
   // SANTRI (100% DIRECT FROM POSTGRESQL DATABASE VIA _cache)
   getAllSantriRaw() {
-    return this._cache.santri || [];
+    this.init();
+    const deletedSet = this._getDeletedKeys('simtah_deleted_santri_keys_v1');
+    if (!this._cache.santri || this._cache.santri.length === 0) {
+      let saved = null;
+      try {
+        const raw = localStorage.getItem('simtah_custom_santri_v5');
+        if (raw) saved = JSON.parse(raw);
+      } catch (e) {}
+      this._cache.santri = (saved && Array.isArray(saved) && saved.length > 0) ? saved : [...INITIAL_SANTRI];
+    }
+    const filtered = (this._cache.santri || []).filter(s => {
+      const sId = String(s.id || '').toLowerCase().trim();
+      const sNama = String(s.nama || '').toLowerCase().trim();
+      const sNis = String(s.nis || '').toLowerCase().trim();
+      const sNisn = String(s.nisn || '').toLowerCase().trim();
+      if (deletedSet.has(sId) || deletedSet.has(sNama) || (sNis && deletedSet.has(sNis)) || (sNisn && deletedSet.has(sNisn))) return false;
+      return true;
+    });
+    this._cache.santri = filtered;
+    return filtered;
   },
 
   getSantri(branchId = null) {
@@ -1820,6 +2141,9 @@ export const storageService = {
       list.push(item);
     }
     this._cache.santri = list;
+    try {
+      localStorage.setItem('simtah_custom_santri_v5', JSON.stringify(this._cache.santri));
+    } catch (e) {}
     this.emitUpdate();
 
     // Persist ke database PostgreSQL
@@ -1893,6 +2217,9 @@ export const storageService = {
       }
       list[idx] = merged;
       this._cache.santri = list;
+      try {
+        localStorage.setItem('simtah_custom_santri_v5', JSON.stringify(this._cache.santri));
+      } catch (e) {}
       this.emitUpdate();
 
       apiService.saveSantri({
@@ -1922,28 +2249,66 @@ export const storageService = {
     return null;
   },
 
-  deleteSantri(id) {
-    if (!id) return;
-    const strId = String(id).trim();
+  deleteSantri(idOrObj) {
+    if (!idOrObj) return;
+    let id = idOrObj;
+    let nama = null;
+    let nis = null;
+    let nisn = null;
+    if (idOrObj && typeof idOrObj === 'object') {
+      id = idOrObj.id;
+      nama = idOrObj.nama;
+      nis = idOrObj.nis;
+      nisn = idOrObj.nisn;
+    }
+    const strId = String(id || '').trim();
     const rawAllSantri = this._cache.santri || [];
 
-    const targetSantri = rawAllSantri.find(s => s.id === strId || (s.nis && String(s.nis) === strId));
-    const targetNis = targetSantri ? String(targetSantri.nis || '') : '';
+    const targetSantri = rawAllSantri.find(s => 
+      (strId && (s.id === strId || (s.nis && String(s.nis) === strId))) ||
+      (nama && s.nama && s.nama.toLowerCase().trim() === String(nama).toLowerCase().trim()) ||
+      (nis && s.nis && String(s.nis).trim() === String(nis).trim()) ||
+      (nisn && s.nisn && String(s.nisn).trim() === String(nisn).trim())
+    );
+    const targetNis = targetSantri ? String(targetSantri.nis || '') : (nis ? String(nis) : '');
     const altId1 = strId.startsWith('ss-') ? strId.replace('ss-', 's-') : (strId.startsWith('s-') ? strId.replace('s-', 'ss-') : strId);
     const altId2 = strId.replace(/^s{1,2}-/, '');
 
+    const keysToDelete = [];
+    if (strId) keysToDelete.push(strId);
+    if (altId1) keysToDelete.push(altId1);
+    if (altId2) keysToDelete.push(altId2);
+    if (nama) keysToDelete.push(nama);
+    if (nis) keysToDelete.push(nis);
+    if (nisn) keysToDelete.push(nisn);
+    if (targetSantri) {
+      if (targetSantri.id) keysToDelete.push(targetSantri.id);
+      if (targetSantri.nama) keysToDelete.push(targetSantri.nama);
+      if (targetSantri.nis) keysToDelete.push(targetSantri.nis);
+      if (targetSantri.nisn) keysToDelete.push(targetSantri.nisn);
+      if (targetSantri.nik) keysToDelete.push(targetSantri.nik);
+    }
+    this._addDeletedKeys('simtah_deleted_santri_keys_v1', keysToDelete);
+    const delSet = this._getDeletedKeys('simtah_deleted_santri_keys_v1');
+
     const isMatch = (item) => {
       if (!item) return false;
-      const itemId = String(item.id || '');
+      const itemId = String(item.id || '').toLowerCase().trim();
+      const itemNama = String(item.nama || '').toLowerCase().trim();
+      const itemNis = String(item.nis || '').toLowerCase().trim();
+      const itemNisn = String(item.nisn || '').toLowerCase().trim();
+      if (delSet.has(itemId) || delSet.has(itemNama) || (itemNis && delSet.has(itemNis)) || (itemNisn && delSet.has(itemNisn))) return true;
       if (itemId === strId || itemId === altId1 || itemId === altId2) return true;
       if (targetSantri && itemId === String(targetSantri.id || '')) return true;
       if (targetNis && String(item.nis || '') === targetNis) return true;
-      if (targetSantri?.nama && item.nama && item.nama.trim().toLowerCase() === targetSantri.nama.trim().toLowerCase()) return true;
       return false;
     };
 
     // 1. Hapus dari in-memory cache santri
     this._cache.santri = rawAllSantri.filter(s => !isMatch(s));
+    try {
+      localStorage.setItem('simtah_custom_santri_v5', JSON.stringify(this._cache.santri));
+    } catch (e) {}
 
     // 2. Bersihkan riwayat setoran & absensi & spp santri ini dari cache
     this._cache.setoran = (this._cache.setoran || []).filter(st => {
@@ -1960,11 +2325,11 @@ export const storageService = {
     });
 
     // 3. Hapus langsung dari database PostgreSQL via API
-    apiService.deleteSantri(id).catch(e => console.warn('[API] deleteSantri error:', e.message));
-    if (altId1 && altId1 !== id) {
+    if (strId) apiService.deleteSantri(strId).catch(e => console.warn('[API] deleteSantri error:', e.message));
+    if (altId1 && altId1 !== strId) {
       apiService.deleteSantri(altId1).catch(() => {});
     }
-    if (targetSantri && targetSantri.id && targetSantri.id !== id && targetSantri.id !== altId1) {
+    if (targetSantri && targetSantri.id && targetSantri.id !== strId && targetSantri.id !== altId1) {
       apiService.deleteSantri(targetSantri.id).catch(() => {});
     }
 
@@ -2586,23 +2951,36 @@ export const storageService = {
   },
 
   // BACKUP & EXPORT
-  exportBackupJSON() {
+  exportBackupJSON(branchId = null) {
+    const isFiltered = branchId && branchId !== 'ALL';
+    const branches = this.getCabang();
+    const activeBranch = isFiltered ? (branches.find(c => c.id === branchId) || { id: branchId, nama: branchId, kode: branchId }) : null;
+    const santri = this.getSantri(branchId);
+    const santriIds = new Set(santri.map(s => s.id));
+    const halaqah = this.getHalaqah(branchId);
+    const setoran = isFiltered ? this.getSetoran().filter(s => santriIds.has(s.santriId)) : this.getSetoran();
+    const absensi = isFiltered ? this.getAbsensi().filter(a => santriIds.has(a.santriId)) : this.getAbsensi();
+    const izin = isFiltered ? this.getIzin().filter(i => santriIds.has(i.santriId)) : this.getIzin();
+    const settings = this.getSettings();
+
     const data = {
       version: '2.0.0',
       system: 'Tahfidz HUB Multi-Branch',
+      branch: isFiltered ? { id: branchId, nama: activeBranch?.nama, kode: activeBranch?.kode } : 'ALL',
       exportedAt: new Date().toISOString(),
-      santri: this.getSantri(),
-      halaqah: this.getHalaqah(),
-      setoran: this.getSetoran(),
-      absensi: this.getAbsensi(),
-      izin: this.getIzin(),
-      settings: this.getSettings()
+      santri,
+      halaqah,
+      setoran,
+      absensi,
+      izin,
+      settings
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Backup_Tahfidz_HUB_${new Date().toISOString().split('T')[0]}.json`;
+    const tag = isFiltered ? `_${activeBranch?.kode || branchId}` : '_SEMUA_CABANG';
+    a.download = `Backup_Tahfidz_HUB${tag}_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   },
@@ -2660,10 +3038,27 @@ export const storageService = {
   // PENGAMPU (AKUN USTADZ - 100% DIRECT FROM POSTGRESQL DATABASE VIA _cache)
   getAllPengampuRaw() {
     this.init();
+    const deletedSet = this._getDeletedKeys('simtah_deleted_pengampu_keys_v1');
     if (!this._cache.pengampu || this._cache.pengampu.length === 0) {
-      this._cache.pengampu = [...INITIAL_SIGAP_GURU];
+      let saved = null;
+      try {
+        const raw = localStorage.getItem('simtah_custom_pengampu_v5');
+        if (raw) saved = JSON.parse(raw);
+      } catch (e) {}
+      this._cache.pengampu = (saved && Array.isArray(saved) && saved.length > 0) ? saved : [...INITIAL_SIGAP_GURU];
     }
-    return this._cache.pengampu;
+    const filtered = (this._cache.pengampu || []).filter(u => {
+      const uId = String(u.id || '').toLowerCase().trim();
+      const uNama = String(u.nama || '').toLowerCase().trim();
+      const uEmail = String(u.email || '').toLowerCase().trim();
+      const uUser = String(u.username || '').toLowerCase().trim();
+      const uNip = String(u.nip || '').toLowerCase().trim();
+      if (deletedSet.has(uId) || deletedSet.has(uNama) || deletedSet.has(uEmail) || deletedSet.has(uUser)) return false;
+      if (uNip && uNip !== 'non-nip' && deletedSet.has(uNip)) return false;
+      return true;
+    });
+    this._cache.pengampu = filtered;
+    return filtered;
   },
 
   getPengampu(branchId = null) {
@@ -2685,6 +3080,9 @@ export const storageService = {
     const all = this.getAllPengampuRaw();
     const otherBranches = all.filter(p => (p.cabangId || 'cabang-pusat') !== targetBranch);
     this._cache.pengampu = [...otherBranches, ...branchList];
+    try {
+      localStorage.setItem('simtah_custom_pengampu_v5', JSON.stringify(this._cache.pengampu));
+    } catch (e) {}
     this.emitUpdate();
   },
 
@@ -2701,6 +3099,9 @@ export const storageService = {
     };
     list.push(created);
     this._cache.pengampu = list;
+    try {
+      localStorage.setItem('simtah_custom_pengampu_v5', JSON.stringify(this._cache.pengampu));
+    } catch (e) {}
     this.emitUpdate();
 
     apiService.savePengampu({
@@ -2723,6 +3124,9 @@ export const storageService = {
     if (idx !== -1) {
       list[idx] = { ...list[idx], ...fields };
       this._cache.pengampu = list;
+      try {
+        localStorage.setItem('simtah_custom_pengampu_v5', JSON.stringify(this._cache.pengampu));
+      } catch (e) {}
       this.emitUpdate();
 
       apiService.savePengampu({
@@ -2741,10 +3145,55 @@ export const storageService = {
     return null;
   },
 
-  deletePengampu(id) {
-    this._cache.pengampu = (this._cache.pengampu || []).filter(u => u.id !== id);
+  deletePengampu(idOrObj, nama = null, email = null) {
+    let id = idOrObj;
+    if (idOrObj && typeof idOrObj === 'object') {
+      id = idOrObj.id;
+      nama = nama || idOrObj.nama;
+      email = email || idOrObj.email;
+    }
+    const rawAll = this._cache.pengampu || [];
+    const target = rawAll.find(u => 
+      (id && u.id === id) || 
+      (nama && u.nama && u.nama.toLowerCase().trim() === String(nama).toLowerCase().trim()) ||
+      (email && u.email && u.email.toLowerCase().trim() === String(email).toLowerCase().trim())
+    );
+
+    const keysToDelete = [];
+    if (id) keysToDelete.push(id);
+    if (nama) keysToDelete.push(nama);
+    if (email) keysToDelete.push(email);
+    if (target) {
+      if (target.id) keysToDelete.push(target.id);
+      if (target.nama) keysToDelete.push(target.nama);
+      if (target.email) keysToDelete.push(target.email);
+      if (target.username) keysToDelete.push(target.username);
+      if (target.nip && target.nip !== 'NON-NIP') keysToDelete.push(target.nip);
+    }
+
+    this._addDeletedKeys('simtah_deleted_pengampu_keys_v1', keysToDelete);
+    const deletedSet = this._getDeletedKeys('simtah_deleted_pengampu_keys_v1');
+
+    this._cache.pengampu = rawAll.filter(u => {
+      const uId = String(u.id || '').toLowerCase().trim();
+      const uNama = String(u.nama || '').toLowerCase().trim();
+      const uEmail = String(u.email || '').toLowerCase().trim();
+      const uUser = String(u.username || '').toLowerCase().trim();
+      const uNip = String(u.nip || '').toLowerCase().trim();
+      if (deletedSet.has(uId) || deletedSet.has(uNama) || deletedSet.has(uEmail) || deletedSet.has(uUser)) return false;
+      if (uNip && uNip !== 'non-nip' && deletedSet.has(uNip)) return false;
+      return true;
+    });
+
+    try {
+      localStorage.setItem('simtah_custom_pengampu_v5', JSON.stringify(this._cache.pengampu));
+    } catch (e) {}
+
     this.emitUpdate();
-    apiService.deletePengampu(id).catch(e => console.warn('[API] deletePengampu error:', e.message));
+    if (id) apiService.deletePengampu(id).catch(e => console.warn('[API] deletePengampu error:', e.message));
+    if (target?.id && target.id !== id) {
+      apiService.deletePengampu(target.id).catch(() => {});
+    }
   },
 
   resetPasswordPengampu(idOrName, newPassword = "bismillah123", email = null) {
@@ -2767,7 +3216,22 @@ export const storageService = {
   // JADWAL SESI PRESENSI (100% DIRECT FROM POSTGRESQL DATABASE VIA _cache)
   getSesi(branchId = null) {
     this.init();
-    const rawList = (this._cache.sesi && this._cache.sesi.length > 0) ? this._cache.sesi : INITIAL_SESI;
+    const deletedSet = this._getDeletedKeys('simtah_deleted_sesi_keys_v1');
+    if (!this._cache.sesi || this._cache.sesi.length === 0) {
+      let saved = null;
+      try {
+        const raw = localStorage.getItem('simtah_custom_sesi_v5');
+        if (raw) saved = JSON.parse(raw);
+      } catch (e) {}
+      this._cache.sesi = (saved && Array.isArray(saved) && saved.length > 0) ? saved : [...INITIAL_SESI];
+    }
+    const rawList = (this._cache.sesi || []).filter(s => {
+      const sId = String(s.id || '').toLowerCase().trim();
+      const sNama = String(s.nama || '').toLowerCase().trim();
+      if (deletedSet.has(sId) || deletedSet.has(sNama)) return false;
+      return true;
+    });
+    this._cache.sesi = rawList;
     const target = branchId !== null ? branchId : this.getActiveBranchId();
     const filtered = (target && target !== 'ALL')
       ? rawList.filter(s => !s.cabangId || s.cabangId === target || s.cabangId === 'ALL')
@@ -2802,6 +3266,9 @@ export const storageService = {
 
   saveSesi(list) {
     this._cache.sesi = list;
+    try {
+      localStorage.setItem('simtah_custom_sesi_v5', JSON.stringify(this._cache.sesi));
+    } catch (e) {}
     this.emitUpdate();
   },
 
@@ -2820,6 +3287,9 @@ export const storageService = {
     };
     list.push(created);
     this._cache.sesi = list;
+    try {
+      localStorage.setItem('simtah_custom_sesi_v5', JSON.stringify(this._cache.sesi));
+    } catch (e) {}
     this.emitUpdate();
 
     apiService.saveSesi({
@@ -2841,6 +3311,9 @@ export const storageService = {
     if (idx !== -1) {
       list[idx] = { ...list[idx], ...fields };
       this._cache.sesi = list;
+      try {
+        localStorage.setItem('simtah_custom_sesi_v5', JSON.stringify(this._cache.sesi));
+      } catch (e) {}
       this.emitUpdate();
 
       apiService.saveSesi({
@@ -2858,17 +3331,35 @@ export const storageService = {
     return null;
   },
 
-  deleteSesi(id) {
-    this._cache.sesi = (this._cache.sesi || []).filter(s => s.id !== id);
+  deleteSesi(idOrObj) {
+    let id = idOrObj;
+    let nama = null;
+    if (idOrObj && typeof idOrObj === 'object') {
+      id = idOrObj.id;
+      nama = idOrObj.nama;
+    }
+    const target = (this._cache.sesi || []).find(s => s.id === id || (nama && s.nama === nama));
+    const keysToDelete = [];
+    if (id) keysToDelete.push(id);
+    if (nama) keysToDelete.push(nama);
+    if (target) {
+      if (target.id) keysToDelete.push(target.id);
+      if (target.nama) keysToDelete.push(target.nama);
+    }
+    this._addDeletedKeys('simtah_deleted_sesi_keys_v1', keysToDelete);
+    this._cache.sesi = (this._cache.sesi || []).filter(s => s.id !== id && (!target || s.id !== target.id));
+    try {
+      localStorage.setItem('simtah_custom_sesi_v5', JSON.stringify(this._cache.sesi));
+    } catch (e) {}
     this.emitUpdate();
-    apiService.deleteSesi(id).catch(e => console.warn('[API] deleteSesi error:', e.message));
+    if (id) apiService.deleteSesi(id).catch(e => console.warn('[API] deleteSesi error:', e.message));
   },
 
   // ==========================================
   // SIGAP: SISWA (100% DIRECT FROM POSTGRESQL VIA _cache.santri)
   // ==========================================
   getAllSigapSiswaRaw() {
-    return (this._cache.santri || []).map(s => ({
+    return this.getAllSantriRaw().map(s => ({
       ...s,
       id: s.id,
       nis: s.nis,
@@ -2913,12 +3404,7 @@ export const storageService = {
   // SIGAP: GURU & PEGAWAI (100% DIRECT FROM POSTGRESQL VIA _cache.pengampu)
   // ==========================================
   getAllSigapGuruRaw() {
-    let list = this._cache.pengampu;
-    if (!list || list.length === 0) {
-      list = INITIAL_SIGAP_GURU;
-      this._cache.pengampu = [...INITIAL_SIGAP_GURU];
-    }
-    return (list || []).map(p => ({
+    return this.getAllPengampuRaw().map(p => ({
       ...p,
       id: p.id,
       nama: p.nama,
@@ -3734,9 +4220,12 @@ export const storageService = {
   // PEMBAYARAN SPP & MANAJEMEN KEUANGAN (100% DIRECT FROM POSTGRESQL DATABASE VIA _cache)
   // =========================================================
   getPembayaranSPP(filter = {}) {
+    if (!this._cache.spp || this._cache.spp.length === 0) {
+      this._cache.spp = [...INITIAL_SPP];
+    }
     let list = this._cache.spp || [];
 
-    if (filter.cabangId && filter.cabangId !== 'all') {
+    if (filter.cabangId && filter.cabangId !== 'all' && filter.cabangId !== 'ALL') {
       list = list.filter(item => (item.cabangId || item.cabang_id) === filter.cabangId);
     }
     if (filter.bulan && filter.bulan !== 'all') {
@@ -3753,6 +4242,8 @@ export const storageService = {
       list = list.filter(item => 
         (item.santriNama && item.santriNama.toLowerCase().includes(q)) ||
         (item.santri_nama && item.santri_nama.toLowerCase().includes(q)) ||
+        (item.namaSantri && item.namaSantri.toLowerCase().includes(q)) ||
+        (item.nama && item.nama.toLowerCase().includes(q)) ||
         (item.nis && String(item.nis).toLowerCase().includes(q)) ||
         (item.invoiceNo && item.invoiceNo.toLowerCase().includes(q)) ||
         (item.invoice_no && item.invoice_no.toLowerCase().includes(q))
@@ -3804,9 +4295,15 @@ export const storageService = {
     return `INV-SPP/${year}${month}/${randomSeq}`;
   },
 
-  generateMonthlySPP(bulan, tahun = 2026, nominalDefault = 350000) {
+  generateMonthlySPP(bulan, tahun = 2026, nominalDefault = 350000, targetBranchId = 'ALL') {
+    if (!this._cache.spp || this._cache.spp.length === 0) {
+      this._cache.spp = [...INITIAL_SPP];
+    }
     const existing = this._cache.spp || [];
-    const santriList = this.getSantri();
+    let santriList = this.getAllSantriRaw();
+    if (targetBranchId && targetBranchId !== 'ALL' && targetBranchId !== 'all') {
+      santriList = santriList.filter(s => (s.cabangId || 'cabang-pusat') === targetBranchId);
+    }
     const newItems = [];
 
     santriList.forEach(s => {
@@ -3817,8 +4314,8 @@ export const storageService = {
           invoiceNo: this.generateInvoiceNo(),
           santriId: s.id,
           santriNama: s.nama,
-          nis: s.nis,
-          kelas: s.kelas,
+          nis: s.nis || '',
+          kelas: s.kelas || '',
           cabangId: s.cabangId || 'cabang-pusat',
           bulan: bulan,
           tahun: Number(tahun),

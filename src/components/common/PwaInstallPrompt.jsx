@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Smartphone, CheckCircle, Share2, PlusSquare } from 'lucide-react';
+import { Download, X, Share2, PlusSquare } from 'lucide-react';
 
 export default function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -31,9 +31,9 @@ export default function PwaInstallPrompt() {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      window.deferredPwaPrompt = e; // Simpan secara global jika tombol lain butuh
+      window.deferredPwaPrompt = e;
       if (!isDismissed) {
-        // Tampilkan prompt setelah beberapa detik agar tidak mengganggu loading awal
+        // Tampilkan pop up setelah beberapa detik
         setTimeout(() => setShowPrompt(true), 2500);
       }
     };
@@ -46,27 +46,18 @@ export default function PwaInstallPrompt() {
       setShowPrompt(false);
       setDeferredPrompt(null);
       window.deferredPwaPrompt = null;
-      console.log('🎉 PWA TahfidzHub berhasil dipasang!');
     };
 
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // 5. Listener untuk event trigger custom jika ada tombol lain yang ingin memunculkan prompt
+    // 5. Listener untuk event trigger custom dari tombol download di sidebar/header
     const handleManualTrigger = () => {
       if (window.deferredPwaPrompt) {
-        window.deferredPwaPrompt.prompt();
-        window.deferredPwaPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            setIsInstalled(true);
-            setShowPrompt(false);
-          }
-          window.deferredPwaPrompt = null;
-          setDeferredPrompt(null);
-        });
+        setShowPrompt(true);
       } else if (isAppleDevice) {
         setShowIOSGuide(true);
       } else {
-        alert('Untuk menginstall aplikasi, gunakan menu browser (ikon titik tiga di kanan atas) dan pilih "Instal Aplikasi" atau "Tambahkan ke Layar Utama".');
+        setShowPrompt(true);
       }
     };
 
@@ -80,16 +71,20 @@ export default function PwaInstallPrompt() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
+    if (!deferredPrompt && !window.deferredPwaPrompt) {
       if (isIOS) {
         setShowIOSGuide(true);
+        setShowPrompt(false);
+      } else {
+        alert('Gunakan menu browser (titik tiga di kanan atas) lalu pilih "Instal Aplikasi" atau "Tambahkan ke Layar Utama".');
         setShowPrompt(false);
       }
       return;
     }
 
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
+    const promptObj = deferredPrompt || window.deferredPwaPrompt;
+    promptObj.prompt();
+    const { outcome } = await promptObj.userChoice;
     if (outcome === 'accepted') {
       setIsInstalled(true);
     }
@@ -101,7 +96,7 @@ export default function PwaInstallPrompt() {
   const handleDismiss = () => {
     setShowPrompt(false);
     setShowIOSGuide(false);
-    // Sembunyikan selama 3 hari ke depan
+    // Sembunyikan pop up selama 3 hari ke depan
     localStorage.setItem('pwa_prompt_dismissed_until', (Date.now() + 3 * 24 * 60 * 60 * 1000).toString());
   };
 
@@ -109,101 +104,258 @@ export default function PwaInstallPrompt() {
 
   return (
     <>
-      {/* Banner Floating Install (Android / Desktop / Chrome) */}
+      {/* POP-UP MODAL INSTALL APLIKASI (BERSIH, DI TENGAH LAYAR & TIDAK MERUSAK LAYOUT) */}
       {showPrompt && (
-        <div className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
-          <div className="bg-slate-900/95 backdrop-blur-xl text-white p-4 rounded-2xl shadow-2xl border border-emerald-500/30 flex items-center gap-4">
-            <div className="relative shrink-0">
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 99999,
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem'
+          }}
+          onClick={handleDismiss}
+        >
+          <div 
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '24px',
+              maxWidth: '400px',
+              width: '100%',
+              padding: '1.75rem 1.5rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+              position: 'relative',
+              textAlign: 'center',
+              border: '1px solid #e2e8f0',
+              animation: 'pwaModalPop 0.25s ease-out'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Tombol Tutup X */}
+            <button
+              onClick={handleDismiss}
+              style={{
+                position: 'absolute',
+                top: '14px',
+                right: '14px',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: '#f1f5f9',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#64748b',
+                cursor: 'pointer'
+              }}
+              aria-label="Tutup"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Logo Ikon Aplikasi */}
+            <div style={{ position: 'relative', display: 'inline-block', marginBottom: '1rem' }}>
               <img 
-                src="/icons/icon-192x192.png" 
-                alt="TahfidzHub Icon" 
-                className="w-14 h-14 rounded-xl shadow-md border border-emerald-400/40 object-cover"
+                src="/logo.png" 
+                alt="TahfidzHub Logo" 
+                style={{
+                  width: '68px',
+                  height: '68px',
+                  borderRadius: '18px',
+                  objectFit: 'cover',
+                  boxShadow: '0 8px 20px rgba(16, 185, 129, 0.25)',
+                  border: '2px solid #a7f3d0'
+                }}
               />
-              <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5">
-                <Download className="w-3.5 h-3.5" />
+              <span 
+                style={{
+                  position: 'absolute',
+                  bottom: '-4px',
+                  right: '-4px',
+                  backgroundColor: '#10b981',
+                  color: '#ffffff',
+                  borderRadius: '50%',
+                  width: '22px',
+                  height: '22px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid #ffffff'
+                }}
+              >
+                <Download size={12} />
               </span>
             </div>
 
-            <div className="flex-1 min-w-0">
-              <h4 className="font-bold text-sm sm:text-base text-emerald-300 leading-tight">
-                Pasang Aplikasi TahfidzHub
-              </h4>
-              <p className="text-xs text-slate-300 mt-0.5 line-clamp-2">
-                Akses cepat dari layar utama HP / Desktop tanpa repot buka browser!
-              </p>
+            {/* Judul & Deskripsi */}
+            <h3 style={{ fontSize: '1.20rem', fontWeight: 900, color: '#0f172a', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
+              Pasang Aplikasi TahfidzHub
+            </h3>
+            <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0 0 1.25rem 0', lineHeight: 1.45 }}>
+              Akses cepat dan mudah langsung dari layar beranda HP atau Desktop Anda tanpa perlu membuka browser!
+            </p>
 
-              <div className="flex items-center gap-2 mt-2.5">
-                <button
-                  onClick={handleInstallClick}
-                  className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 transition-all text-white font-semibold text-xs rounded-lg shadow-md shadow-emerald-900/30 flex items-center gap-1.5"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Install Sekarang
-                </button>
-                <button
-                  onClick={handleDismiss}
-                  className="px-2.5 py-1.5 text-xs text-slate-400 hover:text-white transition-colors"
-                >
-                  Nanti Saja
-                </button>
-              </div>
+            {/* Tombol Aksi */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                onClick={handleInstallClick}
+                style={{
+                  width: '100%',
+                  padding: '12px 18px',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontSize: '0.88rem',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)'
+                }}
+              >
+                <Download size={16} />
+                <span>Pasang Aplikasi Sekarang</span>
+              </button>
+
+              <button
+                onClick={handleDismiss}
+                style={{
+                  width: '100%',
+                  padding: '9px 16px',
+                  borderRadius: '12px',
+                  backgroundColor: 'transparent',
+                  color: '#94a3b8',
+                  border: 'none',
+                  fontSize: '0.80rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Nanti Saja
+              </button>
             </div>
-
-            <button
-              onClick={handleDismiss}
-              className="p-1 text-slate-400 hover:text-white rounded-lg self-start"
-              aria-label="Tutup"
-            >
-              <X className="w-4 h-4" />
-            </button>
           </div>
         </div>
       )}
 
-      {/* Panduan Install untuk iOS Safari */}
+      {/* POP-UP PANDUAN UNTUK IOS SAFARI */}
       {showIOSGuide && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-slate-800 shadow-2xl relative">
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 99999,
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem'
+          }}
+          onClick={() => setShowIOSGuide(false)}
+        >
+          <div 
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '24px',
+              maxWidth: '380px',
+              width: '100%',
+              padding: '1.75rem 1.5rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+              position: 'relative',
+              textAlign: 'center',
+              border: '1px solid #e2e8f0'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <button 
               onClick={() => setShowIOSGuide(false)}
-              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-full bg-slate-100"
+              style={{
+                position: 'absolute',
+                top: '14px',
+                right: '14px',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: '#f1f5f9',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#64748b',
+                cursor: 'pointer'
+              }}
             >
-              <X className="w-5 h-5" />
+              <X size={16} />
             </button>
 
-            <div className="text-center mb-4">
-              <img 
-                src="/icons/icon-192x192.png" 
-                alt="TahfidzHub" 
-                className="w-16 h-16 rounded-2xl mx-auto mb-2 shadow-lg border border-emerald-100 object-cover"
-              />
-              <h3 className="font-bold text-lg text-slate-900">Pasang di iPhone / iPad</h3>
-              <p className="text-xs text-slate-500 mt-1">Ikuti 2 langkah mudah berikut di Safari:</p>
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="TahfidzHub" 
+              style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '16px',
+                margin: '0 auto 12px auto',
+                boxShadow: '0 6px 16px rgba(16, 185, 129, 0.25)',
+                display: 'block'
+              }}
+            />
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0f172a', margin: '0 0 4px 0' }}>
+              Pasang di iPhone / iPad
+            </h3>
+            <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '0 0 1rem 0' }}>
+              Ikuti 2 langkah mudah berikut di Safari:
+            </p>
 
-            <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center shrink-0">
+            <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '14px', border: '1px solid #e2e8f0', textAlign: 'left', fontSize: '0.78rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#ecfdf5', color: '#059669', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   1
                 </div>
                 <div>
-                  Ketuk tombol <strong className="text-emerald-700 font-semibold inline-flex items-center gap-1"><Share2 className="w-3.5 h-3.5 inline" /> Bagikan (Share)</strong> pada bilah menu browser Safari di bagian bawah layar.
+                  Ketuk tombol <strong>Bagikan (Share)</strong> <Share2 size={13} style={{ display: 'inline', verticalAlign: 'middle' }} /> pada menu Safari di bawah layar.
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center shrink-0">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#ecfdf5', color: '#059669', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   2
                 </div>
                 <div>
-                  Gulir ke bawah dan pilih opsi <strong className="text-emerald-700 font-semibold inline-flex items-center gap-1"><PlusSquare className="w-3.5 h-3.5 inline" /> Tambah ke Layar Utama (Add to Home Screen)</strong>.
+                  Pilih opsi <strong>Tambah ke Layar Utama</strong> <PlusSquare size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />.
                 </div>
               </div>
             </div>
 
             <button
               onClick={() => setShowIOSGuide(false)}
-              className="w-full mt-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl text-sm transition-colors shadow-md shadow-emerald-200"
+              style={{
+                width: '100%',
+                marginTop: '1rem',
+                padding: '10px 16px',
+                borderRadius: '12px',
+                backgroundColor: '#10b981',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.84rem',
+                cursor: 'pointer'
+              }}
             >
               Mengerti
             </button>

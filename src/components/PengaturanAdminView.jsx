@@ -47,32 +47,86 @@ export default function PengaturanAdminView({
   currentRole,
   isOwner
 }) {
-  const effectiveBranchId = activeBranchId || storageService.getActiveBranchId();
+  const [cabangList, setCabangList] = useState(() => {
+    const all = storageService.getCabang ? storageService.getCabang() : [];
+    return all.filter(c => (c.status || 'Aktif').toLowerCase() === 'aktif');
+  });
+
+  const [selectedBranchId, setSelectedBranchId] = useState(() => {
+    return activeBranchId || 'ALL';
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      const all = storageService.getCabang ? storageService.getCabang() : [];
+      setCabangList(all.filter(c => (c.status || 'Aktif').toLowerCase() === 'aktif'));
+    };
+    window.addEventListener('simtah_data_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('simtah_data_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
+
+  const effectiveBranchId = selectedBranchId !== 'ALL' ? selectedBranchId : (activeBranchId || storageService.getActiveBranchId());
   const currentBranch = (storageService.getCabang() || []).find(c => c.id === effectiveBranchId) || storageService.getActiveBranch() || { nama: "MA Ihya As-Sunnah" };
   const isBranchSmp = effectiveBranchId === 'cabang-smp';
   const defaultUnitSekolah = isBranchSmp ? "SMP IT IHYA' AS-SUNNAH" : "MA IHYA' AS-SUNNAH";
 
-  const [activeSubTab, setActiveSubTab] = useState(initialSubTab || 'pengampu-akun');
+  const [activeSubTab, setActiveSubTab] = useState(() => {
+    return localStorage.getItem('simtah_active_pengaturan_subtab') || initialSubTab || 'pengampu-akun';
+  });
 
   useEffect(() => {
-    const handleOpenFoto = () => setActiveSubTab('foto-profil');
+    const handleOpenFoto = () => {
+      setActiveSubTab('foto-profil');
+      localStorage.setItem('simtah_active_pengaturan_subtab', 'foto-profil');
+    };
+    const handleOpenTab = (e) => {
+      if (e.detail) {
+        setActiveSubTab(e.detail);
+        localStorage.setItem('simtah_active_pengaturan_subtab', e.detail);
+      }
+    };
     window.addEventListener('sigap_open_foto_profil', handleOpenFoto);
-    return () => window.removeEventListener('sigap_open_foto_profil', handleOpenFoto);
+    window.addEventListener('sigap_open_pengaturan_tab', handleOpenTab);
+    return () => {
+      window.removeEventListener('sigap_open_foto_profil', handleOpenFoto);
+      window.removeEventListener('sigap_open_pengaturan_tab', handleOpenTab);
+    };
   }, []);
+
+  const handleSubTabChange = (newTab) => {
+    setActiveSubTab(newTab);
+    localStorage.setItem('simtah_active_pengaturan_subtab', newTab);
+    window.dispatchEvent(new CustomEvent('sigap_open_pengaturan_tab', { detail: newTab }));
+  };
 
   const [formData, setFormData] = useState({ ...settings });
 
-  const [guruList, setGuruList] = useState(() => storageService.getSigapGuru(effectiveBranchId));
-  const [pengampuList, setPengampuList] = useState(() => storageService.getPengampu(effectiveBranchId));
-  const [siswaList, setSiswaList] = useState(() => storageService.getSigapSiswa(effectiveBranchId));
-  const [sesiList, setSesiList] = useState(() => storageService.getSesi(effectiveBranchId));
+  const [guruList, setGuruList] = useState(() => storageService.getSigapGuru(selectedBranchId === 'ALL' ? 'ALL' : selectedBranchId));
+  const [pengampuList, setPengampuList] = useState(() => storageService.getPengampu(selectedBranchId === 'ALL' ? 'ALL' : selectedBranchId));
+  const [siswaList, setSiswaList] = useState(() => storageService.getSigapSiswa(selectedBranchId === 'ALL' ? 'ALL' : selectedBranchId));
+  const [sesiList, setSesiList] = useState(() => storageService.getSesi(selectedBranchId === 'ALL' ? 'ALL' : selectedBranchId));
+
+  const reloadData = (branchFilter = selectedBranchId) => {
+    const targetBranch = branchFilter === 'ALL' ? 'ALL' : branchFilter;
+    setGuruList(storageService.getSigapGuru(targetBranch));
+    setPengampuList(storageService.getPengampu(targetBranch));
+    setSiswaList(storageService.getSigapSiswa(targetBranch));
+    setSesiList(storageService.getSesi(targetBranch));
+    if (onReload) onReload();
+  };
 
   useEffect(() => {
-    setGuruList(storageService.getSigapGuru(effectiveBranchId));
-    setPengampuList(storageService.getPengampu(effectiveBranchId));
-    setSiswaList(storageService.getSigapSiswa(effectiveBranchId));
-    setSesiList(storageService.getSesi(effectiveBranchId));
-  }, [effectiveBranchId]);
+    reloadData(selectedBranchId);
+  }, [selectedBranchId]);
+
+  const handleBranchFilterChange = (newBranchId) => {
+    setSelectedBranchId(newBranchId);
+    reloadData(newBranchId);
+  };
 
   const [searchTermGuru, setSearchTermGuru] = useState('');
   const [searchTermSiswa, setSearchTermSiswa] = useState('');
@@ -203,18 +257,10 @@ export default function PengaturanAdminView({
     }
   };
 
-  const reloadData = () => {
-    setGuruList(storageService.getSigapGuru(effectiveBranchId));
-    setPengampuList(storageService.getPengampu(effectiveBranchId));
-    setSiswaList(storageService.getSigapSiswa(effectiveBranchId));
-    setSesiList(storageService.getSesi(effectiveBranchId));
-    if (onReload) onReload();
-  };
-
   // Real-time synchronization when schedule/session is updated from Jadwal menu or other views
   useEffect(() => {
     const handleSync = () => {
-      setSesiList(storageService.getSesi(effectiveBranchId));
+      setSesiList(storageService.getSesi(selectedBranchId === 'ALL' ? 'ALL' : selectedBranchId));
     };
     window.addEventListener('sigap_jadwal_updated', handleSync);
     window.addEventListener('storage', handleSync);
@@ -222,7 +268,7 @@ export default function PengaturanAdminView({
       window.removeEventListener('sigap_jadwal_updated', handleSync);
       window.removeEventListener('storage', handleSync);
     };
-  }, [effectiveBranchId]);
+  }, [selectedBranchId]);
 
   const daftarNamaPengampu = Array.from(
     new Set([
@@ -250,7 +296,7 @@ export default function PengaturanAdminView({
     const guruItem = {
       nama: newPengampu.nama,
       nip: newPengampu.nip || 'NON-NIP',
-      cabangId: effectiveBranchId,
+      cabangId: newPengampu.cabangId || (selectedBranchId !== 'ALL' ? selectedBranchId : effectiveBranchId),
       unit,
       unitSekolah: unit,
       unitTag: unit.includes('SMP') ? 'SMP' : (unit.includes('MA') ? 'MA' : 'PONPES'),
@@ -340,12 +386,14 @@ export default function PengaturanAdminView({
     setCustomPassword('bismillah123');
   };
 
-  const handleDeletePengampu = (id, nama) => {
-    if (window.confirm(`Yakin ingin menghapus guru/pengampu "${nama}" dari sistem Unit dan Data Pegawai?`)) {
-      storageService.deleteSigapGuru(id);
-      storageService.deletePengampu(id);
+  const handleDeletePengampu = (guruOrId, fallbackNama = '') => {
+    const guruObj = (guruOrId && typeof guruOrId === 'object') ? guruOrId : { id: guruOrId, nama: fallbackNama };
+    const displayName = guruObj.nama || guruObj.id || fallbackNama;
+    if (window.confirm(`Yakin ingin menghapus guru/pengampu "${displayName}" dari sistem Unit dan Data Pegawai?`)) {
+      storageService.deletePengampu(guruObj);
+      storageService.deleteSigapGuru(guruObj);
       reloadData();
-      notify(`Data guru/pengampu ${nama} berhasil dihapus.`);
+      notify(`Data guru/pengampu ${displayName} berhasil dihapus.`);
     }
   };
 
@@ -395,6 +443,7 @@ export default function PengaturanAdminView({
     }
     storageService.addSesi({
       ...newSesi,
+      cabangId: newSesi.cabangId || (selectedBranchId !== 'ALL' ? selectedBranchId : 'ALL'),
       mulai: newSesi.jamMulai,
       selesai: newSesi.jamSelesai,
       bukaScan: newSesi.jamMulai,
@@ -412,11 +461,13 @@ export default function PengaturanAdminView({
     notify(`Sesi ${newSesi.nama} berhasil ditambahkan!`);
   };
 
-  const handleDeleteSesi = (id, nama) => {
-    if (window.confirm(`Hapus sesi "${nama}"? Perubahan ini akan otomatis tersinkron ke Menu Jadwal.`)) {
-      storageService.deleteSesi(id);
+  const handleDeleteSesi = (sesiOrId, fallbackNama = '') => {
+    const sObj = (sesiOrId && typeof sesiOrId === 'object') ? sesiOrId : { id: sesiOrId, nama: fallbackNama };
+    const displayName = sObj.nama || sObj.id || fallbackNama;
+    if (window.confirm(`Hapus sesi "${displayName}"? Perubahan ini akan otomatis tersinkron ke Menu Jadwal.`)) {
+      storageService.deleteSesi(sObj);
       reloadData();
-      notify(`Sesi ${nama} berhasil dihapus.`);
+      notify(`Sesi ${displayName} berhasil dihapus.`);
     }
   };
 
@@ -430,9 +481,10 @@ export default function PengaturanAdminView({
       return;
     }
 
+    const targetBranch = newSiswa.cabangId || (selectedBranchId !== 'ALL' ? selectedBranchId : effectiveBranchId);
     const payload = {
       ...newSiswa,
-      cabangId: effectiveBranchId,
+      cabangId: targetBranch,
       nama: newSiswa.nama.trim(),
       nisn: newSiswa.nisn.trim(),
       nik: newSiswa.nik || '',
@@ -484,11 +536,14 @@ export default function PengaturanAdminView({
     notify(`Data siswa ${payload.nama} berhasil diperbarui di Unit & Data Siswa!`);
   };
 
-  const handleDeleteSiswa = (id, nama) => {
-    if (window.confirm(`Hapus data siswa "${nama}" dari Unit dan Data Siswa?`)) {
-      storageService.deleteSigapSiswa(id);
+  const handleDeleteSiswa = (siswaOrId, fallbackNama = '') => {
+    const sObj = (siswaOrId && typeof siswaOrId === 'object') ? siswaOrId : { id: siswaOrId, nama: fallbackNama };
+    const displayName = sObj.nama || sObj.id || fallbackNama;
+    if (window.confirm(`Hapus data siswa "${displayName}" dari Unit dan Data Siswa?`)) {
+      storageService.deleteSigapSiswa(sObj);
+      storageService.deleteSantri(sObj);
       reloadData();
-      notify(`Data siswa ${nama} berhasil dihapus.`);
+      notify(`Data siswa ${displayName} berhasil dihapus.`);
     }
   };
 
@@ -501,6 +556,17 @@ export default function PengaturanAdminView({
       onSaveSettings(formData);
     } else {
       storageService.saveSettings(formData);
+    }
+    const targetBranchId = selectedBranchId === 'ALL' ? (cabangList[0]?.id || 'cabang-pusat') : selectedBranchId;
+    if (targetBranchId) {
+      storageService.saveCabang({
+        id: targetBranchId,
+        nama: formData.namaMadrasah,
+        alamat: formData.alamatMadrasah,
+        noHp: formData.teleponMadrasah,
+        email: formData.emailMadrasah,
+        penanggungJawab: formData.namaKepalaMadrasah
+      });
     }
     notify('Identitas Lembaga & Satuan Pendidikan berhasil diperbarui!');
   };
@@ -527,9 +593,9 @@ export default function PengaturanAdminView({
   };
 
   // ==========================================
-  // FILTERED LISTS
+  // FILTERED LISTS (DENGAN DEDUPLIKASI KETAT & FILTER CABANG AKTIF)
   // ==========================================
-  const filteredGuruList = guruList.filter(g => {
+  const rawFilteredGuruList = guruList.filter(g => {
     const term = searchTermGuru.toLowerCase().trim();
     const matchSearch = !term ||
       (g.nama && g.nama.toLowerCase().includes(term)) ||
@@ -539,13 +605,23 @@ export default function PengaturanAdminView({
       (g.jabatan && g.jabatan.toLowerCase().includes(term)) ||
       (g.halaqahNama && g.halaqahNama.toLowerCase().includes(term));
 
-    const unitVal = g.unitSekolah || g.unit || '';
-    const matchUnit = selectedFilterUnit === 'Semua Unit' || unitVal === selectedFilterUnit;
+    const gBranch = g.cabangId || (g.unitSekolah?.includes('SMP') || g.unitTag?.includes('SMP') ? 'cabang-smp' : 'cabang-pusat');
+    const matchBranch = selectedBranchId === 'ALL' || gBranch === selectedBranchId;
 
-    return matchSearch && matchUnit;
+    return matchSearch && matchBranch;
   });
 
-  const filteredSiswaList = siswaList.filter(s => {
+  const filteredGuruList = [];
+  const seenGuruKeys = new Set();
+  for (const g of rawFilteredGuruList) {
+    const key = (g.nip || g.username || g.id || g.nama || '').toLowerCase().trim();
+    if (!seenGuruKeys.has(key)) {
+      seenGuruKeys.add(key);
+      filteredGuruList.push(g);
+    }
+  }
+
+  const rawFilteredSiswaList = siswaList.filter(s => {
     const term = searchTermSiswa.toLowerCase().trim();
     const matchSearch = !term ||
       (s.nama && s.nama.toLowerCase().includes(term)) ||
@@ -553,120 +629,140 @@ export default function PengaturanAdminView({
       (s.nisn && s.nisn.toLowerCase().includes(term)) ||
       (s.pengampu && s.pengampu.toLowerCase().includes(term));
 
-    const unitVal = s.unitSekolah || '';
-    const matchUnit = selectedFilterUnit === 'Semua Unit' || unitVal === selectedFilterUnit;
+    const sBranch = s.cabangId || (s.unitSekolah?.includes('SMP') ? 'cabang-smp' : 'cabang-pusat');
+    const matchBranch = selectedBranchId === 'ALL' || sBranch === selectedBranchId;
 
-    return matchSearch && matchUnit;
+    return matchSearch && matchBranch;
   });
+
+  const filteredSiswaList = [];
+  const seenSiswaKeys = new Set();
+  for (const s of rawFilteredSiswaList) {
+    const key = (s.nis || s.nisn || s.nik || s.id || s.nama || '').toLowerCase().trim();
+    if (!seenSiswaKeys.has(key)) {
+      seenSiswaKeys.add(key);
+      filteredSiswaList.push(s);
+    }
+  }
+
+  const filteredSesiList = sesiList.filter(sesi => {
+    if (selectedBranchId === 'ALL') return true;
+    return !sesi.cabangId || sesi.cabangId === 'ALL' || sesi.cabangId === selectedBranchId;
+  });
+
+  const SUBTAB_META = {
+    'pengampu-akun': {
+      title: 'Akun Pegawai & Pengampu',
+      desc: 'Kelola akun guru, musyrif halaqah, staf TU, kredensial login, dan penugasan halaqah.',
+      icon: Users,
+      color: '#059669',
+      bg: '#ecfdf5'
+    },
+    'foto-profil': {
+      title: 'Pengaturan Foto Profil',
+      desc: 'Kelola foto profil akun pimpinan yayasan, super admin cabang, pengampu, dan santri.',
+      icon: Camera,
+      color: '#7c3aed',
+      bg: '#ede9fe'
+    },
+    'jadwal-sesi': {
+      title: 'Jadwal Sesi KBM & Halaqah',
+      desc: 'Atur jadwal sesi waktu kegiatan belajar mengajar, halaqah Qur\'an, dan toleransi absensi.',
+      icon: Clock,
+      color: '#0284c7',
+      bg: '#e0f2fe'
+    },
+    'tambah-siswa': {
+      title: 'Data Siswa & Pendaftaran',
+      desc: 'Manajemen data santri aktif, nomor induk (NIS/NISN), kelas, dan status data siswa.',
+      icon: GraduationCap,
+      color: '#d97706',
+      bg: '#fef3c7'
+    },
+    'template-rapor': {
+      title: 'Format & Template Rapor',
+      desc: 'Kustomisasi kriteria penilaian capaian tahfidz, predikat mutu, dan format cetak rapor.',
+      icon: FileCheck,
+      color: '#8b5cf6',
+      bg: '#f3e8ff'
+    },
+    'lembaga': {
+      title: 'Profil Lembaga & Unit Cabang',
+      desc: 'Informasi identitas madrasah, alamat resmi, kontak pimpinan, dan legalitas unit.',
+      icon: Building2,
+      color: '#2563eb',
+      bg: '#eff6ff'
+    },
+    'backup': {
+      title: 'Backup & Database Sistem',
+      desc: 'Cadangkan data database, unduh file backup JSON lokal, dan sinkronisasi server PostgreSQL.',
+      icon: Database,
+      color: '#0d9488',
+      bg: '#ccfbf1'
+    }
+  };
+
+  const currentTabInfo = SUBTAB_META[activeSubTab] || SUBTAB_META['pengampu-akun'];
+  const HeaderIcon = currentTabInfo.icon || Settings;
 
   return (
     <div className="page-content-wrapper">
-      {/* Header Banner */}
-      <div className="card" style={{ marginBottom: '24px', borderLeft: '5px solid #047857' }}>
+      {/* Header Banner - Sesuai Sub-Menu yang Dipilih di Sidebar */}
+      <div className="card" style={{ marginBottom: '20px', borderLeft: `5px solid ${currentTabInfo.color}` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{
-              width: '48px',
-              height: '48px',
+              width: '46px',
+              height: '46px',
               borderRadius: '12px',
-              background: '#ecfdf5',
-              color: '#047857',
+              background: currentTabInfo.bg,
+              color: currentTabInfo.color,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0
             }}>
-              <Settings size={26} />
+              <HeaderIcon size={24} />
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.22rem', fontWeight: 500, color: '#0f172a' }}>
-                Konfigurasi Unit & Database
+              <h2 style={{ margin: 0, fontSize: '1.20rem', fontWeight: 800, color: '#0f172a' }}>
+                {currentTabInfo.title}
               </h2>
-              <p className="owner-desc-text" style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>
-                Atur akun pengampu unit, jadwal sesi, data siswa, identitas madrasah, dan cadangan data.
+              <p className="owner-desc-text" style={{ margin: '2px 0 0 0', fontSize: '0.80rem', color: '#64748b' }}>
+                {currentTabInfo.desc}
               </p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={() => setShowAddSiswaModal(true)} style={{ padding: '0.45rem 0.85rem', fontSize: '0.8rem' }}>
-              <UserPlus size={15} />
-              <span>+ Siswa Baru</span>
-            </button>
+
+          {/* Quick Active Branch Filter Selector in Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', padding: '6px 12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <Building2 size={16} color="#0d9488" />
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>Cabang Aktif:</span>
+            <select
+              className="form-select"
+              value={selectedBranchId}
+              onChange={(e) => handleBranchFilterChange(e.target.value)}
+              style={{
+                height: '34px',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: '#0f172a',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                border: '1.5px solid #cbd5e1',
+                background: '#ffffff',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="ALL">🌐 Semua Cabang Aktif ({cabangList.length})</option>
+              {cabangList.map(c => (
+                <option key={c.id} value={c.id}>
+                  📍 {c.nama} ({c.kode})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-      </div>
-
-      {/* Sub Tabs Navigation - Streamlined & Snug for Mobile */}
-      <div className="pengaturan-subtabs-scroll" style={{ display: 'flex', gap: '6px', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <button
-          type="button"
-          className={`btn ${activeSubTab === 'pengampu-akun' ? 'btn-primary' : 'btn-outline'}`}
-          onClick={() => setActiveSubTab('pengampu-akun')}
-          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-        >
-          <Users size={15} />
-          <span>Akun Pegawai</span>
-        </button>
-
-        <button
-          type="button"
-          className={`btn ${activeSubTab === 'foto-profil' ? 'btn-primary' : 'btn-outline'}`}
-          onClick={() => setActiveSubTab('foto-profil')}
-          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-        >
-          <Camera size={15} />
-          <span>Foto Profil</span>
-        </button>
-
-        <button
-          type="button"
-          className={`btn ${activeSubTab === 'jadwal-sesi' ? 'btn-primary' : 'btn-outline'}`}
-          onClick={() => setActiveSubTab('jadwal-sesi')}
-          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-        >
-          <Clock size={15} />
-          <span>Jadwal Sesi</span>
-        </button>
-
-        <button
-          type="button"
-          className={`btn ${activeSubTab === 'tambah-siswa' ? 'btn-primary' : 'btn-outline'}`}
-          onClick={() => setActiveSubTab('tambah-siswa')}
-          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-        >
-          <GraduationCap size={15} />
-          <span>Data Siswa</span>
-        </button>
-
-        <button
-          type="button"
-          className={`btn ${activeSubTab === 'template-rapor' ? 'btn-primary' : 'btn-outline'}`}
-          onClick={() => setActiveSubTab('template-rapor')}
-          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-        >
-          <FileCheck size={15} />
-          <span>Format Rapor</span>
-        </button>
-
-        <button
-          type="button"
-          className={`btn ${activeSubTab === 'lembaga' ? 'btn-primary' : 'btn-outline'}`}
-          onClick={() => setActiveSubTab('lembaga')}
-          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-        >
-          <Building2 size={15} />
-          <span>Lembaga</span>
-        </button>
-
-        <button
-          type="button"
-          className={`btn ${activeSubTab === 'backup' ? 'btn-primary' : 'btn-outline'}`}
-          onClick={() => setActiveSubTab('backup')}
-          style={{ borderRadius: '8px 8px 0 0', borderBottom: 'none', cursor: 'pointer', whiteSpace: 'nowrap', padding: '0.42rem 0.75rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-        >
-          <Database size={15} />
-          <span>Backup Data</span>
-        </button>
       </div>
 
       {/* ========================================================= */}
@@ -676,7 +772,9 @@ export default function PengaturanAdminView({
         <PengaturanFotoProfilView 
           showToast={showToast} 
           currentRole={currentRole} 
-          isOwner={isOwner} 
+          isOwner={isOwner}
+          selectedBranchId={selectedBranchId}
+          onBranchChange={handleBranchFilterChange}
         />
       )}
 
@@ -707,16 +805,19 @@ export default function PengaturanAdminView({
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Filter size={15} color="#64748b" />
+              <Building2 size={16} color="#059669" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>Filter Cabang:</span>
               <select
                 className="form-select"
-                value={selectedFilterUnit}
-                onChange={(e) => setSelectedFilterUnit(e.target.value)}
-                style={{ height: '38px', fontSize: '0.85rem', minWidth: '180px' }}
+                value={selectedBranchId}
+                onChange={(e) => handleBranchFilterChange(e.target.value)}
+                style={{ height: '38px', fontSize: '0.84rem', minWidth: '220px', fontWeight: 700, borderColor: '#059669', background: '#ecfdf5', color: '#065f46' }}
               >
-                <option value="Semua Unit">Semua Unit ({guruList.length})</option>
-                {Array.from(new Set(guruList.map(g => g.unitSekolah || g.unitTag || g.unit).filter(Boolean))).map(u => (
-                  <option key={u} value={u}>{u}</option>
+                <option value="ALL">🌐 Semua Cabang Aktif ({cabangList.length})</option>
+                {cabangList.map(c => (
+                  <option key={c.id} value={c.id}>
+                    📍 {c.nama} ({c.kode})
+                  </option>
                 ))}
               </select>
             </div>
@@ -927,7 +1028,7 @@ export default function PengaturanAdminView({
                               <button
                                 className="btn btn-ghost btn-sm"
                                 title="Hapus Guru"
-                                onClick={() => handleDeletePengampu(guru.id, guru.nama)}
+                                onClick={() => handleDeletePengampu(guru)}
                                 style={{ color: '#ef4444', padding: '6px' }}
                               >
                                 <Trash2 size={15} />
@@ -963,8 +1064,48 @@ export default function PengaturanAdminView({
             </button>
           </div>
 
+          {/* Search & Branch Filter Bar */}
+          <div className="card" style={{ padding: '12px 16px', marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Clock size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
+                  Jadwal Sesi: <strong>{selectedBranchId === 'ALL' ? 'Semua Cabang Aktif' : (cabangList.find(c => c.id === selectedBranchId)?.nama || selectedBranchId)}</strong>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                  Menampilkan {filteredSesiList.length} sesi presensi terdaftar
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Building2 size={16} color="#0284c7" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>Filter Cabang:</span>
+              <select
+                className="form-select"
+                value={selectedBranchId}
+                onChange={(e) => handleBranchFilterChange(e.target.value)}
+                style={{ height: '38px', fontSize: '0.84rem', minWidth: '220px', fontWeight: 700, borderColor: '#0284c7', background: '#f0f9ff', color: '#0369a1' }}
+              >
+                <option value="ALL">🌐 Semua Cabang Aktif ({cabangList.length})</option>
+                {cabangList.map(c => (
+                  <option key={c.id} value={c.id}>
+                    📍 {c.nama} ({c.kode})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
-            {sesiList.map(sesi => {
+            {filteredSesiList.length === 0 ? (
+              <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                Tidak ada sesi presensi yang terdaftar untuk cabang ini.
+              </div>
+            ) : (
+              filteredSesiList.map(sesi => {
               const isAktif = sesi.status === 'AKTIF' || (sesi.aktif !== false && sesi.status !== 'NONAKTIF');
               const jamMulai = sesi.mulai || sesi.jamMulai || '05:00';
               const jamSelesai = sesi.selesai || sesi.jamSelesai || '06:30';
@@ -1029,7 +1170,7 @@ export default function PengaturanAdminView({
                     </button>
                     <button 
                       className="btn btn-ghost btn-sm"
-                      onClick={() => handleDeleteSesi(sesi.id, sesi.nama)}
+                      onClick={() => handleDeleteSesi(sesi)}
                       style={{ color: '#ef4444', padding: '4px 8px' }}
                       title="Hapus Sesi"
                     >
@@ -1038,7 +1179,7 @@ export default function PengaturanAdminView({
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
 
           <div className="card" style={{ marginTop: '20px', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
@@ -1107,18 +1248,20 @@ export default function PengaturanAdminView({
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Filter size={15} color="#64748b" />
-
+              <Building2 size={16} color="#d97706" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>Filter Cabang:</span>
               <select
                 className="form-select"
-                value={selectedFilterUnit}
-                onChange={(e) => setSelectedFilterUnit(e.target.value)}
-                style={{ height: '38px', fontSize: '0.85rem', minWidth: '180px' }}
+                value={selectedBranchId}
+                onChange={(e) => handleBranchFilterChange(e.target.value)}
+                style={{ height: '38px', fontSize: '0.84rem', minWidth: '220px', fontWeight: 700, borderColor: '#d97706', background: '#fffbeb', color: '#b45309' }}
               >
-                <option value="Semua Unit">Semua Unit</option>
-                <option value="MA IHYA' AS-SUNNAH">MA IHYA' AS-SUNNAH</option>
-                <option value="SMP IT IHYA' AS-SUNNAH">SMP IT IHYA' AS-SUNNAH</option>
-                <option value="Pondok Pesantren PPIAS">Pondok Pesantren PPIAS</option>
+                <option value="ALL">🌐 Semua Cabang Aktif ({cabangList.length})</option>
+                {cabangList.map(c => (
+                  <option key={c.id} value={c.id}>
+                    📍 {c.nama} ({c.kode})
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -1244,7 +1387,7 @@ export default function PengaturanAdminView({
                               <button
                                 className="btn btn-ghost btn-sm"
                                 title="Hapus Siswa"
-                                onClick={() => handleDeleteSiswa(siswa.id, siswa.nama)}
+                                onClick={() => handleDeleteSiswa(siswa)}
                                 style={{ color: '#ef4444', padding: '6px' }}
                               >
                                 <Trash2 size={15} />
@@ -1263,22 +1406,73 @@ export default function PengaturanAdminView({
       )}
 
       {/* ========================================================= */}
+      {/* ========================================================= */}
       {/* 4. IDENTITAS LEMBAGA */}
       {/* ========================================================= */}
       {activeSubTab === 'lembaga' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px' }}>
-          <div className="card">
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px' }}>Identitas Pesantren / Madrasah</h3>
-            <form onSubmit={handleSaveLembaga}>
-              <div className="form-group">
-                <label className="form-label">Nama Lembaga Utama *</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  required
-                  value={formData.namaMadrasah || ''} 
-                  onChange={(e) => setFormData({ ...formData, namaMadrasah: e.target.value })}
-                />
+        <div>
+          {/* Branch Switcher Bar */}
+          <div className="card" style={{ padding: '12px 16px', marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Building2 size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
+                  Profil Identitas: <strong>{cabangList.find(c => c.id === (selectedBranchId === 'ALL' ? (cabangList[0]?.id || 'cabang-pusat') : selectedBranchId))?.nama || 'MA Ihya As-Sunnah'}</strong>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                  Pilih cabang aktif yang ingin diatur legalitas, alamat, kontak, dan pimpinannya
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Building2 size={16} color="#2563eb" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>Pilih Cabang:</span>
+              <select
+                className="form-select"
+                value={selectedBranchId === 'ALL' ? (cabangList[0]?.id || 'cabang-pusat') : selectedBranchId}
+                onChange={(e) => {
+                  const bId = e.target.value;
+                  handleBranchFilterChange(bId);
+                  const matched = cabangList.find(c => c.id === bId);
+                  if (matched) {
+                    setFormData(prev => ({
+                      ...prev,
+                      namaMadrasah: matched.nama || prev.namaMadrasah,
+                      subJudulLembaga: matched.kode ? `Unit ${matched.kode}` : prev.subJudulLembaga,
+                      alamatMadrasah: matched.alamat || prev.alamatMadrasah,
+                      teleponMadrasah: matched.noHp || prev.teleponMadrasah,
+                      emailMadrasah: matched.email || prev.emailMadrasah,
+                      namaKepalaMadrasah: matched.penanggungJawab || prev.namaKepalaMadrasah
+                    }));
+                  }
+                }}
+                style={{ height: '38px', fontSize: '0.84rem', minWidth: '220px', fontWeight: 700, borderColor: '#2563eb', background: '#eff6ff', color: '#1d4ed8' }}
+              >
+                {cabangList.map(c => (
+                  <option key={c.id} value={c.id}>
+                    📍 {c.nama} ({c.kode})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px' }}>
+            <div className="card">
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '16px' }}>Identitas Pesantren / Madrasah</h3>
+              <form onSubmit={handleSaveLembaga}>
+                <div className="form-group">
+                  <label className="form-label">Nama Lembaga Utama *</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    required
+                    value={formData.namaMadrasah || ''} 
+                    onChange={(e) => setFormData({ ...formData, namaMadrasah: e.target.value })}
+                  />
               </div>
 
               <div className="form-group">
@@ -1450,34 +1644,74 @@ export default function PengaturanAdminView({
             </div>
           </div>
         </div>
+      </div>
       )}
 
       {/* ========================================================= */}
       {/* 5. BACKUP & RESTORE */}
       {/* ========================================================= */}
       {activeSubTab === 'backup' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
-          <div className="card">
-            <h3 style={{ margin: '0 0 8px 0', fontWeight: 800, color: '#166534' }}>Cadangkan Database (Backup JSON)</h3>
-            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '16px' }}>
-              Unduh seluruh database sistem (santri, akun pengampu, jadwal sesi, setoran, absensi) ke berkas JSON lokal.
-            </p>
-            <button className="btn btn-primary" onClick={() => storageService.exportBackupJSON()}>
-              <Download size={16} />
-              <span>Unduh File Cadangan (JSON)</span>
-            </button>
+        <div>
+          {/* Branch Filter Selector Bar */}
+          <div className="card" style={{ padding: '12px 16px', marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: '#ccfbf1', color: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Database size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
+                  Cakupan Backup Data: <strong>{selectedBranchId === 'ALL' ? 'Seluruh Cabang (Konsolidasi Yayasan)' : (cabangList.find(c => c.id === selectedBranchId)?.nama || selectedBranchId)}</strong>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                  Pilih cabang untuk mengunduh arsip JSON spesifik cabang atau seluruh yayasan
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Building2 size={16} color="#0d9488" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>Filter Cabang:</span>
+              <select
+                className="form-select"
+                value={selectedBranchId}
+                onChange={(e) => handleBranchFilterChange(e.target.value)}
+                style={{ height: '38px', fontSize: '0.84rem', minWidth: '220px', fontWeight: 700, borderColor: '#0d9488', background: '#f0fdfa', color: '#0f766e' }}
+              >
+                <option value="ALL">🌐 Semua Cabang Aktif (Konsolidasi)</option>
+                {cabangList.map(c => (
+                  <option key={c.id} value={c.id}>
+                    📍 {c.nama} ({c.kode})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="card">
-            <h3 style={{ margin: '0 0 8px 0', fontWeight: 800, color: '#0284c7' }}>Pulihkan Database (Restore JSON)</h3>
-            <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '16px' }}>
-              Pulihkan database dari file backup JSON sebelumnya.
-            </p>
-            <label className="btn btn-outline" style={{ cursor: 'pointer', display: 'inline-flex' }}>
-              <Upload size={16} />
-              <span>Pilih File Cadangan JSON</span>
-              <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleFileRestore} />
-            </label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '20px' }}>
+            <div className="card">
+              <h3 style={{ margin: '0 0 8px 0', fontWeight: 800, color: '#166534' }}>Cadangkan Database (Backup JSON)</h3>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '16px' }}>
+                {selectedBranchId === 'ALL' 
+                  ? 'Unduh seluruh database sistem konsolidasi (semua cabang) ke berkas JSON lokal.' 
+                  : `Unduh database terisolasi untuk cabang ${cabangList.find(c => c.id === selectedBranchId)?.nama || selectedBranchId} ke berkas JSON lokal.`}
+              </p>
+              <button className="btn btn-primary" onClick={() => storageService.exportBackupJSON(selectedBranchId)}>
+                <Download size={16} />
+                <span>Unduh File Cadangan JSON {selectedBranchId === 'ALL' ? '(Semua Cabang)' : `(${cabangList.find(c => c.id === selectedBranchId)?.kode || 'Cabang'})`}</span>
+              </button>
+            </div>
+
+            <div className="card">
+              <h3 style={{ margin: '0 0 8px 0', fontWeight: 800, color: '#0284c7' }}>Pulihkan Database (Restore JSON)</h3>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '16px' }}>
+                Pulihkan database dari file backup JSON sebelumnya.
+              </p>
+              <label className="btn btn-outline" style={{ cursor: 'pointer', display: 'inline-flex' }}>
+                <Upload size={16} />
+                <span>Pilih File Cadangan JSON</span>
+                <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleFileRestore} />
+              </label>
+            </div>
           </div>
         </div>
       )}
@@ -1487,6 +1721,54 @@ export default function PengaturanAdminView({
       {/* ========================================================= */}
       {activeSubTab === 'template-rapor' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Branch Filter Selector Bar */}
+          <div className="card" style={{ padding: '12px 16px', display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: '#f3e8ff', color: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FileCheck size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
+                  Konfigurasi Rapor Cabang: <strong>{cabangList.find(c => c.id === (selectedBranchId === 'ALL' ? (cabangList[0]?.id || 'cabang-pusat') : selectedBranchId))?.nama || 'MA Ihya As-Sunnah'}</strong>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                  Pilih cabang aktif untuk mengatur kop surat, nama madrasah, dan format penilaian rapor
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Building2 size={16} color="#8b5cf6" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>Pilih Cabang:</span>
+              <select
+                className="form-select"
+                value={selectedBranchId === 'ALL' ? (cabangList[0]?.id || 'cabang-pusat') : selectedBranchId}
+                onChange={(e) => {
+                  const bId = e.target.value;
+                  handleBranchFilterChange(bId);
+                  const matched = cabangList.find(c => c.id === bId);
+                  if (matched) {
+                    setRaporTemplate(prev => ({
+                      ...prev,
+                      namaMadrasah: matched.nama || prev.namaMadrasah,
+                      alamat: matched.alamat || prev.alamat,
+                      telepon: matched.noHp || prev.telepon,
+                      email: matched.email || prev.email,
+                      kepalaMadrasah: matched.penanggungJawab || prev.kepalaMadrasah
+                    }));
+                  }
+                }}
+                style={{ height: '38px', fontSize: '0.84rem', minWidth: '220px', fontWeight: 700, borderColor: '#8b5cf6', background: '#faf5ff', color: '#6d28d9' }}
+              >
+                {cabangList.map(c => (
+                  <option key={c.id} value={c.id}>
+                    📍 {c.nama} ({c.kode})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div className="card" style={{ background: '#ecfdf5', borderColor: '#a7f3d0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <div>
@@ -1869,15 +2151,25 @@ export default function PengaturanAdminView({
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">Unit Satuan Lembaga *</label>
+                    <label className="form-label">Cabang & Satuan Lembaga *</label>
                     <select
                       className="form-select"
-                      value={newPengampu.unitSekolah}
-                      onChange={(e) => setNewPengampu({ ...newPengampu, unitSekolah: e.target.value })}
+                      value={newPengampu.cabangId || (selectedBranchId !== 'ALL' ? selectedBranchId : (cabangList[0]?.id || 'cabang-pusat'))}
+                      onChange={(e) => {
+                        const cId = e.target.value;
+                        const cObj = cabangList.find(c => c.id === cId);
+                        setNewPengampu({ 
+                          ...newPengampu, 
+                          cabangId: cId, 
+                          unitSekolah: cObj ? cObj.nama : newPengampu.unitSekolah 
+                        });
+                      }}
                     >
-                      <option value="MA IHYA' AS-SUNNAH">MA IHYA' AS-SUNNAH</option>
-                      <option value="SMP IT IHYA' AS-SUNNAH">SMP IT IHYA' AS-SUNNAH</option>
-                      <option value="Pondok Pesantren PPIAS">Pondok Pesantren PPIAS</option>
+                      {cabangList.map(c => (
+                        <option key={c.id} value={c.id}>
+                          📍 {c.nama} ({c.kode})
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -2210,6 +2502,22 @@ export default function PengaturanAdminView({
                 </div>
 
                 <div className="form-group">
+                  <label className="form-label">Cabang Operasional *</label>
+                  <select 
+                    className="form-select"
+                    value={newSesi.cabangId || (selectedBranchId !== 'ALL' ? selectedBranchId : 'ALL')}
+                    onChange={(e) => setNewSesi({ ...newSesi, cabangId: e.target.value })}
+                  >
+                    <option value="ALL">🌐 Semua Cabang (Umum / Global)</option>
+                    {cabangList.map(c => (
+                      <option key={c.id} value={c.id}>
+                        📍 {c.nama} ({c.kode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
                   <label className="form-label">Status Awal</label>
                   <select 
                     className="form-select"
@@ -2370,15 +2678,25 @@ export default function PengaturanAdminView({
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Unit Satuan Pendidikan *</label>
+                  <label className="form-label">Cabang & Satuan Pendidikan *</label>
                   <select
                     className="form-select"
-                    value={newSiswa.unitSekolah}
-                    onChange={(e) => setNewSiswa({ ...newSiswa, unitSekolah: e.target.value })}
+                    value={newSiswa.cabangId || (selectedBranchId !== 'ALL' ? selectedBranchId : (cabangList[0]?.id || 'cabang-pusat'))}
+                    onChange={(e) => {
+                      const cId = e.target.value;
+                      const cObj = cabangList.find(c => c.id === cId);
+                      setNewSiswa({ 
+                        ...newSiswa, 
+                        cabangId: cId, 
+                        unitSekolah: cObj ? cObj.nama : newSiswa.unitSekolah 
+                      });
+                    }}
                   >
-                    <option value="MA IHYA' AS-SUNNAH">MA IHYA' AS-SUNNAH</option>
-                    <option value="SMP IT IHYA' AS-SUNNAH">SMP IT IHYA' AS-SUNNAH</option>
-                    <option value="Pondok Pesantren PPIAS">Pondok Pesantren PPIAS</option>
+                    {cabangList.map(c => (
+                      <option key={c.id} value={c.id}>
+                        📍 {c.nama} ({c.kode})
+                      </option>
+                    ))}
                   </select>
                 </div>
 

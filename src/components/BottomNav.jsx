@@ -291,7 +291,7 @@ export default function BottomNav({
 
   const handleTabClick = (tab) => {
     if (tab.isMoreTrigger) {
-      setShowDrawer(prev => !prev);
+      window.dispatchEvent(new CustomEvent('toggle_mobile_sidebar'));
     } else {
       if (currentRole === 'owner') {
         if (onSwitchBranch && activeBranchId && activeBranchId !== 'ALL') {
@@ -300,6 +300,7 @@ export default function BottomNav({
       }
       setActiveTab(tab.targetTab);
       setShowDrawer(false);
+      window.dispatchEvent(new CustomEvent('close_mobile_sidebar'));
     }
   };
 

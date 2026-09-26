@@ -7,8 +7,30 @@ import React from 'react';
 export default function TahfidzHubLogo({ 
   size = 28, 
   variant = 'white', // 'white', 'gradient', 'emerald', 'amber'
-  className = '' 
+  className = '',
+  useSvg = false
 }) {
+  if (!useSvg) {
+    return (
+      <img 
+        src="/logo.png" 
+        alt="Logo Tahfidz HUB" 
+        width={size} 
+        height={size} 
+        className={className}
+        style={{ 
+          width: `${size}px`, 
+          height: `${size}px`, 
+          objectFit: 'cover', 
+          borderRadius: `${Math.max(4, Math.round(size * 0.25))}px`,
+          display: 'inline-block',
+          verticalAlign: 'middle',
+          flexShrink: 0
+        }} 
+      />
+    );
+  }
+
   const getColors = () => {
     switch (variant) {
       case 'gradient':

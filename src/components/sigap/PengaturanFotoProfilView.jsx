@@ -72,20 +72,29 @@ const AVATAR_PRESETS = [
   }
 ];
 
-export default function PengaturanFotoProfilView({ showToast, currentRole, isOwner }) {
+export default function PengaturanFotoProfilView({ showToast, currentRole, isOwner, selectedBranchId, onBranchChange }) {
   const authUser = storageService.getAuthUser ? storageService.getAuthUser() : null;
   const effectiveRole = currentRole || authUser?.role || (isOwner ? 'owner' : 'superadmin');
   const isRoleOwner = effectiveRole === 'owner' || isOwner === true;
 
   const [fotoProfilList, setFotoProfilList] = useState(() => (storageService.getFotoProfilList ? storageService.getFotoProfilList() : []));
-  const [guruList, setGuruList] = useState(() => (storageService.getSigapGuru ? storageService.getSigapGuru() : []));
+  const [guruList, setGuruList] = useState(() => (storageService.getSigapGuru ? storageService.getSigapGuru('ALL') : []));
   const [superadminList, setSuperadminList] = useState(() => (storageService.getSuperAdminAccounts ? storageService.getSuperAdminAccounts() : []));
   const [cabangList, setCabangList] = useState(() => (storageService.getCabang ? storageService.getCabang() : []));
   const activeBranch = storageService.getActiveBranch ? storageService.getActiveBranch() : null;
 
   const [categoryFilter, setCategoryFilter] = useState('all'); // 'all' | 'superadmin' | 'admin_cabang' | 'pengampu'
   const [searchTerm, setSearchTerm] = useState('');
-  const [cabangFilter, setCabangFilter] = useState('all');
+  const [cabangFilter, setCabangFilter] = useState(() => {
+    if (selectedBranchId && selectedBranchId !== 'ALL') return selectedBranchId;
+    return 'all';
+  });
+
+  useEffect(() => {
+    if (selectedBranchId !== undefined) {
+      setCabangFilter(selectedBranchId === 'ALL' ? 'all' : selectedBranchId);
+    }
+  }, [selectedBranchId]);
 
   // Pastikan jika bukan Owner, filter kategori 'superadmin' (Owner) otomatis reset ke 'all'
   useEffect(() => {
@@ -165,9 +174,6 @@ export default function PengaturanFotoProfilView({ showToast, currentRole, isOwn
       if (u.includes('azka') || n.includes('azka') || i.includes('azka')) return; // Bersihkan akun azka basier
 
       const saCabangId = sa.cabangId || sa.cabang_id || 'cabang-pusat';
-      // Jika Super Admin (Bukan Owner), hanya masukkan akun admin cabang yang sesuai dengan cabang aktifnya
-      if (!isRoleOwner && saCabangId !== currentBranchId) return;
-
       const c = cabangList.find(cb => cb.id === saCabangId);
       const cleanNama = (sa.nama || 'Admin Cabang').replace(/\s+/g, ' ').trim();
       allAccounts.push({
@@ -214,10 +220,7 @@ export default function PengaturanFotoProfilView({ showToast, currentRole, isOwn
       const n = (g.nama || '').toLowerCase();
       if (u.includes('azka') || n.includes('azka')) return;
 
-      const gCabangId = g.cabangId || g.cabang_id || 'cabang-pusat';
-      // Jika Super Admin (Bukan Owner), hanya masukkan pengampu cabang aktifnya agar data tidak tercampur
-      if (!isRoleOwner && gCabangId !== currentBranchId) return;
-
+      const gCabangId = g.cabangId || g.cabang_id || (g.unitSekolah?.includes('SMP') ? 'cabang-smp' : 'cabang-pusat');
       const c = cabangList.find(cb => cb.id === gCabangId);
       allAccounts.push({
         id: g.id || `guru-${idx}`,
@@ -252,12 +255,23 @@ export default function PengaturanFotoProfilView({ showToast, currentRole, isOwn
     });
   }
 
-  // Saring berdasarkan Filter Kategori, Pencarian, dan Cabang (untuk Owner)
-  const filteredAccounts = allAccounts.filter(acc => {
+  // Deduplikasi akun agar setiap entitas unik hanya tampil tepat satu kali
+  const uniqueAccounts = [];
+  const seenAccountKeys = new Set();
+  for (const acc of allAccounts) {
+    const key = (acc.username || acc.userId || acc.id || acc.nama || '').toLowerCase().trim();
+    if (!seenAccountKeys.has(key)) {
+      seenAccountKeys.add(key);
+      uniqueAccounts.push(acc);
+    }
+  }
+
+  // Saring berdasarkan Filter Kategori, Pencarian, dan Cabang
+  const filteredAccounts = uniqueAccounts.filter(acc => {
     if (categoryFilter !== 'all' && acc.userType !== categoryFilter) {
       return false;
     }
-    if (isRoleOwner && cabangFilter !== 'all' && acc.cabangId !== 'all' && acc.cabangId !== cabangFilter) {
+    if (cabangFilter !== 'all' && acc.cabangId !== 'all' && acc.cabangId !== cabangFilter) {
       return false;
     }
     if (searchTerm) {
@@ -272,8 +286,8 @@ export default function PengaturanFotoProfilView({ showToast, currentRole, isOwn
   });
 
   // Hitung Statistik
-  const totalAkun = allAccounts.length;
-  const akunBerfoto = allAccounts.filter(a => !!storageService.getPhotoForUser({ 
+  const totalAkun = uniqueAccounts.length;
+  const akunBerfoto = uniqueAccounts.filter(a => !!storageService.getPhotoForUser({ 
     userId: a.userId, 
     userType: a.userType, 
     username: a.username, 
@@ -499,49 +513,37 @@ export default function PengaturanFotoProfilView({ showToast, currentRole, isOwn
           </button>
         </div>
 
-        {/* Branch Indicator / Selector */}
-        {!isRoleOwner ? (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '4px 10px',
-            borderRadius: '8px',
-            background: '#f0fdf4',
-            border: '1px solid #86efac',
-            color: '#15803d',
-            fontSize: '0.74rem',
-            fontWeight: 700
-          }}>
-            <ShieldCheck size={14} color="#15803d" />
-            <span>Cabang: <strong>{currentBranchObj.nama}</strong> (Data Terisolasi)</span>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>Cabang:</span>
-            <select
-              value={cabangFilter}
-              onChange={(e) => setCabangFilter(e.target.value)}
-              style={{
-                padding: '5px 8px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                fontSize: '0.76rem',
-                fontWeight: 700,
-                outline: 'none',
-                background: '#f8fafc',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="all">🌐 Semua Cabang ({cabangList.length})</option>
-              {cabangList.map(cb => (
-                <option key={cb.id} value={cb.id}>
-                  📍 {cb.nama} ({cb.kode})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Branch Filter Selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Building2 size={16} color="#059669" />
+          <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 700 }}>Cabang:</span>
+          <select
+            value={cabangFilter}
+            onChange={(e) => {
+              const val = e.target.value;
+              setCabangFilter(val);
+              if (onBranchChange) onBranchChange(val === 'all' ? 'ALL' : val);
+            }}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '8px',
+              border: '1.5px solid #059669',
+              fontSize: '0.80rem',
+              fontWeight: 700,
+              outline: 'none',
+              background: '#ecfdf5',
+              color: '#065f46',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="all">🌐 Semua Cabang Aktif ({cabangList.filter(c => (c.status || 'Aktif').toLowerCase() === 'aktif').length})</option>
+            {cabangList.filter(c => (c.status || 'Aktif').toLowerCase() === 'aktif').map(cb => (
+              <option key={cb.id} value={cb.id}>
+                📍 {cb.nama} ({cb.kode})
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* Search Bar */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: '260px' }}>

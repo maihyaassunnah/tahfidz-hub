@@ -30,10 +30,14 @@ import {
   Sparkles,
   Sliders,
   ChevronDown,
+  ChevronUp,
   Database,
   Receipt,
   Lock,
-  Download
+  Download,
+  TrendingUp,
+  Award,
+  X
 } from 'lucide-react';
 import { storageService } from '../services/storage';
 import TahfidzHubLogo from './TahfidzHubLogo';
@@ -55,6 +59,149 @@ export default function Sidebar({
   const [pendingIzinCount, setPendingIzinCount] = useState(() => storageService.getPendingSigapIzinCount());
   const [photoUpdateTrigger, setPhotoUpdateTrigger] = useState(0);
 
+  // Mobile Slide-over Drawer State
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const handleToggle = () => setIsMobileOpen(prev => !prev);
+    const handleOpen = () => setIsMobileOpen(true);
+    const handleClose = () => setIsMobileOpen(false);
+
+    window.addEventListener('toggle_mobile_sidebar', handleToggle);
+    window.addEventListener('open_mobile_sidebar', handleOpen);
+    window.addEventListener('close_mobile_sidebar', handleClose);
+
+    return () => {
+      window.removeEventListener('toggle_mobile_sidebar', handleToggle);
+      window.removeEventListener('open_mobile_sidebar', handleOpen);
+      window.removeEventListener('close_mobile_sidebar', handleClose);
+    };
+  }, []);
+
+  const closeMobileIfOpen = () => {
+    if (window.innerWidth <= 850) {
+      setIsMobileOpen(false);
+    }
+  };
+
+  const selectTab = (tabId) => {
+    setActiveTab(tabId);
+    closeMobileIfOpen();
+  };
+
+  // Sub-menu Pengaturan State & Sync
+  const [isPengaturanOpen, setIsPengaturanOpen] = useState(true);
+  const [activePengaturanSubTab, setActivePengaturanSubTab] = useState(() => {
+    return localStorage.getItem('simtah_active_pengaturan_subtab') || 'pengampu-akun';
+  });
+
+  // STATE & SUB-MENU: PUSAT KONTROL CABANG & ANALITIK (OWNER)
+  const [isKontrolCabangOpen, setIsKontrolCabangOpen] = useState(true);
+  const [activeOwnerMetricTab, setActiveOwnerMetricTab] = useState(() => {
+    return localStorage.getItem('simtah_active_owner_metric_tab') || 'spp';
+  });
+
+  const [metricBadges, setMetricBadges] = useState({
+    spp: '63%',
+    tahfidz: '1.0 Juz',
+    kehadiran: '95%',
+    sdm: '25 Santri',
+    scorecard: 'Terpadu'
+  });
+
+  const isKontrolCabangActive = activeTab === 'owner-dashboard' || activeTab === 'dashboard' || activeTab === 'sigap-dashboard';
+
+  useEffect(() => {
+    if (isKontrolCabangActive) {
+      setIsKontrolCabangOpen(true);
+    }
+  }, [isKontrolCabangActive]);
+
+  useEffect(() => {
+    const handleMetricTabUpdate = (e) => {
+      if (e.detail) {
+        setActiveOwnerMetricTab(e.detail);
+        localStorage.setItem('simtah_active_owner_metric_tab', e.detail);
+      }
+    };
+    const handleStatsUpdate = (e) => {
+      if (e.detail) {
+        setMetricBadges(prev => ({
+          ...prev,
+          spp: e.detail.sppBadge || prev.spp,
+          tahfidz: e.detail.tahfidzBadge || prev.tahfidz,
+          kehadiran: e.detail.kehadiranBadge || prev.kehadiran,
+          sdm: e.detail.sdmBadge || prev.sdm,
+          scorecard: e.detail.scorecardBadge || prev.scorecard
+        }));
+      }
+    };
+    window.addEventListener('owner_open_metric_tab', handleMetricTabUpdate);
+    window.addEventListener('owner_analytics_stats_updated', handleStatsUpdate);
+    return () => {
+      window.removeEventListener('owner_open_metric_tab', handleMetricTabUpdate);
+      window.removeEventListener('owner_analytics_stats_updated', handleStatsUpdate);
+    };
+  }, []);
+
+  const OWNER_METRIC_SUB_MENUS = [
+    { id: 'spp', label: 'Keuangan & SPP', icon: Receipt, badge: metricBadges.spp },
+    { id: 'tahfidz', label: 'Progres Tahfidz', icon: BookOpen, badge: metricBadges.tahfidz },
+    { id: 'kehadiran', label: 'Presensi KBM (7 Hari)', icon: TrendingUp, badge: metricBadges.kehadiran },
+    { id: 'sdm', label: 'Populasi & Rasio SDM', icon: Users, badge: metricBadges.sdm },
+    { id: 'scorecard', label: 'Matriks Skor Komparasi', icon: Award, badge: metricBadges.scorecard },
+  ];
+
+  const handleSelectOwnerMetricSubTab = (metricId) => {
+    setActiveOwnerMetricTab(metricId);
+    localStorage.setItem('simtah_active_owner_metric_tab', metricId);
+    setActiveTab('owner-dashboard');
+    setIsKontrolCabangOpen(true);
+    window.dispatchEvent(new CustomEvent('owner_open_metric_tab', { detail: metricId }));
+    closeMobileIfOpen();
+  };
+
+  const isPengaturanActive = activeTab === 'owner-konfigurasi' || activeTab === 'sigap-konfigurasi';
+
+  useEffect(() => {
+    if (isPengaturanActive) {
+      setIsPengaturanOpen(true);
+    }
+  }, [isPengaturanActive]);
+
+  useEffect(() => {
+    const handleSubTabUpdate = (e) => {
+      if (e.detail) {
+        setActivePengaturanSubTab(e.detail);
+        localStorage.setItem('simtah_active_pengaturan_subtab', e.detail);
+      }
+    };
+    window.addEventListener('sigap_open_pengaturan_tab', handleSubTabUpdate);
+    return () => window.removeEventListener('sigap_open_pengaturan_tab', handleSubTabUpdate);
+  }, []);
+
+  const PENGATURAN_SUB_MENUS = [
+    { id: 'pengampu-akun', label: 'Akun Pegawai', icon: Users, badge: 'Pegawai' },
+    { id: 'foto-profil', label: 'Foto Profil', icon: Camera },
+    { id: 'jadwal-sesi', label: 'Jadwal Sesi', icon: Clock },
+    { id: 'tambah-siswa', label: 'Data Siswa', icon: GraduationCap },
+    { id: 'template-rapor', label: 'Format Rapor', icon: FileCheck2 },
+    { id: 'lembaga', label: 'Lembaga', icon: Building2 },
+    { id: 'backup', label: 'Backup Data', icon: Database },
+  ];
+
+  const handleSelectPengaturanSubTab = (subTabId, targetMainTab = 'owner-konfigurasi') => {
+    setActivePengaturanSubTab(subTabId);
+    localStorage.setItem('simtah_active_pengaturan_subtab', subTabId);
+    setActiveTab(targetMainTab);
+    setIsPengaturanOpen(true);
+    window.dispatchEvent(new CustomEvent('sigap_open_pengaturan_tab', { detail: subTabId }));
+    if (subTabId === 'foto-profil') {
+      window.dispatchEvent(new CustomEvent('sigap_open_foto_profil'));
+    }
+    closeMobileIfOpen();
+  };
+
   useEffect(() => {
     const updateCount = () => {
       setPendingIzinCount(storageService.getPendingSigapIzinCount());
@@ -73,28 +220,53 @@ export default function Sidebar({
     };
   }, []);
   // =========================================================
-  // =========================================================
   // 0. TAMPILAN KHUSUS OWNER (PORTAL YAYASAN & MULTI-CABANG)
-  // JIKA MEMILIH "SEMUA CABANG" (KONSOLIDASI GLOBAL)
+  // SELALU TAMPIL BERSIH, SEDERHANA, DAN EKSEKUTIF
   // =========================================================
-  if (currentRole === 'owner' && (!activeBranchId || activeBranchId === 'ALL')) {
+  if (currentRole === 'owner') {
     const activeBranch = storageService.getActiveBranch();
     const ownerPhoto = storageService.getPhotoForUser({ userId: 'owner', userType: 'superadmin', username: 'owner' });
 
     return (
-      <aside className="sigap-sidebar sigap-sidebar-owner no-print">
+      <>
+        {isMobileOpen && (
+          <div 
+            className="sigap-sidebar-backdrop is-mobile-open"
+            onClick={() => setIsMobileOpen(false)}
+            title="Tutup Menu"
+          />
+        )}
+        <aside className={`sigap-sidebar sigap-sidebar-owner no-print ${isMobileOpen ? 'is-mobile-open' : ''}`}>
+          {/* Mobile Close Button */}
+          <button 
+            type="button" 
+            className="sidebar-mobile-close-btn"
+            onClick={() => setIsMobileOpen(false)}
+            title="Tutup Menu"
+            aria-label="Tutup Menu"
+          >
+            <X size={18} />
+          </button>
         {/* BRAND LOGO HEADER: TAHFIDZ HUB OWNER (PERSIS GAYA "Lecture .") */}
         <div className="sigap-brand" style={{ padding: '22px 18px 14px 18px', borderBottom: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div 
               className="sigap-logo-box" 
               style={{ 
-                background: 'linear-gradient(135deg, #ff5b35 0%, #ff7b59 100%)', 
-                boxShadow: '0 4px 14px rgba(255, 91, 53, 0.28)',
-                borderRadius: '12px'
+                background: 'transparent', 
+                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                width: '42px',
+                height: '42px',
+                flexShrink: 0
               }}
             >
-              <TahfidzHubLogo size={22} variant="white" />
+              <img 
+                src="/logo.png" 
+                alt="Tahfidz HUB" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px', display: 'block' }} 
+              />
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', fontSize: '1.22rem', fontWeight: 900, color: isDarkMode ? '#f8fafc' : '#1e293b', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
@@ -222,50 +394,40 @@ export default function Sidebar({
           {/* Active Branch Quick Selector Dropdown */}
           <div 
             style={{ 
-              marginTop: '8px', 
-              padding: '5px 8px', 
-              background: isDarkMode ? '#0f172a' : '#ffffff', 
-              borderRadius: '10px', 
-              fontSize: '0.74rem', 
+              marginTop: '10px', 
+              padding: '6px 10px', 
+              background: isDarkMode ? '#0f172a' : '#fffbeb', 
+              borderRadius: '12px', 
+              border: isDarkMode ? '1.5px solid #d97706' : '1.5px solid #fde68a',
+              boxShadow: '0 2px 6px rgba(217, 119, 6, 0.12)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              border: isDarkMode ? '1px solid #334155' : '1px solid #fde68a',
-              gap: '6px'
+              gap: '8px',
+              width: '100%',
+              boxSizing: 'border-box',
+              position: 'relative'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0 }}>
-              <MapPin size={12} color="#d97706" style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: '0.68rem', color: '#64748b', whiteSpace: 'nowrap' }}>Cabang:</span>
-            </div>
+            <MapPin size={13} color="#d97706" style={{ flexShrink: 0 }} />
             
             {cabangList && cabangList.length > 0 ? (
-              <select 
-                value={activeBranchId || activeBranch?.id || 'ALL'} 
-                onChange={(e) => onSwitchBranch && onSwitchBranch(e.target.value)}
-                style={{
-                  background: isDarkMode ? '#1e293b' : '#fffbeb',
-                  border: '1px solid ' + (isDarkMode ? '#334155' : '#fde68a'),
-                  borderRadius: '6px',
-                  padding: '2px 4px',
-                  fontSize: '0.70rem',
-                  fontWeight: '800',
-                  color: '#b45309',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  flex: 1,
-                  maxWidth: '150px',
-                  textOverflow: 'ellipsis'
-                }}
-                title="Pilih Cabang untuk Diinspeksi"
-              >
-                <option value="ALL">🌐 Semua Cabang</option>
-                {cabangList.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.nama} ({c.kode})
-                  </option>
-                ))}
-              </select>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', position: 'relative' }}>
+                <select 
+                  className="sigap-branch-select-clean"
+                  value={activeBranchId || activeBranch?.id || 'ALL'} 
+                  onChange={(e) => onSwitchBranch && onSwitchBranch(e.target.value)}
+                  style={{ color: isDarkMode ? '#fbbf24' : '#b45309' }}
+                  title="Pilih Cabang untuk Diinspeksi"
+                >
+                  <option value="ALL">🌐 Semua Cabang</option>
+                  {cabangList.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.nama} ({c.kode})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={13} color="#d97706" style={{ position: 'absolute', right: 0, pointerEvents: 'none', flexShrink: 0 }} />
+              </div>
             ) : (
               <strong style={{ color: activeBranch?.warnaAksen || '#d97706', fontSize: '0.72rem' }}>
                 {activeBranch?.kode || 'MA-PUSAT'}
@@ -274,186 +436,249 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* DAFTAR MENU NAVIGASI SEMUA CABANG (LENGKAP SEPERTI CABANG & PRISMA STUDIO DI PALING BAWAH) */}
-        <div className="sigap-menu-scroll">
-          {/* 1. DASHBOARD */}
-          <div 
-            className={`sigap-nav-item ${activeTab === 'owner-dashboard' || activeTab === 'dashboard' || activeTab === 'sigap-dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('owner-dashboard')}
-          >
-            <Home size={18} className="sigap-nav-icon" />
-            <span>Dashboard Yayasan</span>
-          </div>
-
-          {/* 2. CIVITAS AKADEMIKA */}
-          <div className="sigap-section-divider">
-            <span className="sigap-section-title">CIVITAS AKADEMIKA</span>
+        {/* DAFTAR MENU EKSEKUTIF OWNER (SEDERHANA, MINIMALIS & INFORMATIF) */}
+        <div className="sigap-menu-scroll" style={{ padding: '8px 12px' }}>
+          <div className="sigap-section-divider" style={{ marginTop: '4px' }}>
+            <span className="sigap-section-title">PUSAT KENDALI YAYASAN</span>
             <div className="sigap-section-line"></div>
           </div>
 
-          <div 
-            className={`sigap-nav-item ${activeTab === 'sigap-siswa' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-siswa')}
-          >
-            <GraduationCap size={18} className="sigap-nav-icon" />
-            <span>Data Siswa</span>
-          </div>
-
-          <div 
-            className={`sigap-nav-item ${activeTab === 'sigap-guru' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-guru')}
-          >
-            <Users size={18} className="sigap-nav-icon" />
-            <span>Data Guru & Pegawai</span>
-          </div>
-
-          <div 
-            className={`sigap-nav-item ${activeTab === 'sigap-alumni' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-alumni')}
-          >
-            <GraduationCap size={18} className="sigap-nav-icon" />
-            <span>Data Alumni</span>
-          </div>
-
-          {/* 3. MANAJEMEN KBM */}
-          <div className="sigap-section-divider">
-            <span className="sigap-section-title">MANAJEMEN KBM</span>
-            <div className="sigap-section-line"></div>
-          </div>
-
-          <div 
-            className={`sigap-nav-item ${activeTab === 'sigap-jadwal' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-jadwal')}
-          >
-            <Calendar size={18} className="sigap-nav-icon" />
-            <span>Jadwal</span>
-          </div>
-
-          <div 
-            className={`sigap-nav-item ${activeTab === 'sigap-lokasi-qr' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-lokasi-qr')}
-          >
-            <MapPin size={18} className="sigap-nav-icon" />
-            <span>Lokasi & QR Presensi</span>
-          </div>
-
-          {/* 4. REKAP & PERIZINAN */}
-          <div className="sigap-section-divider">
-            <span className="sigap-section-title">REKAP & PERIZINAN</span>
-            <div className="sigap-section-line"></div>
-          </div>
-
-          <div 
-            className={`sigap-nav-item ${activeTab === 'sigap-monitoring' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-monitoring')}
-          >
-            <ClipboardCheck size={18} className="sigap-nav-icon" />
-            <span>Monitoring & Rekap</span>
-          </div>
-
-          <div 
-            className={`sigap-nav-item ${activeTab === 'sigap-izin' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-izin')}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CheckSquare size={18} className="sigap-nav-icon" />
-              <span>Persetujuan Izin</span>
+          {/* 1. PUSAT KONTROL CABANG & SUB-MENU METRIK ANALITIK */}
+          <div>
+            <div 
+              className={`sigap-nav-item ${isKontrolCabangActive ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('owner-dashboard');
+                setIsKontrolCabangOpen(prev => !prev);
+              }}
+              style={{ 
+                marginBottom: isKontrolCabangOpen ? '4px' : '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Building2 size={18} className="sigap-nav-icon" />
+                <span>Pusat Kontrol Cabang</span>
+              </div>
+              {isKontrolCabangOpen ? (
+                <ChevronUp size={15} style={{ opacity: 0.7 }} />
+              ) : (
+                <ChevronDown size={15} style={{ opacity: 0.7 }} />
+              )}
             </div>
-            {pendingIzinCount > 0 && (
-              <span style={{
-                background: '#ef4444',
-                color: '#ffffff',
-                fontSize: '10px',
-                fontWeight: 800,
-                padding: '2px 7px',
-                borderRadius: '10px',
-                boxShadow: '0 2px 5px rgba(239, 68, 68, 0.4)'
-              }}>
-                {pendingIzinCount}
-              </span>
+
+            {/* SUB MENU ACCORDION: KEUANGAN, TAHFIDZ, PRESENSI, SDM, SCORECARD */}
+            {isKontrolCabangOpen && (
+              <div 
+                style={{
+                  margin: '0 14px 10px 28px',
+                  paddingLeft: '12px',
+                  borderLeft: isDarkMode ? '2px solid #334155' : '2px solid #ffdcd3',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '3px'
+                }}
+              >
+                {OWNER_METRIC_SUB_MENUS.map(sub => {
+                  const SubIcon = sub.icon;
+                  const isSubActive = isKontrolCabangActive && activeOwnerMetricTab === sub.id;
+
+                  return (
+                    <div
+                      key={sub.id}
+                      onClick={() => handleSelectOwnerMetricSubTab(sub.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '7px 10px',
+                        borderRadius: '10px',
+                        fontSize: '0.78rem',
+                        fontWeight: isSubActive ? 800 : 600,
+                        color: isSubActive 
+                          ? '#ff5b35' 
+                          : (isDarkMode ? '#94a3b8' : '#475569'),
+                        background: isSubActive 
+                          ? (isDarkMode ? '#1e293b' : '#fff7f5') 
+                          : 'transparent',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSubActive) {
+                          e.currentTarget.style.color = '#ff5b35';
+                          e.currentTarget.style.background = isDarkMode ? 'rgba(255, 91, 53, 0.08)' : '#fff7f5';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSubActive) {
+                          e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#475569';
+                          e.currentTarget.style.background = 'transparent';
+                        }
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <SubIcon size={14} color={isSubActive ? '#ff5b35' : (isDarkMode ? '#64748b' : '#94a3b8')} />
+                        <span>{sub.label}</span>
+                      </div>
+                      {sub.badge && (
+                        <span 
+                          style={{
+                            fontSize: '0.58rem',
+                            fontWeight: 800,
+                            padding: '1px 5px',
+                            borderRadius: '6px',
+                            background: isSubActive ? '#ff5b35' : (isDarkMode ? '#334155' : '#fed7aa'),
+                            color: isSubActive ? '#ffffff' : (isDarkMode ? '#cbd5e1' : '#b45309')
+                          }}
+                        >
+                          {sub.badge}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 
-          {/* 5. KEUANGAN & SPP */}
-          <div className="sigap-section-divider">
-            <span className="sigap-section-title">KEUANGAN & SPP</span>
-            <div className="sigap-section-line"></div>
-          </div>
-
+          {/* 2. KELOLA CABANG & SUPER ADMIN */}
           <div 
-            className={`sigap-nav-item ${activeTab === 'sigap-spp' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-spp')}
-          >
-            <Receipt size={18} className="sigap-nav-icon" />
-            <span>Pembayaran SPP</span>
-          </div>
-
-          {/* 6. MANAJEMEN CABANG */}
-          <div className="sigap-section-divider">
-            <span className="sigap-section-title">MANAJEMEN CABANG</span>
-            <div className="sigap-section-line"></div>
-          </div>
-
-          <div 
-            className={`sigap-nav-item ${activeTab === 'owner-cabang' ? 'active' : ''}`}
-            onClick={() => setActiveTab('owner-cabang')}
-          >
-            <Building2 size={18} className="sigap-nav-icon" />
-            <span>Analisis & Kelola Cabang</span>
-          </div>
-
-          <div 
-            className={`sigap-nav-item ${activeTab === 'owner-superadmin' ? 'active' : ''}`}
-            onClick={() => setActiveTab('owner-superadmin')}
-          >
-            <ShieldCheck size={18} className="sigap-nav-icon" />
-            <span>Akun Super Admin</span>
-          </div>
-
-          <div 
-            className={`sigap-nav-item ${activeTab === 'owner-rekap' ? 'active' : ''}`}
-            onClick={() => setActiveTab('owner-rekap')}
-          >
-            <FileText size={18} className="sigap-nav-icon" />
-            <span>Konsolidasi Seluruh Cabang</span>
-          </div>
-
-          {/* 7. DATABASE & SISTEM (PALING BAWAH SESUAI PERMINTAAN) */}
-          <div className="sigap-section-divider">
-            <span className="sigap-section-title">DATABASE & SISTEM</span>
-            <div className="sigap-section-line"></div>
-          </div>
-
-          <div 
-            className={`sigap-nav-item ${activeTab === 'sigap-prisma-studio' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-prisma-studio')}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+            className={`sigap-nav-item ${activeTab === 'owner-cabang' || activeTab === 'owner-superadmin' ? 'active' : ''}`}
+            onClick={() => selectTab('owner-cabang')}
+            style={{ marginBottom: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Database size={18} className="sigap-nav-icon" />
-              <span>Prisma Studio</span>
+              <ShieldCheck size={18} className="sigap-nav-icon" />
+              <span>Manajemen Cabang</span>
             </div>
             <span style={{
-              fontSize: '0.60rem',
+              fontSize: '0.62rem',
               fontWeight: 800,
-              padding: '2px 6px',
-              borderRadius: '6px',
-              background: isDarkMode ? '#064e3b' : '#ecfdf5',
-              color: isDarkMode ? '#34d399' : '#047857',
-              border: isDarkMode ? '1px solid #059669' : '1px solid #a7f3d0',
-              whiteSpace: 'nowrap'
+              padding: '2px 7px',
+              borderRadius: '10px',
+              background: isDarkMode ? '#1e293b' : '#ede9fe',
+              color: '#7c3aed'
             }}>
-              Semua Cabang
+              {cabangList?.length || 2} Unit
             </span>
           </div>
 
+          {/* 3. KEUANGAN & SPP GLOBAL */}
           <div 
-            className={`sigap-nav-item ${activeTab === 'sigap-konfigurasi' || activeTab === 'owner-konfigurasi' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-konfigurasi')}
+            className={`sigap-nav-item ${activeTab === 'owner-spp' || activeTab === 'sigap-spp' ? 'active' : ''}`}
+            onClick={() => selectTab('owner-spp')}
+            style={{ marginBottom: '6px' }}
           >
-            <Settings size={18} className="sigap-nav-icon" />
-            <span>Konfigurasi Unit & Akun</span>
+            <Receipt size={18} className="sigap-nav-icon" />
+            <span>Keuangan & SPP Global</span>
+          </div>
+
+          {/* 4. PENGATURAN YAYASAN & SUB-MENU AKUN PEGAWAI DLL */}
+          <div>
+            <div 
+              className={`sigap-nav-item ${activeTab === 'sigap-konfigurasi' || activeTab === 'owner-konfigurasi' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('owner-konfigurasi');
+                setIsPengaturanOpen(prev => !prev);
+              }}
+              style={{ 
+                marginBottom: isPengaturanOpen ? '4px' : '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Settings size={18} className="sigap-nav-icon" />
+                <span>Pengaturan Yayasan</span>
+              </div>
+              {isPengaturanOpen ? (
+                <ChevronUp size={15} style={{ opacity: 0.7 }} />
+              ) : (
+                <ChevronDown size={15} style={{ opacity: 0.7 }} />
+              )}
+            </div>
+
+            {/* SUB MENU ACCORDION: AKUN PEGAWAI DLL */}
+            {isPengaturanOpen && (
+              <div 
+                style={{
+                  margin: '0 14px 10px 28px',
+                  paddingLeft: '12px',
+                  borderLeft: isDarkMode ? '2px solid #334155' : '2px solid #ffdcd3',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '3px'
+                }}
+              >
+                {PENGATURAN_SUB_MENUS.map(sub => {
+                  const SubIcon = sub.icon;
+                  const isSubActive = (activeTab === 'owner-konfigurasi' || activeTab === 'sigap-konfigurasi') && activePengaturanSubTab === sub.id;
+
+                  return (
+                    <div
+                      key={sub.id}
+                      onClick={() => handleSelectPengaturanSubTab(sub.id, 'owner-konfigurasi')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '7px 10px',
+                        borderRadius: '10px',
+                        fontSize: '0.78rem',
+                        fontWeight: isSubActive ? 800 : 600,
+                        color: isSubActive 
+                          ? '#ff5b35' 
+                          : (isDarkMode ? '#94a3b8' : '#475569'),
+                        background: isSubActive 
+                          ? (isDarkMode ? '#1e293b' : '#fff7f5') 
+                          : 'transparent',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSubActive) {
+                          e.currentTarget.style.color = '#ff5b35';
+                          e.currentTarget.style.background = isDarkMode ? 'rgba(255, 91, 53, 0.08)' : '#fff7f5';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSubActive) {
+                          e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#475569';
+                          e.currentTarget.style.background = 'transparent';
+                        }
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <SubIcon size={14} color={isSubActive ? '#ff5b35' : (isDarkMode ? '#64748b' : '#94a3b8')} />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {sub.label}
+                        </span>
+                      </div>
+                      {sub.badge && (
+                        <span 
+                          style={{
+                            fontSize: '0.58rem',
+                            fontWeight: 800,
+                            padding: '1px 5px',
+                            borderRadius: '6px',
+                            background: isSubActive ? '#ff5b35' : (isDarkMode ? '#334155' : '#fed7aa'),
+                            color: isSubActive ? '#ffffff' : (isDarkMode ? '#cbd5e1' : '#b45309')
+                          }}
+                        >
+                          {sub.badge}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -501,6 +726,7 @@ export default function Sidebar({
           </button>
         </div>
       </aside>
+    </>
     );
   }
 
@@ -508,7 +734,7 @@ export default function Sidebar({
   // =========================================================
   // 1. TAMPILAN KHUSUS SUPER ADMIN / KETIKA OWNER MEMILIH SATU CABANG
   // =========================================================
-  if (currentRole === 'superadmin' || (currentRole === 'owner' && activeBranchId && activeBranchId !== 'ALL')) {
+  if (currentRole === 'superadmin') {
     const authUser = storageService.getAuthUser();
     const effectiveBranchId = currentRole === 'superadmin' 
       ? (authUser?.cabangId || activeBranchId || 'cabang-pusat')
@@ -523,17 +749,44 @@ export default function Sidebar({
     });
 
     return (
-      <aside className="sigap-sidebar no-print">
+      <>
+        {isMobileOpen && (
+          <div 
+            className="sigap-sidebar-backdrop is-mobile-open"
+            onClick={() => setIsMobileOpen(false)}
+            title="Tutup Menu"
+          />
+        )}
+        <aside className={`sigap-sidebar no-print ${isMobileOpen ? 'is-mobile-open' : ''}`}>
+          {/* Mobile Close Button */}
+          <button 
+            type="button" 
+            className="sidebar-mobile-close-btn"
+            onClick={() => setIsMobileOpen(false)}
+            title="Tutup Menu"
+            aria-label="Tutup Menu"
+          >
+            <X size={18} />
+          </button>
         {/* BRAND LOGO HEADER: TAHFIDZ HUB SUPER ADMIN */}
         <div className="sigap-brand">
           <div 
             className="sigap-logo-box"
             style={{ 
-              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.28)'
+              background: 'transparent',
+              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.28)',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              width: '42px',
+              height: '42px',
+              flexShrink: 0
             }}
           >
-            <TahfidzHubLogo size={24} variant="white" />
+            <img 
+              src="/logo.png" 
+              alt="Tahfidz HUB" 
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px', display: 'block' }} 
+            />
           </div>
           <div style={{ minWidth: 0 }}>
             <div className="sigap-brand-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
@@ -659,59 +912,50 @@ export default function Sidebar({
           ) : (
             <div 
               style={{ 
-                marginTop: '8px', 
-                padding: '5px 8px', 
+                marginTop: '10px', 
+                padding: '6px 10px', 
                 background: isDarkMode ? '#0f172a' : '#ffffff', 
-                borderRadius: '10px', 
-                fontSize: '0.74rem', 
+                borderRadius: '12px', 
+                border: isDarkMode ? '1.5px solid #10b981' : '1.5px solid #10b981',
+                boxShadow: '0 2px 6px rgba(16, 185, 129, 0.12)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                border: isDarkMode ? '1px solid #334155' : '1px solid #cbd5e1',
-                gap: '6px'
+                gap: '8px',
+                width: '100%',
+                boxSizing: 'border-box',
+                position: 'relative'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0 }}>
-                <MapPin size={12} color="#059669" style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: '0.68rem', color: '#64748b', whiteSpace: 'nowrap' }}>Cabang:</span>
+              <MapPin size={13} color="#10b981" style={{ flexShrink: 0 }} />
+              
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', position: 'relative' }}>
+                <select 
+                  className="sigap-branch-select-clean"
+                  value={activeBranchId || (cabangList[0]?.id || 'cabang-pusat')} 
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === 'ALL') {
+                      if (onSwitchBranch) onSwitchBranch('ALL');
+                      if (setActiveTab) setActiveTab('owner-dashboard');
+                      showToast && showToast("Kembali ke Portal Yayasan (Semua Cabang)");
+                    } else {
+                      if (onSwitchBranch) onSwitchBranch(val);
+                    }
+                  }}
+                  style={{ color: isDarkMode ? '#34d399' : '#047857' }}
+                  title="Pilih Cabang untuk Dikelola"
+                >
+                  {currentRole === 'owner' && (
+                    <option value="ALL">🌐 Semua Cabang (Portal Yayasan)</option>
+                  )}
+                  {cabangList.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.nama} ({c.kode})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={13} color="#10b981" style={{ position: 'absolute', right: 0, pointerEvents: 'none', flexShrink: 0 }} />
               </div>
-              <select 
-                value={activeBranchId || (cabangList[0]?.id || 'cabang-pusat')} 
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === 'ALL') {
-                    if (onSwitchBranch) onSwitchBranch('ALL');
-                    if (setActiveTab) setActiveTab('owner-dashboard');
-                    showToast && showToast("Kembali ke Portal Yayasan (Semua Cabang)");
-                  } else {
-                    if (onSwitchBranch) onSwitchBranch(val);
-                  }
-                }}
-                style={{
-                  background: isDarkMode ? '#1e293b' : '#f0fdf4',
-                  border: '1px solid ' + (isDarkMode ? '#334155' : '#86efac'),
-                  borderRadius: '6px',
-                  padding: '2px 4px',
-                  fontSize: '0.70rem',
-                  fontWeight: '800',
-                  color: '#15803d',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  flex: 1,
-                  maxWidth: '150px',
-                  textOverflow: 'ellipsis'
-                }}
-                title="Pilih Cabang untuk Dikelola"
-              >
-                {currentRole === 'owner' && (
-                  <option value="ALL">🌐 Semua Cabang (Portal Yayasan)</option>
-                )}
-                {cabangList.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.nama} ({c.kode})
-                  </option>
-                ))}
-              </select>
             </div>
           )}
 
@@ -751,7 +995,7 @@ export default function Sidebar({
           {/* 1. DASHBOARD */}
           <div 
             className={`sigap-nav-item ${activeTab === 'dashboard' || activeTab === 'sigap-dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-dashboard')}
+            onClick={() => selectTab('sigap-dashboard')}
           >
             <Home size={18} className="sigap-nav-icon" />
             <span>Dashboard</span>
@@ -765,7 +1009,7 @@ export default function Sidebar({
 
           <div 
             className={`sigap-nav-item ${activeTab === 'sigap-siswa' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-siswa')}
+            onClick={() => selectTab('sigap-siswa')}
           >
             <GraduationCap size={18} className="sigap-nav-icon" />
             <span>Data Siswa</span>
@@ -773,7 +1017,7 @@ export default function Sidebar({
 
           <div 
             className={`sigap-nav-item ${activeTab === 'sigap-guru' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-guru')}
+            onClick={() => selectTab('sigap-guru')}
           >
             <Users size={18} className="sigap-nav-icon" />
             <span>Data Guru & Pegawai</span>
@@ -781,7 +1025,7 @@ export default function Sidebar({
 
           <div 
             className={`sigap-nav-item ${activeTab === 'sigap-alumni' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-alumni')}
+            onClick={() => selectTab('sigap-alumni')}
           >
             <GraduationCap size={18} className="sigap-nav-icon" />
             <span>Data Alumni</span>
@@ -795,7 +1039,7 @@ export default function Sidebar({
 
           <div 
             className={`sigap-nav-item ${activeTab === 'sigap-jadwal' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-jadwal')}
+            onClick={() => selectTab('sigap-jadwal')}
           >
             <Calendar size={18} className="sigap-nav-icon" />
             <span>Jadwal</span>
@@ -803,7 +1047,7 @@ export default function Sidebar({
 
           <div 
             className={`sigap-nav-item ${activeTab === 'sigap-lokasi-qr' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-lokasi-qr')}
+            onClick={() => selectTab('sigap-lokasi-qr')}
           >
             <MapPin size={18} className="sigap-nav-icon" />
             <span>Lokasi & QR Presensi</span>
@@ -817,7 +1061,7 @@ export default function Sidebar({
 
           <div 
             className={`sigap-nav-item ${activeTab === 'sigap-monitoring' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-monitoring')}
+            onClick={() => selectTab('sigap-monitoring')}
           >
             <ClipboardCheck size={18} className="sigap-nav-icon" />
             <span>Monitoring & Rekap</span>
@@ -825,7 +1069,7 @@ export default function Sidebar({
 
           <div 
             className={`sigap-nav-item ${activeTab === 'sigap-izin' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-izin')}
+            onClick={() => selectTab('sigap-izin')}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -855,7 +1099,7 @@ export default function Sidebar({
 
           <div 
             className={`sigap-nav-item ${activeTab === 'sigap-spp' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-spp')}
+            onClick={() => selectTab('sigap-spp')}
           >
             <Receipt size={18} className="sigap-nav-icon" />
             <span>Pembayaran SPP</span>
@@ -869,18 +1113,108 @@ export default function Sidebar({
 
           <div 
             className={`sigap-nav-item ${activeTab === 'sigap-prisma-studio' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-prisma-studio')}
+            onClick={() => selectTab('sigap-prisma-studio')}
           >
             <Database size={18} className="sigap-nav-icon" />
             <span>Prisma Studio</span>
           </div>
 
-          <div 
-            className={`sigap-nav-item ${activeTab === 'sigap-konfigurasi' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sigap-konfigurasi')}
-          >
-            <Settings size={18} className="sigap-nav-icon" />
-            <span>Konfigurasi Unit</span>
+          <div>
+            <div 
+              className={`sigap-nav-item ${activeTab === 'sigap-konfigurasi' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('sigap-konfigurasi');
+                setIsPengaturanOpen(prev => !prev);
+              }}
+              style={{ 
+                marginBottom: isPengaturanOpen ? '4px' : '6px',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                cursor: 'pointer' 
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Settings size={18} className="sigap-nav-icon" />
+                <span>Konfigurasi Unit</span>
+              </div>
+              {isPengaturanOpen ? (
+                <ChevronUp size={15} style={{ opacity: 0.7 }} />
+              ) : (
+                <ChevronDown size={15} style={{ opacity: 0.7 }} />
+              )}
+            </div>
+
+            {isPengaturanOpen && (
+              <div 
+                style={{
+                  margin: '0 14px 10px 28px',
+                  paddingLeft: '12px',
+                  borderLeft: isDarkMode ? '2px solid #334155' : '2px solid #a7f3d0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '3px'
+                }}
+              >
+                {PENGATURAN_SUB_MENUS.map(sub => {
+                  const SubIcon = sub.icon;
+                  const isSubActive = activeTab === 'sigap-konfigurasi' && activePengaturanSubTab === sub.id;
+
+                  return (
+                    <div
+                      key={sub.id}
+                      onClick={() => handleSelectPengaturanSubTab(sub.id, 'sigap-konfigurasi')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '7px 10px',
+                        borderRadius: '10px',
+                        fontSize: '0.78rem',
+                        fontWeight: isSubActive ? 800 : 600,
+                        color: isSubActive ? '#059669' : (isDarkMode ? '#94a3b8' : '#475569'),
+                        background: isSubActive ? (isDarkMode ? '#1e293b' : '#ecfdf5') : 'transparent',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSubActive) {
+                          e.currentTarget.style.color = '#059669';
+                          e.currentTarget.style.background = isDarkMode ? 'rgba(16, 185, 129, 0.08)' : '#ecfdf5';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSubActive) {
+                          e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#475569';
+                          e.currentTarget.style.background = 'transparent';
+                        }
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <SubIcon size={14} color={isSubActive ? '#059669' : (isDarkMode ? '#64748b' : '#94a3b8')} />
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {sub.label}
+                        </span>
+                      </div>
+                      {sub.badge && (
+                        <span 
+                          style={{
+                            fontSize: '0.58rem',
+                            fontWeight: 800,
+                            padding: '1px 5px',
+                            borderRadius: '6px',
+                            background: isSubActive ? '#059669' : (isDarkMode ? '#334155' : '#dcfce7'),
+                            color: isSubActive ? '#ffffff' : (isDarkMode ? '#cbd5e1' : '#15803d')
+                          }}
+                        >
+                          {sub.badge}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -947,6 +1281,7 @@ export default function Sidebar({
           </button>
         </div>
       </aside>
+    </>
     );
   }
 
@@ -978,20 +1313,47 @@ export default function Sidebar({
     : null;
 
   return (
-    <aside className="simtah-sidebar no-print">
+    <>
+      {isMobileOpen && (
+        <div 
+          className="sigap-sidebar-backdrop is-mobile-open"
+          onClick={() => setIsMobileOpen(false)}
+          title="Tutup Menu"
+        />
+      )}
+      <aside className={`simtah-sidebar no-print ${isMobileOpen ? 'is-mobile-open' : ''}`}>
+        {/* Mobile Close Button */}
+        <button 
+          type="button" 
+          className="sidebar-mobile-close-btn"
+          onClick={() => setIsMobileOpen(false)}
+          title="Tutup Menu"
+          aria-label="Tutup Menu"
+        >
+          <X size={18} />
+        </button>
       {/* Brand Logo: Tahfidz HUB */}
       <div className="sidebar-brand">
         <div 
           className="brand-icon-geom"
           style={{
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            background: 'transparent',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 10px rgba(16, 185, 129, 0.25)'
+            boxShadow: '0 4px 10px rgba(16, 185, 129, 0.25)',
+            borderRadius: '10px',
+            overflow: 'hidden',
+            width: '38px',
+            height: '38px',
+            flexShrink: 0
           }}
         >
-          <TahfidzHubLogo size={22} variant="white" />
+          <img 
+            src="/logo.png" 
+            alt="Tahfidz HUB" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px', display: 'block' }} 
+          />
         </div>
         <div className="brand-name">
           Tahfidz HUB <span className="brand-dot"></span>
@@ -1037,7 +1399,7 @@ export default function Sidebar({
           <div className="nav-group-title">AL-QUR'AN</div>
           <div 
             className={`nav-item ${activeTab === 'mushaf' ? 'active' : ''}`}
-            onClick={() => setActiveTab('mushaf')}
+            onClick={() => selectTab('mushaf')}
           >
             <div className="nav-item-left">
               <div style={{
@@ -1064,7 +1426,7 @@ export default function Sidebar({
         <div className="nav-group-title">DASHBOARD</div>
         <div 
           className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setActiveTab('dashboard')}
+          onClick={() => selectTab('dashboard')}
         >
           <div className="nav-item-left">
             <LayoutDashboard size={18} className="nav-icon" />
@@ -1081,7 +1443,7 @@ export default function Sidebar({
         {currentRole !== 'orangtua' && (
           <div 
             className={`nav-item ${activeTab === 'scan' ? 'active' : ''}`}
-            onClick={() => setActiveTab('scan')}
+            onClick={() => selectTab('scan')}
           >
             <div className="nav-item-left">
               <QrCode size={18} className="nav-icon" />
@@ -1093,7 +1455,7 @@ export default function Sidebar({
 
         <div 
           className={`nav-item ${activeTab === 'riwayat-presensi' || activeTab === 'riwayat-presensi-santri' ? 'active' : ''}`}
-          onClick={() => setActiveTab('riwayat-presensi-santri')}
+          onClick={() => selectTab('riwayat-presensi-santri')}
         >
           <div className="nav-item-left">
             <ClipboardCheck size={18} className="nav-icon" />
@@ -1106,7 +1468,7 @@ export default function Sidebar({
           <>
             <div 
               className={`nav-item ${activeTab === 'riwayat-presensi-pengampu' ? 'active' : ''}`}
-              onClick={() => setActiveTab('riwayat-presensi-pengampu')}
+              onClick={() => selectTab('riwayat-presensi-pengampu')}
             >
               <div className="nav-item-left">
                 <UserCheck size={18} className="nav-icon" />
@@ -1117,7 +1479,7 @@ export default function Sidebar({
 
             <div 
               className={`nav-item ${activeTab === 'izin' ? 'active' : ''}`}
-              onClick={() => setActiveTab('izin')}
+              onClick={() => selectTab('izin')}
             >
               <div className="nav-item-left">
                 <FileText size={18} className="nav-icon" />
@@ -1136,7 +1498,7 @@ export default function Sidebar({
         {currentRole === 'orangtua' && (
           <div 
             className={`nav-item ${activeTab === 'hafalan-santri' ? 'active' : ''}`}
-            onClick={() => setActiveTab('hafalan-santri')}
+            onClick={() => selectTab('hafalan-santri')}
           >
             <div className="nav-item-left">
               <BookOpen size={18} className="nav-icon" />
@@ -1148,7 +1510,7 @@ export default function Sidebar({
 
         <div 
           className={`nav-item ${activeTab === 'santri' ? 'active' : ''}`}
-          onClick={() => setActiveTab('santri')}
+          onClick={() => selectTab('santri')}
         >
           <div className="nav-item-left">
             <GraduationCap size={18} className="nav-icon" />
@@ -1161,7 +1523,7 @@ export default function Sidebar({
           <>
             <div 
               className={`nav-item ${activeTab === 'presensi-santri' ? 'active' : ''}`}
-              onClick={() => setActiveTab('presensi-santri')}
+              onClick={() => selectTab('presensi-santri')}
             >
               <div className="nav-item-left">
                 <ClipboardCheck size={18} className="nav-icon" />
@@ -1172,7 +1534,7 @@ export default function Sidebar({
 
             <div 
               className={`nav-item ${activeTab === 'setoran' ? 'active' : ''}`}
-              onClick={() => setActiveTab('setoran')}
+              onClick={() => selectTab('setoran')}
             >
               <div className="nav-item-left">
                 <BookOpen size={18} className="nav-icon" />
@@ -1189,7 +1551,7 @@ export default function Sidebar({
         <div className="nav-group-title">LAPORAN</div>
         <div 
           className={`nav-item ${activeTab === 'rapor' ? 'active' : ''}`}
-          onClick={() => setActiveTab('rapor')}
+          onClick={() => selectTab('rapor')}
         >
           <div className="nav-item-left">
             <FileCheck2 size={18} className="nav-icon" />
@@ -1232,5 +1594,6 @@ export default function Sidebar({
         </button>
       </div>
     </aside>
+  </>
   );
 }
